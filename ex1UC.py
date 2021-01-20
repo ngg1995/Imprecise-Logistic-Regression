@@ -62,14 +62,63 @@ def uc_logistic_regression(data,result,uncertain):
         
     return models
 
+def ROC(model = None, predictions = None, data = None, results = None):
+    
+    s = []
+    fpr = []
+    
+    if predictions is None:
+        predictions = model.predict_proba(data)[:,1]
+    
+    for p in np.linspace(0,1,101):
+        a = 0
+        b = 0
+        c = 0
+        d = 0
+
+        for prediction, result in zip(predictions,results):
+
+            if prediction >= p:
+                if result:
+                    # true positive
+                    a += 1
+                else:
+                    # false positive
+                    b+= 1
+            else: 
+                if result:
+                    # false negative
+                    c += 1
+                else:
+                    # true negative
+                    d += 1
+                    
+        
+        s.append(a/(a+c))
+        fpr.append(b/(b+d))
+    return s, fpr
+   
+def UQ_ROC(models, data, results):
+    
+    s = []
+    fpr = []
+    
+    predictions_lb = [min([m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1] for k,m in models.items()]) for d in data.index]
+    predictions_ub = [max([m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1] for k,m in models.items()]) for d in data.index]
+        
+    s_lb,fpr_lb = ROC(predictions = predictions_lb, data = test_data, results = test_results)
+    s_ub,fpr_ub = ROC(predictions = predictions_ub, data = test_data, results = test_results)
+        
+    return s_lb, fpr_lb, s_ub, fpr_ub
+
 # set seed to ensure same data
 np.random.seed(10)
 
 # Params
-many = 25
-dim = 1
+many = 40
+dim = 10
 few = 1
-some = 100
+some = 1000
 
 # Generate data
 data = pd.DataFrame(30*np.random.rand(many,dim))
@@ -111,7 +160,7 @@ base.fit(data.to_numpy(),results.to_numpy())
 base_predict = base.predict(test_data)
 print(base.coef_)
 
-# Plot results
+# # Plot results
 plt.scatter(data,results,color='blue')
 plt.xlabel('X')
 plt.ylabel('$\Pr(X=x)$')
@@ -119,7 +168,7 @@ plt.ylabel('$\Pr(X=x)$')
 lX = np.linspace(data.min(),data.max(),100)
 lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
 plt.plot(lX,lY,color='k',zorder=10,lw=2)
-tikzplotlib.save('paper/figs/UC1D.tikz')
+# # tikzplotlib.save('paper/figs/UC1D.tikz')
 
 for x in uncertain[0]:
 
@@ -138,8 +187,10 @@ for n, model in models.items():
 plt.plot(lX,lYmax,color='red',lw=2)
 plt.plot(lX,lYmin,color='red',lw=2)
 
+plt.show()
 
-tikzplotlib.save('paper/figs/ex1UC.tikz')
+
+# tikzplotlib.save('paper/figs/ex1UC.tikz')
 
 a,b,c,d = generate_confusion_matrix(test_results,base_predict)
 try:
@@ -177,4 +228,17 @@ except:
     ttt = None
 print('THROW\na=%s\tb=%s\nc=%s\td=%s\ns=%s\tt=%s' %(aaa,bbb,ccc,ddd,sss,ttt))
 
-print('p = %s'%((a+c)/(a+b+c+d)))
+# print('p = %s'%((a+c)/(a+b+c+d)))
+
+### ROC CURVE
+s,fpr = ROC(model = base, data = test_data, results = test_results)
+s_lb, fpr_lb, s_ub, fpr_ub = UQ_ROC(models = models, data = test_data, results = test_results)
+
+plt.plot(fpr,s,'r')
+plt.plot(fpr_lb,s_lb,'c')
+plt.plot(fpr_ub,s_ub,'m') 
+
+plt.plot([0,0],[1,1],'k:')
+plt.xlabel('1-$t$')
+plt.ylabel('$s$')
+plt.show()

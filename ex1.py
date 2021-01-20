@@ -89,7 +89,7 @@ def ROC(model, data, results):
 np.random.seed(10)
 
 # Params
-many = 25
+many = 2500
 dim = 1
 few = 500
 some = 100
@@ -97,19 +97,19 @@ some = 100
 # Generate data
 data = pd.DataFrame(30*np.random.rand(many,dim))
 results = generate_results(data)
-with open('paper/figs/ex1data.csv','w') as f:
-    print('x,result', file=f)
+with open('ex1data.csv','w') as f:
+    print('x,results', file=f)
     for i in data.index:
-        print('%.3f ,%s'%(data.iloc[i],results.iloc[i]),file=f)
+        print('%.3f ,%i'%(data.iloc[i],results.iloc[i]),file=f)
 
 # Generate test data 
 np.random.seed(111)
 test_data = pd.DataFrame(30*np.random.rand(some,dim))
 test_results = generate_results(test_data)
-with open('paper/figs/ex1test.csv','w') as f:
-    print('x,result,x,result,x,result,x,result', file=f)
-    for i in data.index:
-        print('%.3f ,%s,%.3f ,%s,%.3f ,%s,%.3f ,%s'%(test_data.iloc[i],test_results.iloc[i],test_data.iloc[i+25],test_results.iloc[i+25],test_data.iloc[i+50],test_results.iloc[i+50],test_data.iloc[i+75],test_results.iloc[i+75]),file=f)
+# with open('paper/figs/ex1test.csv','w') as f:
+#     print('x,result,x,result,x,result,x,result', file=f)
+#     for i in data.index:
+#         print('%.3f ,%s,%.3f ,%s,%.3f ,%s,%.3f ,%s'%(test_data.iloc[i],test_results.iloc[i],test_data.iloc[i+25],test_results.iloc[i+25],test_data.iloc[i+50],test_results.iloc[i+50],test_data.iloc[i+75],test_results.iloc[i+75]),file=f)
 # Fit base model
 base = LogisticRegression()
 base.fit(data.to_numpy(),results.to_numpy())
@@ -138,7 +138,7 @@ plt.plot(fpr,s,'r')
 plt.plot([0,0],[1,1],'k:')
 plt.xlabel('1-$t$')
 plt.ylabel('$s$')
-tikzplotlib.save('paper/figs/ex1_ROC.tikz')
+# tikzplotlib.save('paper/figs/ex1_ROC.tikz')
 # Get confusion matrix
 
 # a,b,c,d = generate_confusion_matrix(test_results,base_predict)
