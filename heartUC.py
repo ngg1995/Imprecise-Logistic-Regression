@@ -20,7 +20,7 @@ def split_data(features, results, test_frac = 0.5, uq_frac = 0.05, seed=random.r
     test_data = features.loc[test_data_index]
     train_data = features.loc[train_data_index]
     uq_data = features.loc[uq_data_index]
-    print('%i test data\n%i training data\n%i uncertain data' %(test_data_index,train_data_index,uq_data_index))
+    print('%i test data\n%i training data\n%i uncertain data' %(len(test_data_index),len(train_data_index),len(uq_data_index)))
     test_results = results.loc[test_data_index]
     train_results = results.loc[train_data_index]
   
@@ -131,7 +131,7 @@ heart_data = pd.read_csv('SAheart.csv',index_col = 'patient')
 factors = heart_data[['sbp','tobacco','ldl','adiposity','famhist','typea','obesity','alcohol','age']]
 chd = heart_data['chd']
 
-test_data, test_results, train_data, train_results, uq_data = split_data(factors,chd,uq_frac=0.05,seed = 2)
+test_data, test_results, train_data, train_results, uq_data = split_data(factors,chd,uq_frac=0.02,seed = 2)
 
 # Fit model
 base = LogisticRegression(max_iter=500)
@@ -198,3 +198,15 @@ print('THROW\na=%s\tb=%s\nc=%s\td=%s\ns=%s\tt=%s' %(aaa,bbb,ccc,ddd,sss,ttt))
 # plt.xlabel('1-$t$')
 # plt.ylabel('$s$')
 # plt.show()
+
+### PLOTS
+
+l = len(factors.columns)
+colors = ['g' if d else 'r' for c,d in train_results.iteritems()]
+for i,(j,k) in enumerate(it.product(factors.columns,repeat=2)):
+    if j != k:
+        plt.subplot(l,l,i+1)
+        plt.scatter(train_data[j],train_data[k],c=colors)
+        plt.scatter(uq_data[j],uq_data[k],c='b')
+        
+plt.show()

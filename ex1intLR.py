@@ -121,11 +121,12 @@ def get_bounds(UQdata,results):
 np.random.seed(10)
 
 # Params
-many = 25
+many = 40
 dim = 1
+few = 10
+some = 100
 steps = 100
 eps = 1
-some = 100
 
 # Generate data
 data = pd.DataFrame(30*np.random.rand(many,dim))
@@ -179,7 +180,8 @@ plt.plot(lX,lYmax,color='red',lw=2)
 plt.plot(lX,lYmin,color='red',lw=2)
 
 # plt.show()
-tikzplotlib.save('paper/figs/ex1intLR.tikz')
+# tikzplotlib.save('../paper/figs/ex1intLR.tikz')
+plt.savefig('../paper/figs/ex1_int_LR.png')
 
 a,b,c,d = generate_confusion_matrix(test_results,base_predict)
 try:
@@ -192,8 +194,7 @@ except:
     t = None
 
 print('BASE\na=%s\tb=%s\nc=%s\td=%s\ns=%s\tt=%s' %(a,b,c,d,s,t))
-print(1/(1+b/a))
-print(1/(1+c/d))
+
 
 aa,bb,cc,dd = generate_confusion_matrix(test_results,predictions)
 try:
@@ -205,8 +206,6 @@ try:
 except:
     tt = None
 print('KEEP\na=%s\tb=%s\nc=%s\td=%s\ns=%s\tt=%s' %(aa,bb,cc,dd,ss,tt))
-print(1/(1+bb/aa))
-print(1/(1+cc/dd))
 
 
 aaa,bbb,ccc,ddd = generate_confusion_matrix(test_results,predictions,throw = True)
@@ -221,5 +220,3 @@ except:
 print('THROW\na=%s\tb=%s\nc=%s\td=%s\ns=%s\tt=%s' %(aaa,bbb,ccc,ddd,sss,ttt))
 
 print('p = %s'%((a+c)/(a+b+c+d)))
-print(1/(1+bbb/aaa))
-print(1/(1+ccc/ddd))

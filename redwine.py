@@ -1,21 +1,32 @@
-import numpy as np
 import pandas as pd
+import numpy as np
+import random
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LogisticRegression
 import itertools as it
 from tqdm import tqdm
 import pba
-import tikzplotlib
 
-def generate_results(data):
-
-    results = pd.Series(index = data.index, dtype = 'bool')
-    for row in data.index:
-
-        results[row] = sum(data.loc[row]) >= len(data.columns)*(15+3*np.random.randn())
+def split_data(features, results, test_frac = 0.5, uq_frac = 0.05, seed=random.random()):
     
-    return results
+    i = list(features.index)
+    n = len(i)
+   
+    # get data indexes
+    test_data_index = random.sample(i, k = int(n*test_frac))
+    train_data_index = random.sample([f for f in i if f not in test_data_index], k = int((1-uq_frac) * (n-len(test_data_index))))
+    uq_data_index = [f for f in i if f not in test_data_index and f not in train_data_index]
 
+    test_data = features.loc[test_data_index]
+    train_data = features.loc[train_data_index]
+    uq_data = features.loc[uq_data_index]
+    print('%i test data\n%i training data\n%i uncertain data' %(len(test_data_index),len(train_data_index),len(uq_data_index)))
+    test_results = results.loc[test_data_index]
+    train_results = results.loc[train_data_index]
+  
+    
+    return test_data, test_results, train_data, train_results, uq_data
+    
 def generate_confusion_matrix(results,predictions,throw = False):
 
     a = 0
@@ -48,19 +59,20 @@ def generate_confusion_matrix(results,predictions,throw = False):
                     
     return a,b,c,d
 
-def uc_logistic_regression(data,result,uncertain):
+def uc_logistic_regression(data,results,uncertain):
 
     models = {}
 
-    for N,i in enumerate(it.product([0,1],repeat=len(uncertain))):
+    for N,i in tqdm(enumerate(it.product([0,1],repeat=len(uncertain)))):
 
         new_data = pd.concat((data,uncertain), ignore_index = True)
         new_result = pd.concat((results, pd.Series(i)), ignore_index = True)
 
-        model = LogisticRegression()       
+        model = LogisticRegression(max_iter=10000)       
         models[str(i)] = model.fit(new_data.to_numpy(),new_result.to_numpy())
         
     return models
+
 
 def ROC(model = None, predictions = None, data = None, results = None):
     
@@ -103,107 +115,51 @@ def UQ_ROC(models, data, results):
     s = []
     fpr = []
     
-    predictions_lb = [min([m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1] for k,m in models.items()]) for d in data.index]
-    predictions_ub = [max([m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1] for k,m in models.items()]) for d in data.index]
+    predictions_lb = [min([m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1] for k,m in models.items()]) for d in tqdm(data.index)]
+    predictions_ub = [max([m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1] for k,m in models.items()]) for d in tqdm(data.index)]
         
     s_lb,fpr_lb = ROC(predictions = predictions_lb, data = test_data, results = test_results)
     s_ub,fpr_ub = ROC(predictions = predictions_ub, data = test_data, results = test_results)
         
     return s_lb, fpr_lb, s_ub, fpr_ub
 
-# set seed to ensure same data
-np.random.seed(10)
+                  
+# Import the data
+wine_data = pd.read_csv('winequality-red.csv',index_col = None)
 
-# Params
-many = 60
-dim = 2
-few = 3
-some = 1000
+# Split the data into risk factors and result
+factors = wine_data[['fixed acidity','sulphates','alcohol']]
+results = wine_data['quality'] >= 7
 
-# Generate data
-data = pd.DataFrame(15*np.random.randn(many,dim))
-results = generate_results(data)
+test_data, test_results, train_data, train_results, uq_data = split_data(factors,results,uq_frac=0.01,test_frac = 0.25,seed = 1)
 
-# Generate uncertain points
-uncertain = 12.5+pd.DataFrame(5*np.random.rand(few,dim))
+# # Fit model
+base = LogisticRegression(max_iter=500)
+base.fit(train_data, train_results)
 
-# Generate test data 
-np.random.seed(111)
-test_data = pd.DataFrame(30*np.random.rand(some,dim))
-test_results = generate_results(test_data)
-
-# Fit base model
-base = LogisticRegression()
-base.fit(data.to_numpy(),results.to_numpy())
-
-# Classify test data
+# Make preictions from test data
 base_predict = base.predict(test_data)
 
-# Fit model
-models = uc_logistic_regression(data,results,uncertain)
+# Make prediction for uncertain data 
+uq_models = uc_logistic_regression(train_data, train_results, uq_data)
 
-# Classify test data
-test_predict = pd.DataFrame(columns = models.keys())
+test_predict = pd.DataFrame(columns = uq_models.keys())
 
-for key, model in models.items():
+for key, model in uq_models.items():
     test_predict[key] = model.predict(test_data)
     
 predictions = []
 for i in test_predict.index:
     predictions.append([min(test_predict.loc[i]),max(test_predict.loc[i])])
 
-# Fit base model
-base = LogisticRegression()
-base.fit(data.to_numpy(),results.to_numpy())
 
-# Classify test data
-base_predict = base.predict(test_data)
-print(base.coef_)
+## Get confusion matrix
+a,b,c,d = generate_confusion_matrix(base_predict,test_results)
+print('TP=%i\tFP=%i\nFN=%i\tTN=%i' %(a,b,c,d))
 
-# # Plot results
-plt.scatter(data,results,color='blue')
-plt.xlabel('X')
-plt.ylabel('$\Pr(X=x)$')
-
-lX = np.linspace(data.min(),data.max(),100)
-lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
-plt.plot(lX,lY,color='k',zorder=10,lw=2)
-# # tikzplotlib.save('paper/figs/UC1D.tikz')
-
-for x in uncertain[0]:
-
-    plt.plot([x,x],[0,1],color='blue')
-
-lYmin = np.ones(300)
-lYmax = np.zeros(300)
-
-for n, model in models.items():
-    lY = model.predict_proba(np.linspace(data.min(),data.max(),100).reshape(-1, 1))[:,1]
-    lYmin = [min(i,j) for i,j in zip(lY,lYmin)]
-    lYmax = [max(i,j) for i,j in zip(lY,lYmax)]
-    plt.plot(lX,lY,color = 'grey')
-
-
-plt.plot(lX,lYmax,color='red',lw=2)
-plt.plot(lX,lYmin,color='red',lw=2)
-
-plt.show()
-
-
-# tikzplotlib.save('paper/figs/ex1UC.tikz')
-
-a,b,c,d = generate_confusion_matrix(test_results,base_predict)
-try:
-    s = 1/(1+c/a)
-except:
-    s = None
-try:    
-    t = 1/(1+b/d)
-except:
-    t = None
-
-print('BASE\na=%s\tb=%s\nc=%s\td=%s\ns=%s\tt=%s' %(a,b,c,d,s,t))
-
+# Calculate sensitivity and specificity
+print('Sensitivity = %.2f' %(a/(a+c)))
+print('Specificity = %.2f' %(d/(b+d)))
 
 aa,bb,cc,dd = generate_confusion_matrix(test_results,predictions)
 try:
@@ -228,17 +184,29 @@ except:
     ttt = None
 print('THROW\na=%s\tb=%s\nc=%s\td=%s\ns=%s\tt=%s' %(aaa,bbb,ccc,ddd,sss,ttt))
 
-# print('p = %s'%((a+c)/(a+b+c+d)))
 
-# ### ROC CURVE
+### ROC CURVE
 # s,fpr = ROC(model = base, data = test_data, results = test_results)
-# s_lb, fpr_lb, s_ub, fpr_ub = UQ_ROC(models = models, data = test_data, results = test_results)
+# s_lb, fpr_lb, s_ub, fpr_ub = UQ_ROC(models = uq_models, data = test_data, results = test_results)
 
 # plt.plot(fpr,s,'r')
-# plt.plot(fpr_lb,s_lb,'c')
-# plt.plot(fpr_ub,s_ub,'m') 
+# plt.plot(fpr_lb,s_lb,'g')
+# plt.plot(fpr_ub,s_ub,'k')
+# # print(len(fpr))
 
-# plt.plot([0,0],[1,1],'k:')
+# plt.plot([0,1],[0,1],'k:')
 # plt.xlabel('1-$t$')
 # plt.ylabel('$s$')
+# plt.show()
+
+### PLOTS
+
+# l = len(factors.columns)
+# colors = ['g' if d else 'r' for c,d in train_results.iteritems()]
+# for i,(j,k) in enumerate(it.product(factors.columns,repeat=2)):
+#     if j != k:
+#         plt.subplot(l,l,i+1)
+#         plt.scatter(train_data[j],train_data[k],c=colors)
+#         # plt.scatter(uq_data[j],uq_data[k],c='b')
+        
 # plt.show()

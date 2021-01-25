@@ -89,15 +89,15 @@ def ROC(model, data, results):
 np.random.seed(10)
 
 # Params
-many = 2500
+many = 40
 dim = 1
-few = 500
+few = 10
 some = 100
 
 # Generate data
 data = pd.DataFrame(30*np.random.rand(many,dim))
 results = generate_results(data)
-with open('ex1data.csv','w') as f:
+with open('../paper/figs/ex1data.csv','w') as f:
     print('x,results', file=f)
     for i in data.index:
         print('%.3f ,%i'%(data.iloc[i],results.iloc[i]),file=f)
@@ -106,7 +106,7 @@ with open('ex1data.csv','w') as f:
 np.random.seed(111)
 test_data = pd.DataFrame(30*np.random.rand(some,dim))
 test_results = generate_results(test_data)
-# with open('paper/figs/ex1test.csv','w') as f:
+# with open('../paper/figs/ex1test.csv','w') as f:
 #     print('x,result,x,result,x,result,x,result', file=f)
 #     for i in data.index:
 #         print('%.3f ,%s,%.3f ,%s,%.3f ,%s,%.3f ,%s'%(test_data.iloc[i],test_results.iloc[i],test_data.iloc[i+25],test_results.iloc[i+25],test_data.iloc[i+50],test_results.iloc[i+50],test_data.iloc[i+75],test_results.iloc[i+75]),file=f)
@@ -128,7 +128,7 @@ plt.ylabel('$\Pr(X=1)$')
 lX = np.linspace(data.min(),data.max(),100)
 lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
 plt.plot(lX,lY,color='k',zorder=10,lw=2)
-# tikzplotlib.save('paper/figs/ex1.tikz')
+tikzplotlib.save('../paper/figs/ex1.tikz')
 
 plt.clf()
 
@@ -138,43 +138,43 @@ plt.plot(fpr,s,'r')
 plt.plot([0,0],[1,1],'k:')
 plt.xlabel('1-$t$')
 plt.ylabel('$s$')
-# tikzplotlib.save('paper/figs/ex1_ROC.tikz')
+tikzplotlib.save('../paper/figs/ex1_ROC.tikz')
 # Get confusion matrix
 
-# a,b,c,d = generate_confusion_matrix(test_results,base_predict)
-# try:
-#     s = 1/(1+c/a)
-# except:
-#     s = None
-# try:    
-#     t = 1/(1+b/d)
-# except:
-#     t = None
+a,b,c,d = generate_confusion_matrix(test_results,base_predict)
+try:
+    s = 1/(1+c/a)
+except:
+    s = None
+try:    
+    t = 1/(1+b/d)
+except:
+    t = None
 
-# print('BASE\na=%s\tb=%s\nc=%s\td=%s\ns=%s\tt=%s' %(a,b,c,d,s,t))
-
-
-# aa,bb,cc,dd = generate_confusion_matrix(test_results,predictions)
-# try:
-#     ss = 1/(1+cc/aa)
-# except:
-#     ss = None
-# try:    
-#     tt = 1/(1+bb/dd)
-# except:
-#     tt = None
-# print('KEEP\na=%s\tb=%s\nc=%s\td=%s\ns=%s\tt=%s' %(aa,bb,cc,dd,ss,tt))
+print('BASE\na=%s\tb=%s\nc=%s\td=%s\ns=%s\tt=%s' %(a,b,c,d,s,t))
 
 
-# aaa,bbb,ccc,ddd = generate_confusion_matrix(test_results,predictions,throw = True)
-# try:
-#     sss = 1/(1+ccc/aaa)
-# except:
-#     sss = None
-# try:    
-#     ttt = 1/(1+bbb/ddd)
-# except:
-#     ttt = None
-# print('THROW\na=%s\tb=%s\nc=%s\td=%s\ns=%s\tt=%s' %(aaa,bbb,ccc,ddd,sss,ttt))
+aa,bb,cc,dd = generate_confusion_matrix(test_results,predictions)
+try:
+    ss = 1/(1+cc/aa)
+except:
+    ss = None
+try:    
+    tt = 1/(1+bb/dd)
+except:
+    tt = None
+print('KEEP\na=%s\tb=%s\nc=%s\td=%s\ns=%s\tt=%s' %(aa,bb,cc,dd,ss,tt))
 
-# print('p = %s'%((a+c)/(a+b+c+d)))
+
+aaa,bbb,ccc,ddd = generate_confusion_matrix(test_results,predictions,throw = True)
+try:
+    sss = 1/(1+ccc/aaa)
+except:
+    sss = None
+try:    
+    ttt = 1/(1+bbb/ddd)
+except:
+    ttt = None
+print('THROW\na=%s\tb=%s\nc=%s\td=%s\ns=%s\tt=%s' %(aaa,bbb,ccc,ddd,sss,ttt))
+
+print('p = %s'%((a+c)/(a+b+c+d)))
