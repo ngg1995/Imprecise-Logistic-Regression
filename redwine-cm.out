@@ -1,0 +1,13 @@
+TP=57	FP=68
+FN=144	TN=1220
+Sensitivity = 0.284
+Specificity = 0.947
+TP=[19, 94]	FP=[22, 106]
+FN=[107, 182]	TN=[1182, 1266]
+Sensitivity = [0.0945274, 0.467662]
+Specificity = [0.917702, 0.982919]
+TP=19	FP=22
+FN=107	TN=1182
+NP(+)=75	NP(-)=84
+Sensitivity = 0.151
+Specificity = 0.982

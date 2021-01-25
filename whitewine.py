@@ -6,18 +6,26 @@ from sklearn.linear_model import LogisticRegression
 import itertools as it
 from tqdm import tqdm
 import pba
+
 from LRF import *
-                  
+
 # Import the data
-heart_data = pd.read_csv('SAheart.csv',index_col = 'patient')
+wine_data = pd.read_csv('winequality-white.csv',index_col = None)
 
-# Split the data into risk factors and result
-factors = heart_data[['sbp','tobacco','ldl','adiposity','famhist','typea','obesity','alcohol','age']]
-chd = heart_data['chd']
+# Split the data into test/train factors and result and generate uncertain points
+random.seed(1111) # for reproducability
+uq_data_index = random.sample([i for i in wine_data[wine_data['quality'] == 6].index], k = 10)
+train_data_index = random.sample([i for i in wine_data.index if i not in uq_data_index], k = 100)
+test_data_index = [i for i in wine_data.index if i not in uq_data_index and i not in train_data_index]
 
-test_data, test_results, train_data, train_results, uq_data = split_data(factors,chd,test_frac = 0.3,uq_frac=0.03,seed = 2)
+uq_data = wine_data.loc[uq_data_index,[c for c in wine_data.columns if c != 'quality']]
+test_data = wine_data.loc[test_data_index,[c for c in wine_data.columns if c != 'quality']]
+train_data = wine_data.loc[train_data_index,[c for c in wine_data.columns if c != 'quality']]
 
-# Fit model
+test_results = wine_data.loc[test_data_index,'quality'] >= 7
+train_results = wine_data.loc[train_data_index,'quality'] >= 7
+print('prev = %.2f' %(sum(test_results)/len(wine_data)))
+# # Fit model
 base = LogisticRegression(max_iter=500)
 base.fit(train_data, train_results)
 
@@ -36,8 +44,9 @@ predictions = []
 for i in test_predict.index:
     predictions.append([min(test_predict.loc[i]),max(test_predict.loc[i])])
 
+
 ## Get confusion matrix
-with open('heart-cm.out','w') as f:
+with open('whitewine-cm.out','w') as f:
     a,b,c,d = generate_confusion_matrix(test_results,base_predict)
     print('TP=%i\tFP=%i\nFN=%i\tTN=%i' %(a,b,c,d),file = f)
 
@@ -77,19 +86,20 @@ with open('heart-cm.out','w') as f:
     print('Sensitivity = %.3f' %(sss),file = f)
     print('Specificity = %.3f' %(ttt),file = f)
 
-## ROC CURVE
-s,fpr = ROC(model = base, data = test_data, results = test_results)
-s_lb, fpr_lb, s_ub, fpr_ub = UQ_ROC(models = uq_models, data = test_data, results = test_results)
 
-plt.plot([0,1],[0,1],'k:')
-plt.xlabel('1-$t$')
-plt.ylabel('$s$')
-plt.plot(fpr,s,'r')
-plt.savefig('figs/heart_ROC.png')
-plt.plot(fpr_lb,s_lb,'g')
-plt.plot(fpr_ub,s_ub,'k')
-# print(len(fpr))
-plt.savefig('figs/heart_ROC_UQ.png')
+## ROC CURVE
+# s,fpr = ROC(model = base, data = test_data, results = test_results)
+# s_lb, fpr_lb, s_ub, fpr_ub = UQ_ROC(models = uq_models, data = test_data, results = test_results)
+
+# plt.plot([0,1],[0,1],'k:')
+# plt.xlabel('1-$t$')
+# plt.ylabel('$s$')
+# plt.plot(fpr,s,'r')
+# plt.savefig('figs/whitewine_ROC.png')
+# plt.plot(fpr_lb,s_lb,'g')
+# plt.plot(fpr_ub,s_ub,'k')
+# # print(len(fpr))
+# plt.savefig('figs/whitewine_UQ_ROC.png')
 
 plt.clf()
 ## PLOTS
@@ -99,7 +109,7 @@ colors = ['g' if d else 'r' for c,d in train_results.iteritems()]
 for i,(j,k) in enumerate(it.product(train_data.columns,repeat=2)):
     if j != k:
         plt.subplot(l,l,i+1)
-        plt.scatter(train_data[j],train_data[k],c=colors)
+        plt.scatter(train_data[j],train_data[k],c=colors,marker = 'x')
         plt.scatter(uq_data[j],uq_data[k],c='k')
         
-plt.savefig('figs/heart.png')
+plt.savefig('figs/whitewine.png')

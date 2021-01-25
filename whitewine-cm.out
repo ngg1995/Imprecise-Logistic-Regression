@@ -1,0 +1,13 @@
+TP=205	FP=125
+FN=832	TN=3626
+Sensitivity = 0.198
+Specificity = 0.967
+TP=[20, 417]	FP=[7, 500]
+FN=[620, 1017]	TN=[3251, 3744]
+Sensitivity = [0.0192864, 0.402122]
+Specificity = [0.866702, 0.998134]
+TP=20	FP=7
+FN=620	TN=3251
+NP(+)=397	NP(-)=493
+Sensitivity = 0.031
+Specificity = 0.998

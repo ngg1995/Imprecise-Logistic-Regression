@@ -12,6 +12,8 @@ def generate_confusion_matrix(results,predictions,throw = False):
     b = 0
     c = 0
     d = 0
+    e = 0
+    f = 0
     
     for result, prediction in zip(results,predictions):
         if prediction.__class__.__name__ != 'list':
@@ -35,19 +37,27 @@ def generate_confusion_matrix(results,predictions,throw = False):
             else:
                 b += pba.I(0,1)
                 d += pba.I(0,1)
-                    
-    return a,b,c,d
+        else:
+            if result:
+                e += 1
+            else:
+                f += 1
+    
+    if throw:
+        return a,b,c,d,e,f
+    else:
+        return a,b,c,d
 
 def uc_logistic_regression(data,result,uncertain):
 
     models = {}
 
-    for N,i in enumerate(it.product([0,1],repeat=len(uncertain))):
+    for N,i in tqdm(enumerate(it.product([0,1],repeat=len(uncertain))),total=2**len(uncertain)):
 
         new_data = pd.concat((data,uncertain), ignore_index = True)
         new_result = pd.concat((result, pd.Series(i)), ignore_index = True)
 
-        model = LogisticRegression()       
+        model = LogisticRegression(max_iter=1000)       
         models[str(i)] = model.fit(new_data.to_numpy(),new_result.to_numpy())
         
     return models
@@ -93,8 +103,13 @@ def UQ_ROC(models, data, results):
     s = []
     fpr = []
     
-    predictions_lb = [min([m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1] for k,m in models.items()]) for d in data.index]
-    predictions_ub = [max([m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1] for k,m in models.items()]) for d in data.index]
+    predictions_lb = []
+    predictions_ub = []
+    
+    for d in tqdm(data.index):
+        l = [m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1] for k,m in models.items()]
+        predictions_lb += [min(l)]
+        predictions_ub += [max(l)]
         
     s_lb,fpr_lb = ROC(predictions = predictions_lb, data = data, results = results)
     s_ub,fpr_ub = ROC(predictions = predictions_ub, data = data, results = results)

@@ -1,0 +1,13 @@
+TP=33	FP=1
+FN=4	TN=32
+Sensitivity = 0.892
+Specificity = 0.970
+TP=[25, 37]	FP=[0, 14]
+FN=[0, 12]	TN=[19, 33]
+Sensitivity = [0.675676, 1]
+Specificity = [0.575758, 1]
+TP=25	FP=0
+FN=0	TN=19
+NP(+)=12	NP(-)=14
+Sensitivity = 1.000
+Specificity = 1.000
