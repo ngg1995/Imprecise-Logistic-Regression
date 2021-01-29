@@ -14,8 +14,8 @@ wine_data = pd.read_csv('winequality-white.csv',index_col = None)
 
 # Split the data into test/train factors and result and generate uncertain points
 random.seed(1111) # for reproducability
-uq_data_index = random.sample([i for i in wine_data[wine_data['quality'] == 6].index], k = 10)
-train_data_index = random.sample([i for i in wine_data.index if i not in uq_data_index], k = 100)
+uq_data_index = random.sample([i for i in wine_data[wine_data['quality'] == 6].index], k = 12)
+train_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 6].index if i not in uq_data_index], k = 100) + random.sample([i for i in wine_data[wine_data['quality'] >= 7].index if i not in uq_data_index], k = 50)
 test_data_index = [i for i in wine_data.index if i not in uq_data_index and i not in train_data_index]
 
 uq_data = wine_data.loc[uq_data_index,[c for c in wine_data.columns if c != 'quality']]
@@ -86,30 +86,44 @@ with open('whitewine-cm.out','w') as f:
     print('Sensitivity = %.3f' %(sss),file = f)
     print('Specificity = %.3f' %(ttt),file = f)
 
-
 ## ROC CURVE
-# s,fpr = ROC(model = base, data = test_data, results = test_results)
-# s_lb, fpr_lb, s_ub, fpr_ub = UQ_ROC(models = uq_models, data = test_data, results = test_results)
+fig0, ax0 = plt.subplots()
+s,fpr = ROC(model = base, data = test_data, results = test_results)
+s_lb, fpr_lb, s_ub, fpr_ub, s_t, fpr_t = UQ_ROC(models = uq_models, data = test_data, results = test_results)
 
-# plt.plot([0,1],[0,1],'k:')
-# plt.xlabel('1-$t$')
-# plt.ylabel('$s$')
-# plt.plot(fpr,s,'r')
-# plt.savefig('figs/whitewine_ROC.png')
-# plt.plot(fpr_lb,s_lb,'g')
-# plt.plot(fpr_ub,s_ub,'k')
-# # print(len(fpr))
-# plt.savefig('figs/whitewine_UQ_ROC.png')
+plt.plot([0,1],[0,1],'k:',label = '$s = 1-t$')
+plt.xlabel('$1-t$')
+plt.ylabel('$s$')
+plt.plot(fpr,s,'k', label = 'Dropped missing values')
+plt.savefig('figs/whitewine_ROC.png')
+plt.savefig('../paper/figs/whitewine_ROC.png')
 
-plt.clf()
+plt.plot(fpr_lb,s_lb,'r', label = 'Lower bound')
+plt.plot(fpr_ub,s_ub,'b', label = 'Upper Bound')
+plt.plot(fpr_t,s_t,'m', label = 'Dropped Values')
+plt.legend()
+# print(len(fpr))
+# tikzplotlib.save('../paper/figs/whitewine_UQ_ROC.png')
+plt.savefig('figs/whitewine_UQ_ROC.png')
+plt.savefig('../paper/figs/whitewine_UQ_ROC.png')
+
+
+with open('whitewine-auc.out','w') as f:
+    print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
+    print('LOWER BOUND: %.4f' %auc(s_lb,fpr_lb), file = f)
+    print('UPPER BOUND: %.4f' %auc(s_ub,fpr_ub), file = f)
+
+
 ## PLOTS
-
+fig1, ax1 = plt.subplots()
 l = len(train_data.columns)
 colors = ['g' if d else 'r' for c,d in train_results.iteritems()]
 for i,(j,k) in enumerate(it.product(train_data.columns,repeat=2)):
     if j != k:
         plt.subplot(l,l,i+1)
         plt.scatter(train_data[j],train_data[k],c=colors,marker = 'x')
-        plt.scatter(uq_data[j],uq_data[k],c='k')
+        # plt.scatter(uq_data[j],uq_data[k],c='k')
         
 plt.savefig('figs/whitewine.png')
+plt.savefig('../paper/figs/whitewine.png')
+

@@ -62,7 +62,7 @@ def uc_logistic_regression(data,result,uncertain):
         
     return models
 
-def ROC(model = None, predictions = None, data = None, results = None):
+def ROC(model = None, predictions = None, data = None, results = None, uq = False):
     
     s = []
     fpr = []
@@ -76,9 +76,18 @@ def ROC(model = None, predictions = None, data = None, results = None):
         c = 0
         d = 0
 
-        for prediction, result in zip(predictions,results):
-
-            if prediction >= p:
+        for prob, result in zip(predictions,results):
+            if uq:
+                if (prob[0] >= p) and (prob[1] >= p):
+                    x = 1
+                elif (prob[0] < p) and (prob[1] < p):
+                    x = 0
+                else:
+                    continue                      
+            else:
+                x = prob >= p
+                
+            if x:
                 if result:
                     # true positive
                     a += 1
@@ -93,9 +102,11 @@ def ROC(model = None, predictions = None, data = None, results = None):
                     # true negative
                     d += 1
                     
-        
-        s.append(a/(a+c))
-        fpr.append(b/(b+d))
+        try:
+            s.append(a/(a+c))
+            fpr.append(b/(b+d))
+        except: 
+            pass
     return s, fpr
    
 def UQ_ROC(models, data, results):
@@ -110,11 +121,15 @@ def UQ_ROC(models, data, results):
         l = [m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1] for k,m in models.items()]
         predictions_lb += [min(l)]
         predictions_ub += [max(l)]
+    
         
     s_lb,fpr_lb = ROC(predictions = predictions_lb, data = data, results = results)
     s_ub,fpr_ub = ROC(predictions = predictions_ub, data = data, results = results)
-        
-    return s_lb, fpr_lb, s_ub, fpr_ub
+    s_t,fpr_t = ROC(predictions = [(l,h) for l,h in zip(predictions_lb,predictions_ub)], data = data, results = results, uq = True)
+          
+
+    return s_lb, fpr_lb, s_ub, fpr_ub, s_t, fpr_t
+
 
 def split_data(features, results, test_frac = 0.5, uq_frac = 0.05, seed=random.random()):
     
@@ -136,10 +151,20 @@ def split_data(features, results, test_frac = 0.5, uq_frac = 0.05, seed=random.r
     
     return test_data, test_results, train_data, train_results, uq_data
 
+def auc(s,fpr):
+    
+    a = 0
+    for i in range(1,len(s)):
+        a += 0.5*(s[i]+s[i-1])*(fpr[i-1]-fpr[i])
+        
+    return a
+    
+    
 __all__ = [
     'generate_confusion_matrix',
     'uc_logistic_regression',
     'ROC',
     'UQ_ROC',
-    'split_data'
+    'split_data',
+    'auc'
 ]
