@@ -70,7 +70,7 @@ def ROC(model = None, predictions = None, data = None, results = None, uq = Fals
     if predictions is None:
         predictions = model.predict_proba(data)[:,1]
     
-    for p in np.linspace(0,1,101):
+    for p in tqdm(np.linspace(0,1,1001)):
         a = 0
         b = 0
         c = 0
@@ -190,12 +190,84 @@ def split_data(features, results, test_frac = 0.5, uq_frac = 0.05, seed=random.r
 
 def auc(s,fpr):
     
-    a = 0
-    for i in range(1,len(s)):
-        a += 0.5*(s[i]+s[i-1])*(fpr[i-1]-fpr[i])
+    fpr,s = zip(*sorted(zip(fpr,s)))
         
-    return a
+    return np.trapz(s,fpr)
+
+def UQ_ROC_alt(models, data, results):
+   
+    s = []
+    fpr = []
     
+    Sigma = []
+    Tau = []
+    Nu = []
+    
+    
+    probabilities = []
+    for d in tqdm(data.index):
+        l = [m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1] for k,m in models.items()]
+        probabilities.append((min(l),max(l)))
+    
+    
+    for p in tqdm(np.linspace(0,1,1001)):
+        a = 0
+        b = 0
+        c = 0
+        d = 0
+        
+        sigma = 0
+        tau = 0
+        nu = 0
+        
+
+        for prob, result in zip(probabilities,results):
+
+            if (prob[0] >= p) and (prob[1] >= p):
+                x = 1
+            elif (prob[0] < p) and (prob[1] < p):
+                x = 0
+            else:
+                x = 0.5
+                nu += 1
+                
+            if x == 0.5:
+                if result:
+                    sigma += 1
+                else:
+                    tau += 1
+            elif x:
+                if result:
+                    # true positive
+                    a += 1
+                else:
+                    # false positive
+                    b+= 1
+            else: 
+                if result:
+                    # false negative
+                    c += 1
+                else:
+                    # true negative
+                    d += 1
+                    
+        if a == 0:
+            s.append(0)
+        else:
+            s.append(1/(1+(c/a)))
+        
+        if b == 0:
+            fpr.append(0)
+        else:
+            fpr.append(1/(1+(d/b)))
+            
+        Sigma.append(sigma/sum(results))
+        Tau.append(tau/(len(results) - sum(results)))
+        Nu.append(nu/len(results))
+            
+        
+    return s, fpr, Sigma, Tau, Nu
+   
     
 __all__ = [
     'generate_confusion_matrix',
@@ -203,5 +275,6 @@ __all__ = [
     'ROC',
     'UQ_ROC',
     'split_data',
-    'auc'
+    'auc',
+    'UQ_ROC_alt'
 ]

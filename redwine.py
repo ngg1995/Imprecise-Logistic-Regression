@@ -87,19 +87,18 @@ with open('redwine-cm.out','w') as f:
     print('Specificity = %.3f' %(ttt),file = f)
 
 
-## ROC CURVE
-
 ### ROC CURVE
 s,fpr = ROC(model = base, data = test_data, results = test_results)
 s_i, fpr_i, s_t, fpr_t = UQ_ROC(models = uq_models, data = test_data, results = test_results)
 
-plt.plot([0,1],[0,1],'k:',label = '$s = 1-t$')
-plt.plot([0,0,1],[0,1,1],'r:',label = '$s = 1-t$')
+
+# plt.plot([0,0,1],[0,1,1],'r:',label = 'Perfect Classifier')
+plt.plot([0,1],[0,1],'k:',label = 'Random Classifer')
 plt.xlabel('$1-t$')
 plt.ylabel('$s$')
 plt.step(fpr,s,'k', label = 'Base')
-plt.savefig('figs/ex1_ROC.png')
-plt.savefig('../paper/figs/ex1_ROC.png')
+plt.savefig('figs/redwine_ROC.png')
+plt.savefig('../paper/figs/redwine_ROC.png')
 
 
 steps = 1001
@@ -107,39 +106,58 @@ X = np.linspace(0,1,steps)
 Ymin = steps*[2]
 Ymax = steps*[-1]
 
-for i, x in enumerate(X):
+for i, x in tqdm(enumerate(X)):
     for k,j in zip(s_i,fpr_i):
+
         if j.straddles(x,endpoints = True):
             Ymin[i] = min((Ymin[i],k.Left))
             Ymax[i] = max((Ymax[i],k.Right))
-            
-plt.step([x for i,x in enumerate(X) if Ymax[i] != -1],[y for i,y in enumerate(Ymax) if Ymax[i] != -1],'r',label = 'Upper Bound')
-plt.step([x for i,x in enumerate(X) if Ymin[i] != 2],[y for i,y in enumerate(Ymin) if Ymin[i] != 2],'b',label = 'Lower Bound')
 
-plt.step(fpr_t,s_t,'m', label = 'Dropped Values')
+Xmax = [0]+[x for i,x in enumerate(X) if Ymax[i] != -1]+[1]
+Xmin = [0]+[x for i,x in enumerate(X) if Ymin[i] != 2]+[1]
+Ymax = [0]+[y for i,y in enumerate(Ymax) if Ymax[i] != -1]+[1]
+Ymin = [0]+[y for i,y in enumerate(Ymin) if Ymin[i] != 2]+[1]
+
+plt.step(Xmax,Ymax,'r',label = 'Upper Bound',where = 'pre')
+plt.step(Xmin,Ymin,'b',label = 'Lower Bound',where = 'post')
+
+
+plt.step(fpr_t,s_t,'m', label = 'Not Predicting')
 plt.legend()
-# # tikzplotlib.save('../paper/figs/redwine_UQ_ROC.png')
-plt.savefig('figs/redwine_UQ_ROC.png')
-plt.savefig('../paper/figs/redwine_UQ_ROC.png')
 
+# tikzplotlib.save('../paper/figs/redwine_UQ_ROC.png')
+plt.savefig('figs/redwine_UC_ROC.png')
+plt.savefig('../paper/figs/redwine_UC_ROC.png')
+
+# plt.clf()
 
 with open('redwine-auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
-    print('LOWER BOUND: %.4f' %auc([x for i,x in enumerate(X) if Ymin[i] != 2],[y for i,y in enumerate(Ymin) if Ymin[i] != 2]), file = f)
-    print('UPPER BOUND: %.4f' %auc([x for i,x in enumerate(X) if Ymax[i] != 2],[y for i,y in enumerate(Ymax) if Ymax[i] != 2]), file = f)
+    # print('NO UNCERTAINTY: %.4f' %roc_auc_score(base.predict_proba(test_data)[:,1],test_results), file = f)
+    print('LOWER BOUND: %.4f' %auc(Ymin,Xmin), file = f)
+    print('UPPER BOUND: %.4f' %auc(Ymax,Xmax), file = f)
     print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
-    
-plt.clf()
 
-## PLOTS
 
-l = len(train_data.columns)
-colors = ['g' if d else 'r' for c,d in train_results.iteritems()]
-for i,c in enumerate(train_data.columns):
-    plt.subplot(4,3,i+1)
-    plt.scatter(train_data[c],train_results,marker = 'x',c=colors)
-    # plt.scatter(uq_data[j],uq_data[k],c='k')
-        
-plt.savefig('figs/redwine.png')
-plt.savefig('../paper/figs/redwine.png')
+######
+from mpl_toolkits import mplot3d
 
+fig = plt.figure()
+
+ax = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
+ax.set_xlabel('$1-t$')
+ax.set_ylabel('$s$')
+# ax.set_zlabel('$1-\sigma,1-\\tau$')
+
+
+s, fpr, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
+
+ax.plot3D(fpr,s,Tau,'g',label = '$1-\\tau$')
+ax.plot3D(fpr,s,Sigma,'r',label = '$1-\\sigma$')
+ax.plot3D(fpr,s,Nu,'k',label = '$1-\\nu$')
+
+
+ax.legend()
+
+plt.savefig('figs/redwine_ROC_3d.png')
+plt.savefig('../paper/figs/redwine_ROC_3d.png')

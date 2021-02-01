@@ -1,8 +1,10 @@
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+from mpl_toolkits import mplot3d
+
 from sklearn.linear_model import LogisticRegression
-from sklearn import metrics as skm
+from sklearn.metrics import roc_auc_score
 import itertools as it
 from tqdm import tqdm
 import pba
@@ -23,7 +25,7 @@ def generate_results(data):
 np.random.seed(10)
 
 # Params
-many = 25
+many = 50
 dim = 1
 few = 5
 some = 100
@@ -75,6 +77,7 @@ lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
 plt.xlabel('X')
 plt.ylabel('$\Pr(Y=1|X)$')
 plt.scatter(data,results,color='blue',zorder=10)
+# plt.scatter(test_data,test_results,color='green',zorder=10)
 plt.plot(lX,lY,color='k',zorder=10,lw=2)
 plt.savefig('../paper/figs/ex1.png')
 plt.savefig('figs/ex1.png')
@@ -99,7 +102,6 @@ plt.plot(lX,lYmin,color='red',lw=2)
 
 plt.savefig('../paper/figs/ex1_UC.png')
 plt.savefig('figs/ex1_UC.png')
-
 
 plt.clf()
 
@@ -148,8 +150,8 @@ with open('ex1-cm.out','w') as f:
 s,fpr = ROC(model = base, data = test_data, results = test_results)
 s_i, fpr_i, s_t, fpr_t = UQ_ROC(models = uq_models, data = test_data, results = test_results)
 
-plt.plot([0,1],[0,1],'k:',label = '$s = 1-t$')
-plt.plot([0,0,1],[0,1,1],'r:',label = '$s = 1-t$')
+# plt.plot([0,0,1],[0,1,1],'r:',label = 'Perfect Classifier')
+plt.plot([0,1],[0,1],'k:',label = 'Random Classifer')
 plt.xlabel('$1-t$')
 plt.ylabel('$s$')
 plt.step(fpr,s,'k', label = 'Base')
@@ -162,27 +164,56 @@ X = np.linspace(0,1,steps)
 Ymin = steps*[2]
 Ymax = steps*[-1]
 
-for i, x in enumerate(X):
+for i, x in tqdm(enumerate(X)):
     for k,j in zip(s_i,fpr_i):
-        plt.plot([j.Left,j.Left,j.Right,j.Right,j.Left],[k.Left,k.Right,k.Right,k.Left,k.Left],c= 'grey')
+
         if j.straddles(x,endpoints = True):
             Ymin[i] = min((Ymin[i],k.Left))
             Ymax[i] = max((Ymax[i],k.Right))
-            
-plt.step([x for i,x in enumerate(X) if Ymax[i] != -1],[y for i,y in enumerate(Ymax) if Ymax[i] != -1],'r',label = 'Upper Bound')
-plt.step([x for i,x in enumerate(X) if Ymin[i] != 2],[y for i,y in enumerate(Ymin) if Ymin[i] != 2],'b',label = 'Lower Bound')
 
-plt.step(fpr_t,s_t,'m', label = 'Dropped Values')
+Xmax = [0]+[x for i,x in enumerate(X) if Ymax[i] != -1]+[1]
+Xmin = [0]+[x for i,x in enumerate(X) if Ymin[i] != 2]+[1]
+Ymax = [0]+[y for i,y in enumerate(Ymax) if Ymax[i] != -1]+[1]
+Ymin = [0]+[y for i,y in enumerate(Ymin) if Ymin[i] != 2]+[1]
+
+plt.step(Xmax,Ymax,'r',label = 'Upper Bound',where = 'pre')
+plt.step(Xmin,Ymin,'b',label = 'Lower Bound',where = 'post')
+
+plt.step(fpr_t,s_t,'m', label = 'Not Predicting')
 plt.legend()
 
 # tikzplotlib.save('../paper/figs/ex1_UQ_ROC.png')
-plt.savefig('figs/ex1_UQ_ROC.png')
-plt.savefig('../paper/figs/ex1_UQ_ROC.png')
+plt.savefig('figs/ex1_UC_ROC.png')
+plt.savefig('../paper/figs/ex1_UC_ROC.png')
 
 # plt.clf()
 
 with open('ex1-auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
-    print('LOWER BOUND: %.4f' %auc([x for i,x in enumerate(X) if Ymin[i] != 2],[y for i,y in enumerate(Ymin) if Ymin[i] != 2]), file = f)
-    print('UPPER BOUND: %.4f' %auc([x for i,x in enumerate(X) if Ymax[i] != 2],[y for i,y in enumerate(Ymax) if Ymax[i] != 2]), file = f)
+    # print('NO UNCERTAINTY: %.4f' %roc_auc_score(base.predict_proba(test_data)[:,1],test_results), file = f)
+    print('LOWER BOUND: %.4f' %auc(Ymin,Xmin), file = f)
+    print('UPPER BOUND: %.4f' %auc(Ymax,Xmax), file = f)
     print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
+
+
+
+######
+
+fig = plt.figure()
+
+ax = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
+ax.set_xlabel('$1-t$')
+ax.set_ylabel('$s$')
+# ax.set_zlabel('$1-\sigma,1-\\tau$')
+
+
+s, fpr, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
+
+ax.plot3D(fpr,s,Tau,'g',label = '$1-\\tau$')
+ax.plot3D(fpr,s,Sigma,'r',label = '$1-\\sigma$')
+ax.plot3D(fpr,s,Nu,'k',label = '$1-\\nu$')
+
+ax.legend()
+
+plt.savefig('figs/ex1_ROC_3d.png')
+plt.savefig('../paper/figs/ex1_UC_ROC_3d.png')
