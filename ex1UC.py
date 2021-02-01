@@ -20,7 +20,7 @@ def generate_results(data):
 
 
 # set seed to ensure same data
-# np.random.seed(10)
+np.random.seed(10)
 
 # Params
 many = 25
@@ -29,7 +29,7 @@ few = 5
 some = 100
 
 # Generate data
-data = pd.DataFrame(30*np.random.rand(many,dim))
+data = pd.DataFrame(40*np.random.rand(many,dim))
 results = generate_results(data)
 
 # Generate uncertain points
@@ -146,30 +146,43 @@ with open('ex1-cm.out','w') as f:
 
 ### ROC CURVE
 s,fpr = ROC(model = base, data = test_data, results = test_results)
-s_lb, fpr_lb, s_ub, fpr_ub, s_t, fpr_t = UQ_ROC(models = uq_models, data = test_data, results = test_results)
+s_i, fpr_i, s_t, fpr_t = UQ_ROC(models = uq_models, data = test_data, results = test_results)
 
 plt.plot([0,1],[0,1],'k:',label = '$s = 1-t$')
 plt.plot([0,0,1],[0,1,1],'r:',label = '$s = 1-t$')
 plt.xlabel('$1-t$')
 plt.ylabel('$s$')
-plt.plot(fpr,s,'k', label = 'Dropped missing values')
+plt.step(fpr,s,'k', label = 'Base')
 plt.savefig('figs/ex1_ROC.png')
 plt.savefig('../paper/figs/ex1_ROC.png')
 
-# plt.step(fpr_lb,s_lb,'r', label = 'Lower bound')
-# plt.step(fpr_ub,s_ub,'b', label = 'Upper Bound')
-# plt.step(fpr_t,s_t,'m', label = 'Dropped Values')
-# plt.legend()
-# # print(len(fpr))
-# # tikzplotlib.save('../paper/figs/ex1_UQ_ROC.png')
-# plt.savefig('figs/ex1_UQ_ROC.png')
-# plt.savefig('../paper/figs/ex1_UQ_ROC.png')
 
+steps = 1001
+X = np.linspace(0,1,steps)
+Ymin = steps*[2]
+Ymax = steps*[-1]
+
+for i, x in enumerate(X):
+    for k,j in zip(s_i,fpr_i):
+        plt.plot([j.Left,j.Left,j.Right,j.Right,j.Left],[k.Left,k.Right,k.Right,k.Left,k.Left],c= 'grey')
+        if j.straddles(x,endpoints = True):
+            Ymin[i] = min((Ymin[i],k.Left))
+            Ymax[i] = max((Ymax[i],k.Right))
+            
+plt.step([x for i,x in enumerate(X) if Ymax[i] != -1],[y for i,y in enumerate(Ymax) if Ymax[i] != -1],'r',label = 'Upper Bound')
+plt.step([x for i,x in enumerate(X) if Ymin[i] != 2],[y for i,y in enumerate(Ymin) if Ymin[i] != 2],'b',label = 'Lower Bound')
+
+plt.step(fpr_t,s_t,'m', label = 'Dropped Values')
+plt.legend()
+
+# tikzplotlib.save('../paper/figs/ex1_UQ_ROC.png')
+plt.savefig('figs/ex1_UQ_ROC.png')
+plt.savefig('../paper/figs/ex1_UQ_ROC.png')
+
+# plt.clf()
 
 with open('ex1-auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
-    print('LOWER BOUND: %.4f' %auc(s_lb,fpr_lb), file = f)
-    print('UPPER BOUND: %.4f' %auc(s_ub,fpr_ub), file = f)
+    print('LOWER BOUND: %.4f' %auc([x for i,x in enumerate(X) if Ymin[i] != 2],[y for i,y in enumerate(Ymin) if Ymin[i] != 2]), file = f)
+    print('UPPER BOUND: %.4f' %auc([x for i,x in enumerate(X) if Ymax[i] != 2],[y for i,y in enumerate(Ymax) if Ymax[i] != 2]), file = f)
     print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
-    
-# plt.clf()

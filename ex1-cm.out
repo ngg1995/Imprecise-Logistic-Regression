@@ -1,13 +1,13 @@
-TP=53	FP=7
+TP=45	FP=3
+FN=13	TN=39
+Sensitivity = 0.776
+Specificity = 0.929
+TP=[43, 53]	FP=[1, 7]
+FN=[5, 15]	TN=[35, 41]
+Sensitivity = [0.741379, 0.913793]
+Specificity = [0.833333, 0.97619]
+TP=43	FP=1
 FN=5	TN=35
-Sensitivity = 0.914
-Specificity = 0.833
-TP=[48, 53]	FP=[4, 7]
-FN=[5, 10]	TN=[35, 38]
-Sensitivity = [0.827586, 0.913793]
-Specificity = [0.833333, 0.904762]
-TP=48	FP=4
-FN=5	TN=35
-NP(+)=5	NP(-)=3
-Sensitivity = 0.906
-Specificity = 0.897
+NP(+)=10	NP(-)=6
+Sensitivity = 0.896
+Specificity = 0.972

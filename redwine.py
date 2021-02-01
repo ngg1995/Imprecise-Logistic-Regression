@@ -88,41 +88,56 @@ with open('redwine-cm.out','w') as f:
 
 
 ## ROC CURVE
-# s,fpr = ROC(model = base, data = test_data, results = test_results)
-# s_lb, fpr_lb, s_ub, fpr_ub, s_t, fpr_t = UQ_ROC(models = uq_models, data = test_data, results = test_results)
 
-# plt.plot([0,1],[0,1],'k:',label = '$s = 1-t$')
-# plt.xlabel('$1-t$')
-# plt.ylabel('$s$')
-# plt.plot(fpr,s,'k', label = 'Dropped missing values')
-# plt.savefig('figs/redwine_ROC.png')
-# plt.savefig('../paper/figs/redwine_ROC.png')
+### ROC CURVE
+s,fpr = ROC(model = base, data = test_data, results = test_results)
+s_i, fpr_i, s_t, fpr_t = UQ_ROC(models = uq_models, data = test_data, results = test_results)
 
-# plt.plot(fpr_lb,s_lb,'r', label = 'Lower bound')
-# plt.plot(fpr_ub,s_ub,'b', label = 'Upper Bound')
-# plt.plot(fpr_t,s_t,'m', label = 'Dropped Values')
-# plt.legend()
-# # print(len(fpr))
+plt.plot([0,1],[0,1],'k:',label = '$s = 1-t$')
+plt.plot([0,0,1],[0,1,1],'r:',label = '$s = 1-t$')
+plt.xlabel('$1-t$')
+plt.ylabel('$s$')
+plt.step(fpr,s,'k', label = 'Base')
+plt.savefig('figs/ex1_ROC.png')
+plt.savefig('../paper/figs/ex1_ROC.png')
+
+
+steps = 1001
+X = np.linspace(0,1,steps)
+Ymin = steps*[2]
+Ymax = steps*[-1]
+
+for i, x in enumerate(X):
+    for k,j in zip(s_i,fpr_i):
+        if j.straddles(x,endpoints = True):
+            Ymin[i] = min((Ymin[i],k.Left))
+            Ymax[i] = max((Ymax[i],k.Right))
+            
+plt.step([x for i,x in enumerate(X) if Ymax[i] != -1],[y for i,y in enumerate(Ymax) if Ymax[i] != -1],'r',label = 'Upper Bound')
+plt.step([x for i,x in enumerate(X) if Ymin[i] != 2],[y for i,y in enumerate(Ymin) if Ymin[i] != 2],'b',label = 'Lower Bound')
+
+plt.step(fpr_t,s_t,'m', label = 'Dropped Values')
+plt.legend()
 # # tikzplotlib.save('../paper/figs/redwine_UQ_ROC.png')
-# plt.savefig('figs/redwine_UQ_ROC.png')
-# plt.savefig('../paper/figs/redwine_UQ_ROC.png')
+plt.savefig('figs/redwine_UQ_ROC.png')
+plt.savefig('../paper/figs/redwine_UQ_ROC.png')
 
 
-# with open('redwine-auc.out','w') as f:
-#     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
-#     print('LOWER BOUND: %.4f' %auc(s_lb,fpr_lb), file = f)
-#     print('UPPER BOUND: %.4f' %auc(s_ub,fpr_ub), file = f)
-#     print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
+with open('redwine-auc.out','w') as f:
+    print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
+    print('LOWER BOUND: %.4f' %auc([x for i,x in enumerate(X) if Ymin[i] != 2],[y for i,y in enumerate(Ymin) if Ymin[i] != 2]), file = f)
+    print('UPPER BOUND: %.4f' %auc([x for i,x in enumerate(X) if Ymax[i] != 2],[y for i,y in enumerate(Ymax) if Ymax[i] != 2]), file = f)
+    print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
     
-# plt.clf()
+plt.clf()
 
 ## PLOTS
 
 l = len(train_data.columns)
-# colors = ['g' if d else 'r' for c,d in train_results.iteritems()]
+colors = ['g' if d else 'r' for c,d in train_results.iteritems()]
 for i,c in enumerate(train_data.columns):
     plt.subplot(4,3,i+1)
-    plt.scatter(train_data[c],train_results,marker = 'x')
+    plt.scatter(train_data[c],train_results,marker = 'x',c=colors)
     # plt.scatter(uq_data[j],uq_data[k],c='k')
         
 plt.savefig('figs/redwine.png')

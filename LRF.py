@@ -62,7 +62,7 @@ def uc_logistic_regression(data,result,uncertain):
         
     return models
 
-def ROC(model = None, predictions = None, data = None, results = None, uq = False):
+def ROC(model = None, predictions = None, data = None, results = None, uq = False, drop = True):
     
     s = []
     fpr = []
@@ -77,36 +77,73 @@ def ROC(model = None, predictions = None, data = None, results = None, uq = Fals
         d = 0
 
         for prob, result in zip(predictions,results):
-            if uq:
+            if uq and not drop:
                 if (prob[0] >= p) and (prob[1] >= p):
                     x = 1
                 elif (prob[0] < p) and (prob[1] < p):
                     x = 0
                 else:
-                    continue                      
-            else:
-                x = prob >= p
-                
-            if x:
-                if result:
-                    # true positive
-                    a += 1
-                else:
-                    # false positive
-                    b+= 1
-            else: 
-                if result:
-                    # false negative
-                    c += 1
-                else:
-                    # true negative
-                    d += 1
+                    x = 0.5
                     
-        try:
-            s.append(a/(a+c))
-            fpr.append(b/(b+d))
-        except: 
-            pass
+                if x == 0.5:
+                    if result:
+                        a += pba.I(0,1)
+                        b += pba.I(0,1)
+                    else:
+                        c += pba.I(0,1)
+                        d += pba.I(0,1)
+                elif x:
+                    if result:
+                        # true positive
+                        a += 1
+                    else:
+                        # false positive
+                        b+= 1
+                else: 
+                    if result:
+                        # false negative
+                        c += 1
+                    else:
+                        # true negative
+                        d += 1
+                
+                        
+            else:
+                if uq and drop:
+                    if (prob[0] >= p) and (prob[1] >= p):
+                        x = 1
+                    elif (prob[0] < p) and (prob[1] < p):
+                        x = 0
+                    else:
+                        continue                 
+                else:
+                    x = prob >= p
+                    
+                if x:
+                    if result:
+                        # true positive
+                        a += 1
+                    else:
+                        # false positive
+                        b+= 1
+                else: 
+                    if result:
+                        # false negative
+                        c += 1
+                    else:
+                        # true negative
+                        d += 1
+                    
+        if a == 0:
+            s.append(0)
+        else:
+            s.append(1/(1+(c/a)))
+        
+        if b == 0:
+            fpr.append(0)
+        else:
+            fpr.append(1/(1+(d/b)))
+        
     return s, fpr
    
 def UQ_ROC(models, data, results):
@@ -114,21 +151,21 @@ def UQ_ROC(models, data, results):
     s = []
     fpr = []
     
-    predictions_lb = []
-    predictions_ub = []
+    predictions = []
     
     for d in tqdm(data.index):
         l = [m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1] for k,m in models.items()]
-        predictions_lb += [min(l)]
-        predictions_ub += [max(l)]
+        predictions.append((min(l),max(l)))
     
         
-    s_lb,fpr_lb = ROC(predictions = predictions_lb, data = data, results = results)
-    s_ub,fpr_ub = ROC(predictions = predictions_ub, data = data, results = results)
-    s_t,fpr_t = ROC(predictions = [(l,h) for l,h in zip(predictions_lb,predictions_ub)], data = data, results = results, uq = True)
-          
+    s_i,fpr_i = ROC(predictions = predictions, data = data, results = results, uq = True, drop = False)
+    s_t,fpr_t = ROC(predictions = predictions, data = data, results = results, uq = True, drop = True)
+    
+    s_i = [pba.I(i) for i in s_i]
+    fpr_i = [pba.I(i) for i in fpr_i]
+    
 
-    return s_lb, fpr_lb, s_ub, fpr_ub, s_t, fpr_t
+    return s_i, fpr_i, s_t, fpr_t
 
 
 def split_data(features, results, test_frac = 0.5, uq_frac = 0.05, seed=random.random()):
