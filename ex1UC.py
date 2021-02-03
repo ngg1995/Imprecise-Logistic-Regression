@@ -79,8 +79,8 @@ plt.ylabel('$\Pr(Y=1|X)$')
 plt.scatter(data,results,color='blue',zorder=10)
 # plt.scatter(test_data,test_results,color='green',zorder=10)
 plt.plot(lX,lY,color='k',zorder=10,lw=2)
-plt.savefig('../paper/figs/ex1.png')
-plt.savefig('figs/ex1.png')
+plt.savefig('../paper/figs/ex1.png',dpi = 600)
+plt.savefig('figs/ex1.png',dpi = 600)
 
 
 for x in uncertain[0]:
@@ -100,8 +100,8 @@ for n, model in uq_models.items():
 plt.plot(lX,lYmax,color='red',lw=2)
 plt.plot(lX,lYmin,color='red',lw=2)
 
-plt.savefig('../paper/figs/ex1_UC.png')
-plt.savefig('figs/ex1_UC.png')
+plt.savefig('../paper/figs/ex1_UC.png',dpi = 600)
+plt.savefig('figs/ex1_UC.png',dpi = 600)
 
 plt.clf()
 
@@ -155,8 +155,8 @@ plt.plot([0,1],[0,1],'k:',label = 'Random Classifer')
 plt.xlabel('$1-t$')
 plt.ylabel('$s$')
 plt.step(fpr,s,'k', label = 'Base')
-plt.savefig('figs/ex1_ROC.png')
-plt.savefig('../paper/figs/ex1_ROC.png')
+plt.savefig('figs/ex1_ROC.png',dpi = 600)
+plt.savefig('../paper/figs/ex1_ROC.png',dpi = 600)
 
 
 steps = 1001
@@ -164,35 +164,35 @@ X = np.linspace(0,1,steps)
 Ymin = steps*[2]
 Ymax = steps*[-1]
 
-for i, x in tqdm(enumerate(X)):
-    for k,j in zip(s_i,fpr_i):
+# for i, x in tqdm(enumerate(X)):
+#     for k,j in zip(s_i,fpr_i):
 
-        if j.straddles(x,endpoints = True):
-            Ymin[i] = min((Ymin[i],k.Left))
-            Ymax[i] = max((Ymax[i],k.Right))
+#         if j.straddles(x,endpoints = True):
+#             Ymin[i] = min((Ymin[i],k.Left))
+#             Ymax[i] = max((Ymax[i],k.Right))
 
-Xmax = [0]+[x for i,x in enumerate(X) if Ymax[i] != -1]+[1]
-Xmin = [0]+[x for i,x in enumerate(X) if Ymin[i] != 2]+[1]
-Ymax = [0]+[y for i,y in enumerate(Ymax) if Ymax[i] != -1]+[1]
-Ymin = [0]+[y for i,y in enumerate(Ymin) if Ymin[i] != 2]+[1]
+# Xmax = [0]+[x for i,x in enumerate(X) if Ymax[i] != -1]+[1]
+# Xmin = [0]+[x for i,x in enumerate(X) if Ymin[i] != 2]+[1]
+# Ymax = [0]+[y for i,y in enumerate(Ymax) if Ymax[i] != -1]+[1]
+# Ymin = [0]+[y for i,y in enumerate(Ymin) if Ymin[i] != 2]+[1]
 
-plt.step(Xmax,Ymax,'r',label = 'Upper Bound',where = 'pre')
-plt.step(Xmin,Ymin,'b',label = 'Lower Bound',where = 'post')
+# plt.step(Xmax,Ymax,'r',label = 'Upper Bound',where = 'pre')
+# plt.step(Xmin,Ymin,'b',label = 'Lower Bound',where = 'post')
 
 plt.step(fpr_t,s_t,'m', label = 'Not Predicting')
 plt.legend()
 
 # tikzplotlib.save('../paper/figs/ex1_UQ_ROC.png')
-plt.savefig('figs/ex1_UC_ROC.png')
-plt.savefig('../paper/figs/ex1_UC_ROC.png')
+plt.savefig('figs/ex1_UC_ROC.png',dpi = 600)
+plt.savefig('../paper/figs/ex1_UC_ROC.png',dpi = 600)
 
 # plt.clf()
 
 with open('ex1-auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
     # print('NO UNCERTAINTY: %.4f' %roc_auc_score(base.predict_proba(test_data)[:,1],test_results), file = f)
-    print('LOWER BOUND: %.4f' %auc(Ymin,Xmin), file = f)
-    print('UPPER BOUND: %.4f' %auc(Ymax,Xmax), file = f)
+    # print('LOWER BOUND: %.4f' %auc(Ymin,Xmin), file = f)
+    # print('UPPER BOUND: %.4f' %auc(Ymax,Xmax), file = f)
     print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
 
 
@@ -205,15 +205,15 @@ ax = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
 ax.set_xlabel('$1-t$')
 ax.set_ylabel('$s$')
 # ax.set_zlabel('$1-\sigma,1-\\tau$')
-
+ax.plot(fpr_t,s_t,'k',alpha = 0.5)
 
 s, fpr, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
 
-ax.plot3D(fpr,s,Tau,'g',label = '$1-\\tau$')
-ax.plot3D(fpr,s,Sigma,'r',label = '$1-\\sigma$')
-ax.plot3D(fpr,s,Nu,'k',label = '$1-\\nu$')
+ax.plot3D(fpr,s,Sigma,'r',label = '$\\sigma$')
+ax.plot3D(fpr,s,Tau,'g',label = '$\\tau$')
+# ax.plot3D(fpr,s,Nu,'k',label = '$1-\\nu$')
 
 ax.legend()
 
-plt.savefig('figs/ex1_ROC_3d.png')
-plt.savefig('../paper/figs/ex1_UC_ROC_3d.png')
+plt.savefig('figs/ex1_ROC3D.png',dpi = 600)
+plt.savefig('../paper/figs/ex1_UC_ROC3D.png',dpi = 600)
