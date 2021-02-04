@@ -2,12 +2,10 @@ TP=115	FP=265
 FN=50	TN=1057
 Sensitivity = 0.697
 Specificity = 0.800
-TP=[98, 138]	FP=[173, 428]
-FN=[27, 67]	TN=[894, 1149]
-Sensitivity = [0.593939, 0.836364]
-Specificity = [0.676248, 0.869138]
 TP=98	FP=173
 FN=27	TN=894
 NP(+)=40	NP(-)=255
 Sensitivity = 0.784
 Specificity = 0.838
+sigma = 0.242424
+tau = 0.192890

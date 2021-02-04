@@ -62,6 +62,94 @@ def uc_logistic_regression(data,result,uncertain):
         
     return models
 
+def find_threshold(model,column):
+    X = np.linspace(0,30,1000000)
+    for i,j in zip(X,model.predict(X.reshape(-1,1))):
+        if j:
+            return i
+
+def get_bounds(UQdata,results,column,binary = False):
+
+    data = pd.DataFrame({c: [(i.Left+i.Right)/2 if i.__class__.__name__ == 'Interval' else i for i in UQdata[c]] for c in UQdata.columns})
+    
+    bounds = {
+        'minimum': data.copy(),    
+        'maximum': data.copy()
+    }
+    
+
+    for i in UQdata.index:
+        if UQdata.loc[i,column].__class__.__name__ == "Interval":
+            bounds['minimum'].loc[i,column] = UQdata.loc[i,column].Left
+            # maximum
+            bounds['maximum'].loc[i,column] = UQdata.loc[i,column].Right
+    # print(bounds)
+    models = {}
+    # predict from bounds
+    for n, b in bounds.items():
+
+        models[n] = LogisticRegression().fit(b,results.to_numpy())
+        
+        print(column, models[n].intercept_,models[n].coef_)
+
+    # minThreshold = find_threshold(models['minimum'])
+    # maxThreshold = find_threshold(models['maximum'])
+
+    # bounds2 = {        
+    #     'minTs': data.copy(),
+    #     'maxTs': data.copy(),
+    #     'minTm': data.copy(),
+    #     'maxTm': data.copy()
+    #     }
+    
+    # for i in UQdata.index:
+    #     if UQdata.loc[i,column].__class__.__name__ == "Interval":
+    #         if abs(minThreshold - UQdata.loc[i,column].Left) > abs(minThreshold - UQdata.loc[i,column].Right):
+    #             bounds2['minTs'].loc[i,column] = UQdata.loc[i,column].Left
+    #         else:
+    #             bounds2['minTs'].loc[i,column] = UQdata.loc[i,column].Right
+
+    #         if abs(maxThreshold - UQdata.loc[i,column].Left) > abs(maxThreshold - UQdata.loc[i,column].Right):
+    #             bounds2['maxTs'].loc[i,column] = UQdata.loc[i,column].Left
+    #         else:
+    #             bounds2['maxTs'].loc[i,column] = UQdata.loc[i,column].Right
+
+    #         if UQdata.loc[i,column].straddles(maxThreshold):
+    #             bounds2['maxTm'].loc[i,column] = maxThreshold
+    #         elif abs(maxThreshold - UQdata.loc[i,column].Left) < abs(maxThreshold - UQdata.loc[i,column].Right):
+    #             bounds2['maxTm'].loc[i,column] = UQdata.loc[i,column].Left
+    #         else:
+    #             bounds2['maxTm'].loc[i,column] = UQdata.loc[i,column].Right
+
+    #         if UQdata.loc[i,column].straddles(minThreshold):
+    #             bounds2['minTm'].loc[i,column] = minThreshold
+    #         elif abs(minThreshold - UQdata.loc[i,column].Left) > abs(minThreshold - UQdata.loc[i,column].Right):
+    #             bounds2['minTm'].loc[i,column] = UQdata.loc[i,column].Left
+    #         else:
+    #             bounds2['minTm'].loc[i,column] = UQdata.loc[i,column].Right
+
+    # # predict from bounds
+    # for n, b in bounds2.items():
+    #     # d1 = np.array(b).reshape(-1,1)
+    #     model = LogisticRegression()
+    #     models[n] = model.fit(b,results.to_numpy())
+            
+    return {str(column)+'_'+k:i for k,i in models.items()}
+
+def int_logistic_regression(data,results):
+
+    models = {}
+    
+    for c in data.columns:
+        # check which columns have interval data
+        for i in data[c]:
+            if i.__class__.__name__ == 'Interval':
+                
+                models = {**models,**get_bounds(data,results,c)}
+                break
+            
+    return models
+
 def ROC(model = None, predictions = None, data = None, results = None, uq = False, drop = True):
     
     s = []
@@ -167,7 +255,6 @@ def UQ_ROC(models, data, results):
 
     return s_i, fpr_i, s_t, fpr_t
 
-
 def split_data(features, results, test_frac = 0.5, uq_frac = 0.05, seed=random.random()):
     
     i = list(features.index)
@@ -272,6 +359,7 @@ def UQ_ROC_alt(models, data, results):
 __all__ = [
     'generate_confusion_matrix',
     'uc_logistic_regression',
+    'int_logistic_regression',
     'ROC',
     'UQ_ROC',
     'split_data',

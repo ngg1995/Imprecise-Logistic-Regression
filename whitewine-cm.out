@@ -1,13 +1,11 @@
-TP=508	FP=537
-FN=502	TN=3189
-Sensitivity = 0.503
+TP=563	FP=673
+FN=443	TN=3057
+Sensitivity = 0.560
+Specificity = 0.820
+TP=482	FP=474
+FN=345	TN=2818
+NP(+)=179	NP(-)=438
+Sensitivity = 0.583
 Specificity = 0.856
-TP=[402, 617]	FP=[379, 803]
-FN=[393, 608]	TN=[2923, 3347]
-Sensitivity = [0.39802, 0.610891]
-Specificity = [0.784487, 0.898282]
-TP=402	FP=379
-FN=393	TN=2923
-NP(+)=215	NP(-)=424
-Sensitivity = 0.506
-Specificity = 0.885
+sigma = 0.177932
+tau = 0.117426

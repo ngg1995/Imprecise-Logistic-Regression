@@ -55,20 +55,20 @@ with open('redwine-cm.out','w') as f:
     print('Specificity = %.3f' %(d/(b+d)),file = f)
 
 
-    aa,bb,cc,dd = generate_confusion_matrix(test_results,predictions)
-    try:
-        ss = 1/(1+cc/aa)
-    except:
-        ss = None
-    try:    
-        tt = 1/(1+bb/dd)
-    except:
-        tt = None
-    print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aa,bb,cc,dd),file = f)
+    # aa,bb,cc,dd = generate_confusion_matrix(test_results,predictions)
+    # try:
+    #     ss = 1/(1+cc/aa)
+    # except:
+    #     ss = None
+    # try:    
+    #     tt = 1/(1+bb/dd)
+    # except:
+    #     tt = None
+    # print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aa,bb,cc,dd),file = f)
 
-    # Calculate sensitivity and specificity
-    print('Sensitivity = %s' %(ss),file = f)
-    print('Specificity = %s' %(tt),file = f)
+    # # Calculate sensitivity and specificity
+    # print('Sensitivity = %s' %(ss),file = f)
+    # print('Specificity = %s' %(tt),file = f)
 
     aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(test_results,predictions,throw = True)
     try:
@@ -85,6 +85,9 @@ with open('redwine-cm.out','w') as f:
     # Calculate sensitivity and specificity
     print('Sensitivity = %.3f' %(sss),file = f)
     print('Specificity = %.3f' %(ttt),file = f)
+    print('sigma = %3f' %(eee/(aaa+ccc+eee)),file = f)
+    print('tau = %3f' %(fff/(bbb+ddd+fff)),file = f)
+    
 
 
 ### ROC CURVE
@@ -98,37 +101,13 @@ plt.plot([0,1],[0,1],'k:',label = 'Random Classifer')
 plt.xlabel('$1-t$')
 plt.ylabel('$s$')
 plt.step(fpr,s,'k', label = 'Base')
-plt.savefig('figs/redwine_ROC.png',dpi = 600)
-plt.savefig('../paper/figs/redwine_ROC.png',dpi = 600)
-
-
-# steps = 1001
-# X = np.linspace(0,1,steps)
-# Ymin = steps*[2]
-# Ymax = steps*[-1]
-
-# for i, x in tqdm(enumerate(X)):
-#     for k,j in zip(s_i,fpr_i):
-
-#         if j.straddles(x,endpoints = True):
-#             Ymin[i] = min((Ymin[i],k.Left))
-#             Ymax[i] = max((Ymax[i],k.Right))
-
-# Xmax = [0]+[x for i,x in enumerate(X) if Ymax[i] != -1]+[1]
-# Xmin = [0]+[x for i,x in enumerate(X) if Ymin[i] != 2]+[1]
-# Ymax = [0]+[y for i,y in enumerate(Ymax) if Ymax[i] != -1]+[1]
-# Ymin = [0]+[y for i,y in enumerate(Ymin) if Ymin[i] != 2]+[1]
-
-# plt.step(Xmax,Ymax,'r',label = 'Upper Bound',where = 'pre')
-# plt.step(Xmin,Ymin,'b',label = 'Lower Bound',where = 'post')
-
 
 plt.step(fpr_t,s_t,'m', label = 'Not Predicting')
 plt.legend()
 
 # tikzplotlib.save('../paper/figs/redwine_UQ_ROC.png')
-plt.savefig('figs/redwine_UC_ROC.png',dpi = 600)
-plt.savefig('../paper/figs/redwine_UC_ROC.png',dpi = 600)
+plt.savefig('figs/redwine_ROC.png',dpi = 600)
+plt.savefig('../paper/figs/redwine_ROC.png',dpi = 600)
 
 # plt.clf()
 
@@ -153,9 +132,9 @@ ax.set_ylabel('$s$')
 
 
 ax.plot3D(fpr_t,s_t,Sigma,'r',label = '$\\sigma$')
-ax.plot3D(fpr_t,s_t,Tau,'g',label = '$\\tau$')
+ax.plot3D(fpr_t,s_t,Tau,'b',label = '$\\tau$')
 # ax.plot3D(fpr,s,Nu,'k',label = '$1-\\nu$')
-ax.plot(fpr_t,s_t,'k',alpha = 0.5)
+ax.plot(fpr_t,s_t,'m',alpha = 0.5)
 
 
 ax.legend()

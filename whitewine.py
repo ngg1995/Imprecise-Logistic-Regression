@@ -14,7 +14,7 @@ wine_data = pd.read_csv('winequality-white.csv',index_col = None)
 
 # Split the data into test/train factors and result and generate uncertain points
 random.seed(1111) # for reproducability
-uq_data_index = random.sample([i for i in wine_data[wine_data['quality'] == 6].index], k = 12)
+uq_data_index = random.sample([i for i in wine_data.index if wine_data.loc[i,'quality'] == 6 or wine_data.loc[i,'quality'] == 7], k = 12)
 train_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 6].index if i not in uq_data_index], k = 100) + random.sample([i for i in wine_data[wine_data['quality'] >= 7].index if i not in uq_data_index], k = 50)
 test_data_index = [i for i in wine_data.index if i not in uq_data_index and i not in train_data_index]
 
@@ -55,20 +55,20 @@ with open('whitewine-cm.out','w') as f:
     print('Specificity = %.3f' %(d/(b+d)),file = f)
 
 
-    aa,bb,cc,dd = generate_confusion_matrix(test_results,predictions)
-    try:
-        ss = 1/(1+cc/aa)
-    except:
-        ss = None
-    try:    
-        tt = 1/(1+bb/dd)
-    except:
-        tt = None
-    print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aa,bb,cc,dd),file = f)
+    # aa,bb,cc,dd = generate_confusion_matrix(test_results,predictions)
+    # try:
+    #     ss = 1/(1+cc/aa)
+    # except:
+    #     ss = None
+    # try:    
+    #     tt = 1/(1+bb/dd)
+    # except:
+    #     tt = None
+    # print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aa,bb,cc,dd),file = f)
 
-    # Calculate sensitivity and specificity
-    print('Sensitivity = %s' %(ss),file = f)
-    print('Specificity = %s' %(tt),file = f)
+    # # Calculate sensitivity and specificity
+    # print('Sensitivity = %s' %(ss),file = f)
+    # print('Specificity = %s' %(tt),file = f)
 
     aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(test_results,predictions,throw = True)
     try:
@@ -85,45 +85,59 @@ with open('whitewine-cm.out','w') as f:
     # Calculate sensitivity and specificity
     print('Sensitivity = %.3f' %(sss),file = f)
     print('Specificity = %.3f' %(ttt),file = f)
+    print('sigma = %3f' %(eee/(aaa+ccc+eee)),file = f)
+    print('tau = %3f' %(fff/(bbb+ddd+fff)),file = f)
+    
 
-## ROC CURVE
-fig0, ax0 = plt.subplots()
+
+### ROC CURVE
 s,fpr = ROC(model = base, data = test_data, results = test_results)
-s_lb, fpr_lb, s_ub, fpr_ub, s_t, fpr_t = UQ_ROC(models = uq_models, data = test_data, results = test_results)
+# s_i, fpr_i, s_t, fpr_t = UQ_ROC(models = uq_models, data = test_data, results = test_results)
+s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
 
-plt.plot([0,1],[0,1],'k:',label = '$s = 1-t$')
+
+# plt.plot([0,0,1],[0,1,1],'r:',label = 'Perfect Classifier')
+plt.plot([0,1],[0,1],'k:',label = 'Random Classifer')
 plt.xlabel('$1-t$')
 plt.ylabel('$s$')
-plt.plot(fpr,s,'k', label = 'Dropped missing values')
-plt.savefig('figs/whitewine_ROC.png')
-plt.savefig('../paper/figs/whitewine_ROC.png')
+plt.step(fpr,s,'k', label = 'Base')
 
-plt.plot(fpr_lb,s_lb,'r', label = 'Lower bound')
-plt.plot(fpr_ub,s_ub,'b', label = 'Upper Bound')
-plt.plot(fpr_t,s_t,'m', label = 'Dropped Values')
+plt.step(fpr_t,s_t,'m', label = 'Not Predicting')
 plt.legend()
-# print(len(fpr))
-# tikzplotlib.save('../paper/figs/whitewine_UQ_ROC.png')
-plt.savefig('figs/whitewine_UQ_ROC.png')
-plt.savefig('../paper/figs/whitewine_UQ_ROC.png')
 
+# tikzplotlib.save('../paper/figs/whitewine_UQ_ROC.png')
+plt.savefig('figs/whitewine_ROC.png',dpi = 600)
+plt.savefig('../paper/figs/whitewine_ROC.png',dpi = 600)
+
+# plt.clf()
 
 with open('whitewine-auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
-    print('LOWER BOUND: %.4f' %auc(s_lb,fpr_lb), file = f)
-    print('UPPER BOUND: %.4f' %auc(s_ub,fpr_ub), file = f)
+    # print('NO UNCERTAINTY: %.4f' %roc_auc_score(base.predict_proba(test_data)[:,1],test_results), file = f)
+    # print('LOWER BOUND: %.4f' %auc(Ymin,Xmin), file = f)
+    # print('UPPER BOUND: %.4f' %auc(Ymax,Xmax), file = f)
+    print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
 
 
-## PLOTS
-fig1, ax1 = plt.subplots()
-l = len(train_data.columns)
-colors = ['g' if d else 'r' for c,d in train_results.iteritems()]
-for i,(j,k) in enumerate(it.product(train_data.columns,repeat=2)):
-    if j != k:
-        plt.subplot(l,l,i+1)
-        plt.scatter(train_data[j],train_data[k],c=colors,marker = 'x')
-        # plt.scatter(uq_data[j],uq_data[k],c='k')
-        
-plt.savefig('figs/whitewine.png')
-plt.savefig('../paper/figs/whitewine.png')
+######
+from mpl_toolkits import mplot3d
 
+fig = plt.figure()
+
+ax = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
+ax.set_xlabel('$1-t$')
+ax.set_ylabel('$s$')
+# ax.set_zlabel('$1-\sigma,1-\\tau$')
+
+
+
+ax.plot3D(fpr_t,s_t,Sigma,'r',label = '$\\sigma$')
+ax.plot3D(fpr_t,s_t,Tau,'b',label = '$\\tau$')
+# ax.plot3D(fpr,s,Nu,'k',label = '$1-\\nu$')
+ax.plot(fpr_t,s_t,'m',alpha = 0.5)
+
+
+ax.legend()
+
+plt.savefig('figs/whitewine_ROC3D.png')
+plt.savefig('../paper/figs/whitewine_ROC3D.png')

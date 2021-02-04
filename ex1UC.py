@@ -150,7 +150,6 @@ with open('ex1-cm.out','w') as f:
 s,fpr = ROC(model = base, data = test_data, results = test_results)
 s_i, fpr_i, s_t, fpr_t = UQ_ROC(models = uq_models, data = test_data, results = test_results)
 
-# plt.plot([0,0,1],[0,1,1],'r:',label = 'Perfect Classifier')
 plt.plot([0,1],[0,1],'k:',label = 'Random Classifer')
 plt.xlabel('$1-t$')
 plt.ylabel('$s$')
@@ -163,21 +162,6 @@ steps = 1001
 X = np.linspace(0,1,steps)
 Ymin = steps*[2]
 Ymax = steps*[-1]
-
-# for i, x in tqdm(enumerate(X)):
-#     for k,j in zip(s_i,fpr_i):
-
-#         if j.straddles(x,endpoints = True):
-#             Ymin[i] = min((Ymin[i],k.Left))
-#             Ymax[i] = max((Ymax[i],k.Right))
-
-# Xmax = [0]+[x for i,x in enumerate(X) if Ymax[i] != -1]+[1]
-# Xmin = [0]+[x for i,x in enumerate(X) if Ymin[i] != 2]+[1]
-# Ymax = [0]+[y for i,y in enumerate(Ymax) if Ymax[i] != -1]+[1]
-# Ymin = [0]+[y for i,y in enumerate(Ymin) if Ymin[i] != 2]+[1]
-
-# plt.step(Xmax,Ymax,'r',label = 'Upper Bound',where = 'pre')
-# plt.step(Xmin,Ymin,'b',label = 'Lower Bound',where = 'post')
 
 plt.step(fpr_t,s_t,'m', label = 'Not Predicting')
 plt.legend()
@@ -205,12 +189,12 @@ ax = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
 ax.set_xlabel('$1-t$')
 ax.set_ylabel('$s$')
 # ax.set_zlabel('$1-\sigma,1-\\tau$')
-ax.plot(fpr_t,s_t,'k',alpha = 0.5)
+ax.plot(fpr_t,s_t,'m',alpha = 0.5)
 
 s, fpr, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
 
-ax.plot3D(fpr,s,Sigma,'r',label = '$\\sigma$')
-ax.plot3D(fpr,s,Tau,'g',label = '$\\tau$')
+ax.plot3D(fpr,s,Sigma,'b',label = '$\\sigma$')
+ax.plot3D(fpr,s,Tau,'r',label = '$\\tau$')
 # ax.plot3D(fpr,s,Nu,'k',label = '$1-\\nu$')
 
 ax.legend()
