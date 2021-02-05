@@ -52,7 +52,7 @@ def uc_logistic_regression(data,result,uncertain):
 
     models = {}
 
-    for N,i in tqdm(enumerate(it.product([0,1],repeat=len(uncertain))),total=2**len(uncertain)):
+    for N,i in tqdm(enumerate(it.product([0,1],repeat=len(uncertain))),total=2**len(uncertain),desc='UC Logistic Regression'):
 
         new_data = pd.concat((data,uncertain), ignore_index = True)
         new_result = pd.concat((result, pd.Series(i)), ignore_index = True)
@@ -62,21 +62,30 @@ def uc_logistic_regression(data,result,uncertain):
         
     return models
 
-def find_threshold(model,column):
-    X = np.linspace(0,30,1000000)
-    for i,j in zip(X,model.predict(X.reshape(-1,1))):
-        if j:
-            return i
+def find_threshold(model,data,column):
+    probs = model.predict_proba(data)[:,1]
+    
+    md = None
+    dist = np.inf
+       
+    for p,i in zip(probs,data[column]):
+
+        if abs(p-0.5) < dist:
+            md = i
+            dist = abs(p-0.5)
+
+    return md
 
 def get_bounds(UQdata,results,column,binary = False):
 
-    data = pd.DataFrame({c: [(i.Left+i.Right)/2 if i.__class__.__name__ == 'Interval' else i for i in UQdata[c]] for c in UQdata.columns})
+    data = pd.DataFrame({c: [(i.Left+i.Right)/2 if i.__class__.__name__ == 'Interval' else i for i in UQdata[c]] for c in UQdata.columns},index = UQdata.index) # assume midpoints everywhere else
     
     bounds = {
         'minimum': data.copy(),    
         'maximum': data.copy()
     }
-    
+    data.to_csv('f.txt')    
+    UQdata.to_csv('f2.txt')
 
     for i in UQdata.index:
         if UQdata.loc[i,column].__class__.__name__ == "Interval":
@@ -88,51 +97,50 @@ def get_bounds(UQdata,results,column,binary = False):
     # predict from bounds
     for n, b in bounds.items():
 
-        models[n] = LogisticRegression().fit(b,results.to_numpy())
-        
-        print(column, models[n].intercept_,models[n].coef_)
+        models[n] = LogisticRegression(max_iter = 1000).fit(b,results.to_numpy())
 
-    # minThreshold = find_threshold(models['minimum'])
-    # maxThreshold = find_threshold(models['maximum'])
+    minThreshold = find_threshold(models['minimum'],data,column)
+    maxThreshold = find_threshold(models['maximum'],data,column)
 
-    # bounds2 = {        
-    #     'minTs': data.copy(),
-    #     'maxTs': data.copy(),
-    #     'minTm': data.copy(),
-    #     'maxTm': data.copy()
-    #     }
+    bounds2 = {        
+        'minTs': data.copy(),
+        'maxTs': data.copy(),
+        'minTm': data.copy(),
+        'maxTm': data.copy()
+        }
     
-    # for i in UQdata.index:
-    #     if UQdata.loc[i,column].__class__.__name__ == "Interval":
-    #         if abs(minThreshold - UQdata.loc[i,column].Left) > abs(minThreshold - UQdata.loc[i,column].Right):
-    #             bounds2['minTs'].loc[i,column] = UQdata.loc[i,column].Left
-    #         else:
-    #             bounds2['minTs'].loc[i,column] = UQdata.loc[i,column].Right
+    for i, j in zip(UQdata.index,UQdata[column]):
+        if j.__class__.__name__ == "Interval":
+            if abs(minThreshold - j.Left) > abs(minThreshold - j.Right):
+                bounds2['minTs'].loc[i,column] = j.Left
+            else:
+                bounds2['minTs'].loc[i,column] = j.Right
 
-    #         if abs(maxThreshold - UQdata.loc[i,column].Left) > abs(maxThreshold - UQdata.loc[i,column].Right):
-    #             bounds2['maxTs'].loc[i,column] = UQdata.loc[i,column].Left
-    #         else:
-    #             bounds2['maxTs'].loc[i,column] = UQdata.loc[i,column].Right
+            if abs(maxThreshold - j.Left) > abs(maxThreshold - j.Right):
+                bounds2['maxTs'].loc[i,column] = j.Left
+            else:
+                bounds2['maxTs'].loc[i,column] = j.Right
 
-    #         if UQdata.loc[i,column].straddles(maxThreshold):
-    #             bounds2['maxTm'].loc[i,column] = maxThreshold
-    #         elif abs(maxThreshold - UQdata.loc[i,column].Left) < abs(maxThreshold - UQdata.loc[i,column].Right):
-    #             bounds2['maxTm'].loc[i,column] = UQdata.loc[i,column].Left
-    #         else:
-    #             bounds2['maxTm'].loc[i,column] = UQdata.loc[i,column].Right
+            if j.straddles(maxThreshold):
+                bounds2['maxTm'].loc[i,column] = maxThreshold
+            elif abs(maxThreshold - j.Left) < abs(maxThreshold - j.Right):
+                bounds2['maxTm'].loc[i,column] = j.Left
+            else:
+                bounds2['maxTm'].loc[i,column] = j.Right
 
-    #         if UQdata.loc[i,column].straddles(minThreshold):
-    #             bounds2['minTm'].loc[i,column] = minThreshold
-    #         elif abs(minThreshold - UQdata.loc[i,column].Left) > abs(minThreshold - UQdata.loc[i,column].Right):
-    #             bounds2['minTm'].loc[i,column] = UQdata.loc[i,column].Left
-    #         else:
-    #             bounds2['minTm'].loc[i,column] = UQdata.loc[i,column].Right
+            if j.straddles(minThreshold):
+                bounds2['minTm'].loc[i,column] = minThreshold
+            elif abs(minThreshold - j.Left) > abs(minThreshold - j.Right):
+                bounds2['minTm'].loc[i,column] = j.Left
+            else:
+                bounds2['minTm'].loc[i,column] = j.Right
 
-    # # predict from bounds
-    # for n, b in bounds2.items():
-    #     # d1 = np.array(b).reshape(-1,1)
-    #     model = LogisticRegression()
-    #     models[n] = model.fit(b,results.to_numpy())
+    # predict from bounds
+    for n, b in bounds2.items():
+        # d1 = np.array(b).reshape(-1,1)
+        model = LogisticRegression(max_iter = 1000)
+        models[n] = model.fit(b,results.to_numpy())
+
             
     return {str(column)+'_'+k:i for k,i in models.items()}
 
@@ -158,7 +166,7 @@ def ROC(model = None, predictions = None, data = None, results = None, uq = Fals
     if predictions is None:
         predictions = model.predict_proba(data)[:,1]
     
-    for p in tqdm(np.linspace(0,1,1001)):
+    for p in tqdm(np.linspace(0,1,1001),desc='ROC calcualtion'):
         a = 0
         b = 0
         c = 0
@@ -241,7 +249,7 @@ def UQ_ROC(models, data, results):
     
     predictions = []
     
-    for d in tqdm(data.index):
+    for d in data.index:
         l = [m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1] for k,m in models.items()]
         predictions.append((min(l),max(l)))
     
@@ -255,25 +263,6 @@ def UQ_ROC(models, data, results):
 
     return s_i, fpr_i, s_t, fpr_t
 
-def split_data(features, results, test_frac = 0.5, uq_frac = 0.05, seed=random.random()):
-    
-    i = list(features.index)
-    n = len(i)
-   
-    # get data indexes
-    test_data_index = random.sample(i, k = int(n*test_frac))
-    train_data_index = random.sample([f for f in i if f not in test_data_index], k = int((1-uq_frac) * (n-len(test_data_index))))
-    uq_data_index = [f for f in i if f not in test_data_index and f not in train_data_index]
-
-    test_data = features.loc[test_data_index]
-    train_data = features.loc[train_data_index]
-    uq_data = features.loc[uq_data_index]
-    print('%i test data\n%i training data\n%i uncertain data' %(len(test_data_index),len(train_data_index),len(uq_data_index)))
-    test_results = results.loc[test_data_index]
-    train_results = results.loc[train_data_index]
-  
-    
-    return test_data, test_results, train_data, train_results, uq_data
 
 def auc(s,fpr):
     
@@ -292,12 +281,12 @@ def UQ_ROC_alt(models, data, results):
     
     
     probabilities = []
-    for d in tqdm(data.index):
+    for d in data.index:
         l = [m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1] for k,m in models.items()]
         probabilities.append((min(l),max(l)))
     
     
-    for p in tqdm(np.linspace(0,1,1001)):
+    for p in tqdm(np.linspace(0,1,1001),desc = 'UQ_ROC_Calculation'):
         a = 0
         b = 0
         c = 0
@@ -355,6 +344,32 @@ def UQ_ROC_alt(models, data, results):
         
     return s, fpr, Sigma, Tau, Nu
    
+def check_int_MC(models,UQdata,results,many,test_data):
+    
+    int_probabilities = [pba.I(min(i),max(i)) for i in zip(*[m.predict_proba(test_data)[:,1] for m in models.values()])]
+    
+    ir = 0
+    oor = 0
+    
+    for i in tqdm(range(many),desc = 'Monte Carlo search'):
+        new_data = UQdata.copy()
+        for j in new_data.index:
+            for k in new_data.columns:
+                if new_data.loc[j,k].__class__.__name__ == 'Interval':
+                    new_data.loc[j,k] = new_data.loc[j,k].Left + random.random()*new_data.loc[j,k].width()
+        # print(new_data)
+        new_model = LogisticRegression(max_iter = 1000)
+        new_model.fit(new_data,results)
+        probabilities = new_model.predict_proba(test_data)[:,1]
+        for ip, p in zip(int_probabilities,probabilities):
+            # print(ip,p)
+            if ip.straddles(p,endpoints = True):
+                ir += 1
+            else:
+                oor += 1
+                
+    return ir, oor
+        
     
 __all__ = [
     'generate_confusion_matrix',
@@ -362,7 +377,7 @@ __all__ = [
     'int_logistic_regression',
     'ROC',
     'UQ_ROC',
-    'split_data',
     'auc',
-    'UQ_ROC_alt'
+    'UQ_ROC_alt',
+    'check_int_MC'
 ]

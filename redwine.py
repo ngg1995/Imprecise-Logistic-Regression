@@ -54,22 +54,6 @@ with open('redwine-cm.out','w') as f:
     print('Sensitivity = %.3f' %(a/(a+c)),file = f)
     print('Specificity = %.3f' %(d/(b+d)),file = f)
 
-
-    # aa,bb,cc,dd = generate_confusion_matrix(test_results,predictions)
-    # try:
-    #     ss = 1/(1+cc/aa)
-    # except:
-    #     ss = None
-    # try:    
-    #     tt = 1/(1+bb/dd)
-    # except:
-    #     tt = None
-    # print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aa,bb,cc,dd),file = f)
-
-    # # Calculate sensitivity and specificity
-    # print('Sensitivity = %s' %(ss),file = f)
-    # print('Specificity = %s' %(tt),file = f)
-
     aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(test_results,predictions,throw = True)
     try:
         sss = 1/(1+ccc/aaa)

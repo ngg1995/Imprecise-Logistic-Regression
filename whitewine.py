@@ -27,8 +27,9 @@ def intervalise(val,eps):
 def midpoints(data):
     for c in data.columns:
         for i in data.index:
-            if i.loc[i,c].__class__.__name__ == 'Interval':
-                i.loc[i,c] = 
+            if data.loc[i,c].__class__.__name__ == 'Interval':
+                data.loc[i,c] = data.loc[i,c].midpoint()
+    return data
     
 # Import the data
 wine_data = pd.read_csv('winequality-red.csv',index_col = None)
@@ -55,11 +56,11 @@ UQdata = pd.DataFrame({
     }, dtype = 'O')
 
 # Base model is midpoints
-
+MDdata = midpoints(UQdata)
 
 # Fit base model
 base = LogisticRegression(max_iter = 1000)
-base.fit(train_data.to_numpy(),train_results.to_numpy())
+base.fit(MDdata.to_numpy(),train_results.to_numpy())
 
 # Classify test data
 base_predict = base.predict(test_data)
@@ -69,8 +70,9 @@ uq_models = int_logistic_regression(UQdata,train_results)
 
 # Test estimated vs Monte Carlo
 ir, oor = check_int_MC(uq_models,UQdata,train_results,1000,test_data)
-with open('whitewine-MCtest.out','w') as f:
-    print('in bounds %i,%.3f\nout %i,%.3f'%(ir,(ir/(ir+oor)),oor,(oor/(ir+oor))),file = f)
+print(ir,oor)
+# with open('whitewine-MCtest.out','w') as f:
+#     print('in bounds %i,%.3f\nout %i,%.3f'%(ir,(ir/(ir+oor)),oor,(oor/(ir+oor))),file = f)
 
 # Classify test data
 test_predict = pd.DataFrame(columns = uq_models.keys())

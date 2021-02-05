@@ -1,0 +1,11 @@
+TP=548	FP=46
+FN=58	TN=348
+Sensitivity = 0.904
+Specificity = 0.883
+TP=515	FP=26
+FN=40	TN=333
+NP(+)=51	NP(-)=35
+Sensitivity = 0.928
+Specificity = 0.928
+sigma = 0.084158
+tau = 0.088832

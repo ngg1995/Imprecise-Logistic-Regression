@@ -1,13 +1,11 @@
-TP=22	FP=22
-FN=22	TN=72
-Sensitivity = 0.500
-Specificity = 0.766
-TP=[20, 25]	FP=[17, 25]
-FN=[19, 24]	TN=[69, 77]
-Sensitivity = [0.454545, 0.568182]
-Specificity = [0.734043, 0.819149]
-TP=20	FP=17
-FN=19	TN=69
-NP(+)=5	NP(-)=8
-Sensitivity = 0.513
-Specificity = 0.802
+TP=36	FP=18
+FN=42	TN=135
+Sensitivity = 0.462
+Specificity = 0.882
+TP=78	FP=153
+FN=0	TN=0
+NP(+)=0	NP(-)=0
+Sensitivity = 1.000
+Specificity = 0.000
+sigma = 0.000000
+tau = 0.000000
