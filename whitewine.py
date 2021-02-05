@@ -1,40 +1,78 @@
-import pandas as pd
 import numpy as np
-import random
+import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
 import itertools as it
 from tqdm import tqdm
 import pba
+import tikzplotlib
+import random
 
 from LRF import *
 
+def generate_results(data):
+
+    results = pd.Series(index = data.index, dtype = 'bool')
+    for row in data.index:
+
+        results[row] = sum(data.loc[row]) >= len(data.columns)*(15+5*np.random.randn())
+    
+    return results
+
+def intervalise(val,eps):
+    r = np.random.rand()
+    return pba.I(val - r*eps, val + (1-r)*eps)
+
+def midpoints(data):
+    for c in data.columns:
+        for i in data.index:
+            if i.loc[i,c].__class__.__name__ == 'Interval':
+                i.loc[i,c] = 
+    
 # Import the data
-wine_data = pd.read_csv('winequality-white.csv',index_col = None)
+wine_data = pd.read_csv('winequality-red.csv',index_col = None)
 
 # Split the data into test/train factors and result and generate uncertain points
 random.seed(1111) # for reproducability
-uq_data_index = random.sample([i for i in wine_data.index if wine_data.loc[i,'quality'] == 6 or wine_data.loc[i,'quality'] == 7], k = 12)
-train_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 6].index if i not in uq_data_index], k = 100) + random.sample([i for i in wine_data[wine_data['quality'] >= 7].index if i not in uq_data_index], k = 50)
-test_data_index = [i for i in wine_data.index if i not in uq_data_index and i not in train_data_index]
 
-uq_data = wine_data.loc[uq_data_index,[c for c in wine_data.columns if c != 'quality']]
+train_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 6].index], k = 50) + random.sample([i for i in wine_data[wine_data['quality'] >= 7].index ], k = 50)
+test_data_index = [i for i in wine_data.index if i not in train_data_index]
+
 test_data = wine_data.loc[test_data_index,[c for c in wine_data.columns if c != 'quality']]
 train_data = wine_data.loc[train_data_index,[c for c in wine_data.columns if c != 'quality']]
 
 test_results = wine_data.loc[test_data_index,'quality'] >= 7
 train_results = wine_data.loc[train_data_index,'quality'] >= 7
-print('prev = %.2f' %(sum(test_results)/len(wine_data)))
-# # Fit model
-base = LogisticRegression(max_iter=500)
-base.fit(train_data, train_results)
 
-# Make preictions from test data
+# Intervalise data
+eps = {"fixed acidity":0.5,"pH":0.1}
+np.random.seed(0)
+UQdata = pd.DataFrame({
+    **{"fixed acidity":[intervalise(train_data.loc[i,"fixed acidity"],eps["fixed acidity"]) for i in train_data.index],
+       "pH":[intervalise(train_data.loc[i,"pH"],eps["pH"]) for i in train_data.index]},
+    **{c:train_data[c] for c in train_data.columns if c != "fixed acidity"}
+    }, dtype = 'O')
+
+# Base model is midpoints
+
+
+# Fit base model
+base = LogisticRegression(max_iter = 1000)
+base.fit(train_data.to_numpy(),train_results.to_numpy())
+
+# Classify test data
 base_predict = base.predict(test_data)
 
-# Make prediction for uncertain data 
-uq_models = uc_logistic_regression(train_data, train_results, uq_data)
+## fit interval model
+uq_models = int_logistic_regression(UQdata,train_results)
 
+# Test estimated vs Monte Carlo
+ir, oor = check_int_MC(uq_models,UQdata,train_results,1000,test_data)
+with open('whitewine-MCtest.out','w') as f:
+    print('in bounds %i,%.3f\nout %i,%.3f'%(ir,(ir/(ir+oor)),oor,(oor/(ir+oor))),file = f)
+
+# Classify test data
 test_predict = pd.DataFrame(columns = uq_models.keys())
 
 for key, model in uq_models.items():
@@ -54,22 +92,6 @@ with open('whitewine-cm.out','w') as f:
     print('Sensitivity = %.3f' %(a/(a+c)),file = f)
     print('Specificity = %.3f' %(d/(b+d)),file = f)
 
-
-    # aa,bb,cc,dd = generate_confusion_matrix(test_results,predictions)
-    # try:
-    #     ss = 1/(1+cc/aa)
-    # except:
-    #     ss = None
-    # try:    
-    #     tt = 1/(1+bb/dd)
-    # except:
-    #     tt = None
-    # print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aa,bb,cc,dd),file = f)
-
-    # # Calculate sensitivity and specificity
-    # print('Sensitivity = %s' %(ss),file = f)
-    # print('Specificity = %s' %(tt),file = f)
-
     aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(test_results,predictions,throw = True)
     try:
         sss = 1/(1+ccc/aaa)
@@ -78,66 +100,57 @@ with open('whitewine-cm.out','w') as f:
     try:    
         ttt = 1/(1+bbb/ddd)
     except:
-        ttt = None
+        ttt = 0
+        print(ddd,bbb)
         
     print('TP=%i\tFP=%i\nFN=%i\tTN=%i\nNP(+)=%i\tNP(-)=%i' %(aaa,bbb,ccc,ddd,eee,fff),file = f)
-
+    
     # Calculate sensitivity and specificity
     print('Sensitivity = %.3f' %(sss),file = f)
     print('Specificity = %.3f' %(ttt),file = f)
     print('sigma = %3f' %(eee/(aaa+ccc+eee)),file = f)
     print('tau = %3f' %(fff/(bbb+ddd+fff)),file = f)
-    
-
 
 ### ROC CURVE
 s,fpr = ROC(model = base, data = test_data, results = test_results)
-# s_i, fpr_i, s_t, fpr_t = UQ_ROC(models = uq_models, data = test_data, results = test_results)
 s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
-
-
-# plt.plot([0,0,1],[0,1,1],'r:',label = 'Perfect Classifier')
-plt.plot([0,1],[0,1],'k:',label = 'Random Classifer')
+plt.step([0,1],[0,1],'k:',label = 'Random Classifer')
 plt.xlabel('$1-t$')
 plt.ylabel('$s$')
 plt.step(fpr,s,'k', label = 'Base')
 
+
+steps = 1001
+X = np.linspace(0,1,steps)
+Ymin = steps*[2]
+Ymax = steps*[-1]
+
 plt.step(fpr_t,s_t,'m', label = 'Not Predicting')
 plt.legend()
 
-# tikzplotlib.save('../paper/figs/whitewine_UQ_ROC.png')
 plt.savefig('figs/whitewine_ROC.png',dpi = 600)
 plt.savefig('../paper/figs/whitewine_ROC.png',dpi = 600)
 
-# plt.clf()
+plt.clf()
 
 with open('whitewine-auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
-    # print('NO UNCERTAINTY: %.4f' %roc_auc_score(base.predict_proba(test_data)[:,1],test_results), file = f)
-    # print('LOWER BOUND: %.4f' %auc(Ymin,Xmin), file = f)
-    # print('UPPER BOUND: %.4f' %auc(Ymax,Xmax), file = f)
     print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
 
-
 ######
-from mpl_toolkits import mplot3d
-
 fig = plt.figure()
 
 ax = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
 ax.set_xlabel('$1-t$')
 ax.set_ylabel('$s$')
 # ax.set_zlabel('$1-\sigma,1-\\tau$')
-
-
-
-ax.plot3D(fpr_t,s_t,Sigma,'r',label = '$\\sigma$')
-ax.plot3D(fpr_t,s_t,Tau,'b',label = '$\\tau$')
-# ax.plot3D(fpr,s,Nu,'k',label = '$1-\\nu$')
 ax.plot(fpr_t,s_t,'m',alpha = 0.5)
 
+ax.plot3D(fpr,s,Sigma,'b',label = '$\\sigma$')
+ax.plot3D(fpr,s,Tau,'r',label = '$\\tau$')
+# ax.plot3D(fpr,s,Nu,'k',label = '$1-\\nu$')
 
 ax.legend()
 
-plt.savefig('figs/whitewine_ROC3D.png')
-plt.savefig('../paper/figs/whitewine_ROC3D.png')
+plt.savefig('figs/whitewine_ROC3D.png',dpi = 600)
+plt.savefig('../paper/figs/whitewine_ROC3D.png',dpi = 600)
