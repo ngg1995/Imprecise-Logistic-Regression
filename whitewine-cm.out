@@ -1,7 +1,0 @@
-TP=142	FP=672
-FN=25	TN=660
-Sensitivity = 0.850
-Specificity = 0.495
-TP=0	FP=0
-FN=0	TN=0
-NP(+)=0	NP(-)=0

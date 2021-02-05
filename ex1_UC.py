@@ -107,7 +107,7 @@ plt.savefig('figs/ex1_UC.png',dpi = 600)
 plt.clf()
 
 ## Get confusion matrix
-with open('ex1_UC_cm.out','w') as f:
+with open('runinfo/ex1_UC_cm.out','w') as f:
     a,b,c,d = generate_confusion_matrix(test_results,base_predict)
     print('TP=%i\tFP=%i\nFN=%i\tTN=%i' %(a,b,c,d),file = f)
 
@@ -173,7 +173,7 @@ plt.savefig('../paper/figs/ex1_UC_ROC.png',dpi = 600)
 
 # plt.clf()
 
-with open('ex1_UC_auc.out','w') as f:
+with open('runinfo/ex1_UC_auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
     # print('NO UNCERTAINTY: %.4f' %roc_auc_score(base.predict_proba(test_data)[:,1],test_results), file = f)
     # print('LOWER BOUND: %.4f' %auc(Ymin,Xmin), file = f)

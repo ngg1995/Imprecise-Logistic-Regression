@@ -1,7 +1,7 @@
-TP=548	FP=46
-FN=58	TN=348
+TP=548	FP=44
+FN=58	TN=350
 Sensitivity = 0.904
-Specificity = 0.883
+Specificity = 0.888
 TP=515	FP=26
 FN=40	TN=333
 NP(+)=51	NP(-)=35

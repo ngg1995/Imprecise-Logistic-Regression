@@ -46,7 +46,7 @@ for i in test_predict.index:
 
 
 ## Get confusion matrix
-with open('redwine-cm.out','w') as f:
+with open('runinfo/redwine-cm.out','w') as f:
     a,b,c,d = generate_confusion_matrix(test_results,base_predict)
     print('TP=%i\tFP=%i\nFN=%i\tTN=%i' %(a,b,c,d),file = f)
 
@@ -95,7 +95,7 @@ plt.savefig('../paper/figs/redwine_ROC.png',dpi = 600)
 
 # plt.clf()
 
-with open('redwine-auc.out','w') as f:
+with open('runinfo/redwine-auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
     # print('NO UNCERTAINTY: %.4f' %roc_auc_score(base.predict_proba(test_data)[:,1],test_results), file = f)
     # print('LOWER BOUND: %.4f' %auc(Ymin,Xmin), file = f)

@@ -25,16 +25,19 @@ def intervalise(val,eps):
     return pba.I(val - r*eps, val + (1-r)*eps)
 
 def midpoints(data):
+    n_data = data.copy()
     for c in data.columns:
         for i in data.index:
             if data.loc[i,c].__class__.__name__ == 'Interval':
-                data.loc[i,c] = data.loc[i,c].midpoint()
-    return data
+                n_data.loc[i,c] = data.loc[i,c].midpoint()
+            
+    return n_data
+
     
 # Import the data
 wine_data = pd.read_csv('winequality-red.csv',index_col = None)
 
-# Split the data into test/train factors and result and generate uncertain points
+# Split the data into test/train factors and result
 random.seed(1111) # for reproducability
 
 train_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 6].index], k = 50) + random.sample([i for i in wine_data[wine_data['quality'] >= 7].index ], k = 50)
@@ -47,7 +50,7 @@ test_results = wine_data.loc[test_data_index,'quality'] >= 7
 train_results = wine_data.loc[train_data_index,'quality'] >= 7
 
 # Intervalise data
-eps = {"fixed acidity":0.5,"pH":0.1}
+eps = {"fixed acidity":0.1,"pH":0.1}
 np.random.seed(0)
 UQdata = pd.DataFrame({
     **{"fixed acidity":[intervalise(train_data.loc[i,"fixed acidity"],eps["fixed acidity"]) for i in train_data.index],
@@ -65,14 +68,18 @@ base.fit(MDdata.to_numpy(),train_results.to_numpy())
 # Classify test data
 base_predict = base.predict(test_data)
 
+# True model 
+no_uq_model = LogisticRegression(max_iter = 1000)
+no_uq_model.fit(train_data,train_results)
+no_uq_predict = no_uq_model.predict(test_data)
+
 ## fit interval model
 uq_models = int_logistic_regression(UQdata,train_results)
 
 # Test estimated vs Monte Carlo
 ir, oor = check_int_MC(uq_models,UQdata,train_results,1000,test_data)
-print(ir,oor)
-# with open('whitewine-MCtest.out','w') as f:
-#     print('in bounds %i,%.3f\nout %i,%.3f'%(ir,(ir/(ir+oor)),oor,(oor/(ir+oor))),file = f)
+with open('runinfo/whitewine-MCtest.out','w') as f:
+    print('in bounds %i,%.3f\nout %i,%.3f'%(ir,(ir/(ir+oor)),oor,(oor/(ir+oor))),file = f)
 
 # Classify test data
 test_predict = pd.DataFrame(columns = uq_models.keys())
@@ -86,8 +93,8 @@ for i in test_predict.index:
 
 
 ## Get confusion matrix
-with open('whitewine-cm.out','w') as f:
-    a,b,c,d = generate_confusion_matrix(test_results,base_predict)
+with open('runinfo/whitewine-cm.out','w') as f:
+    a,b,c,d = generate_confusion_matrix(test_results,no_uq_predict)
     print('TP=%i\tFP=%i\nFN=%i\tTN=%i' %(a,b,c,d),file = f)
 
     # Calculate sensitivity and specificity
@@ -114,12 +121,14 @@ with open('whitewine-cm.out','w') as f:
     print('tau = %3f' %(fff/(bbb+ddd+fff)),file = f)
 
 ### ROC CURVE
-s,fpr = ROC(model = base, data = test_data, results = test_results)
+s_b,fpr_b = ROC(model = base, data = test_data, results = test_results)
+s,fpr = ROC(model = no_uq_model, data = test_data, results = test_results)
 s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
-plt.step([0,1],[0,1],'k:',label = 'Random Classifer')
+plt.plot([0,1],[0,1],'k:',label = 'Random Classifer')
 plt.xlabel('$1-t$')
 plt.ylabel('$s$')
-plt.step(fpr,s,'k', label = 'Base')
+plt.step(fpr_b,s_b,'k', label = 'Base')
+plt.step(fpr,s,'g', label = 'True Data')
 
 
 steps = 1001
@@ -135,7 +144,7 @@ plt.savefig('../paper/figs/whitewine_ROC.png',dpi = 600)
 
 plt.clf()
 
-with open('whitewine-auc.out','w') as f:
+with open('runinfo/whitewine-auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
     print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
 

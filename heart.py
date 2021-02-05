@@ -51,7 +51,7 @@ uq_models = int_logistic_regression(UQdata,train_results)
 
 ## Test estimated vs Monte Carlo
 # ir, oor = check_int_MC(uq_models,UQdata,train_results,1000,test_data)
-# with open('heart-MCtest.out','w') as f:
+# with open('runinfo/heart-MCtest.out','w') as f:
 #     print('in bounds %i,%.3f\nout %i,%.3f'%(ir,(ir/(ir+oor)),oor,(oor/(ir+oor))),file = f)
 
 # Classify test data
@@ -66,7 +66,7 @@ for i in test_predict.index:
 
 
 ## Get confusion matrix
-with open('heart-cm.out','w') as f:
+with open('runinfo/heart-cm.out','w') as f:
     a,b,c,d = generate_confusion_matrix(test_results,base_predict)
     print('TP=%i\tFP=%i\nFN=%i\tTN=%i' %(a,b,c,d),file = f)
 
@@ -115,7 +115,7 @@ plt.savefig('../paper/figs/heart_ROC.png',dpi = 600)
 
 plt.clf()
 
-with open('heart-auc.out','w') as f:
+with open('runinfo/heart-auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
     print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
 

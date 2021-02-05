@@ -6,6 +6,16 @@ from tqdm import tqdm
 import pba
 import random
 
+def midpoints(data):
+    n_data = data.copy()
+    for c in data.columns:
+        for i in data.index:
+            if data.loc[i,c].__class__.__name__ == 'Interval':
+                n_data.loc[i,c] = data.loc[i,c].midpoint()
+            
+    return n_data
+
+
 def generate_confusion_matrix(results,predictions,throw = False):
 
     a = 0
@@ -78,14 +88,13 @@ def find_threshold(model,data,column):
 
 def get_bounds(UQdata,results,column,binary = False):
 
-    data = pd.DataFrame({c: [(i.Left+i.Right)/2 if i.__class__.__name__ == 'Interval' else i for i in UQdata[c]] for c in UQdata.columns},index = UQdata.index) # assume midpoints everywhere else
+    data = pd.DataFrame({c: [i.midpoint() if i.__class__.__name__ == 'Interval' else i for i in UQdata[c]] for c in UQdata.columns},index = UQdata.index) # assume midpoints everywhere else
     
     bounds = {
         'minimum': data.copy(),    
         'maximum': data.copy()
     }
-    data.to_csv('f.txt')    
-    UQdata.to_csv('f2.txt')
+
 
     for i in UQdata.index:
         if UQdata.loc[i,column].__class__.__name__ == "Interval":

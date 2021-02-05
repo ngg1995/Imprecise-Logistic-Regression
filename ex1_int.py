@@ -23,11 +23,13 @@ def intervalise(val,eps):
     return pba.I(val - r*eps, val + (1-r)*eps)
 
 def midpoints(data):
+    n_data = data.copy()
     for c in data.columns:
         for i in data.index:
             if data.loc[i,c].__class__.__name__ == 'Interval':
-                data.loc[i,c] = data.loc[i,c].midpoint()
-    return data
+                n_data.loc[i,c] = data.loc[i,c].midpoint()
+            
+    return n_data
 
 # set seed to ensure same data
 np.random.seed(10)
@@ -58,7 +60,7 @@ MDdata = midpoints(UQdata)
 
 # Fit base model
 base = LogisticRegression(max_iter = 1000)
-base.fit(MDdata.to_numpy(),train_results.to_numpy())
+base.fit(MDdata.to_numpy(),results.to_numpy())
 
 # Classify test data
 base_predict = base.predict(test_data)
@@ -68,7 +70,7 @@ uq_models = int_logistic_regression(UQdata,results)
 
 ## Test estimated vs Monte Carlo
 ir, oor = check_int_MC(uq_models,UQdata,results,1000,test_data)
-with open('ex1_int_MCtest.out','w') as f:
+with open('runinfo/ex1_int_MCtest.out','w') as f:
     print('in bounds %i,%.3f\nout %i,%.3f'%(ir,(ir/(ir+oor)),oor,(oor/(ir+oor))),file = f)
 
 # Classify test data
@@ -115,7 +117,7 @@ plt.savefig('figs/ex1_int.png',dpi = 600)
 plt.clf()
 
 ## Get confusion matrix
-with open('ex1_int_cm.out','w') as f:
+with open('runinfo/ex1_int_cm.out','w') as f:
     a,b,c,d = generate_confusion_matrix(test_results,base_predict)
     print('TP=%i\tFP=%i\nFN=%i\tTN=%i' %(a,b,c,d),file = f)
 
@@ -163,7 +165,7 @@ plt.savefig('../paper/figs/ex1_int_ROC.png',dpi = 600)
 
 plt.clf()
 
-with open('ex1_int_auc.out','w') as f:
+with open('runinfo/ex1_int_auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
     print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
 
