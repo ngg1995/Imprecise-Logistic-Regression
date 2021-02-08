@@ -54,15 +54,18 @@ np.random.seed(111)
 test_data = pd.DataFrame(40*np.random.rand(some,dim))
 test_results = generate_results(test_data)
 
+# Fit true model
+truth = LogisticRegression(max_iter = 1000)
+truth.fit(data.to_numpy(),results.to_numpy())
+
 # Fit base model
 # Base model is midpoints
 MDdata = midpoints(UQdata)
-
-# Fit base model
 base = LogisticRegression(max_iter = 1000)
 base.fit(MDdata.to_numpy(),results.to_numpy())
 
 # Classify test data
+truth_predict = truth.predict(test_data)
 base_predict = base.predict(test_data)
 
 ## fit interval model
@@ -95,9 +98,6 @@ for u,r in zip(UQdata[0],results.to_list()):
     plt.plot([u.Left,u.Right],[r,r], marker='|')
 plt.plot(lX,lY,color='k',zorder=10,lw=2)
 
-# plt.savefig('../paper/figs/ex1.png',dpi = 600)
-# plt.savefig('figs/ex1.png',dpi = 600)
-
 lYmin = np.ones(300)
 lYmax = np.zeros(300)
 
@@ -118,13 +118,22 @@ plt.clf()
 
 ## Get confusion matrix
 with open('runinfo/ex1_int_cm.out','w') as f:
+    
+    print('~~~~TRUE MODEL~~~~', file = f)
+    a,b,c,d = generate_confusion_matrix(test_results,truth_predict)
+    print('TP=%i\tFP=%i\nFN=%i\tTN=%i' %(a,b,c,d),file = f)
+    # Calculate sensitivity and specificity
+    print('Sensitivity = %.3f' %(a/(a+c)),file = f)
+    print('Specificity = %.3f' %(d/(b+d)),file = f)
+    
+    print('~~~~BASE MODEL~~~~', file = f)
     a,b,c,d = generate_confusion_matrix(test_results,base_predict)
     print('TP=%i\tFP=%i\nFN=%i\tTN=%i' %(a,b,c,d),file = f)
-
     # Calculate sensitivity and specificity
     print('Sensitivity = %.3f' %(a/(a+c)),file = f)
     print('Specificity = %.3f' %(d/(b+d)),file = f)
 
+    print('~~~~UQ MODEL~~~~', file = f)
     aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(test_results,predictions,throw = True)
     try:
         sss = 1/(1+ccc/aaa)

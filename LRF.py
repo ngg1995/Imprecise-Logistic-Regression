@@ -153,18 +153,29 @@ def get_bounds(UQdata,results,column,binary = False):
             
     return {str(column)+'_'+k:i for k,i in models.items()}
 
-def int_logistic_regression(data,results):
+def int_logistic_regression(UQdata,results):
 
-    models = {}
+    uq_col = []
     
-    for c in data.columns:
+    for c in UQdata.columns:
         # check which columns have interval data
-        for i in data[c]:
+        for i in UQdata[c]:
             if i.__class__.__name__ == 'Interval':
-                
-                models = {**models,**get_bounds(data,results,c)}
+                uq_col.append(c)
                 break
-            
+    
+    data = {'lower':pd.DataFrame({
+                **{c:[i.Left for i in UQdata[c]] for c in uq_col},
+                **{c:UQdata[c] for c in UQdata.columns if c not in uq_col}
+                }, index = UQdata.index),
+            'upper':pd.DataFrame({
+                **{c:[i.Right for i in UQdata[c]] for c in uq_col},
+                **{c:UQdata[c] for c in UQdata.columns if c not in uq_col}
+                }, index = UQdata.index)
+            }
+
+    models = {k:LogisticRegression(max_iter = 1000).fit(d,results) for k,d in data.items()}
+        
     return models
 
 def ROC(model = None, predictions = None, data = None, results = None, uq = False, drop = True):
