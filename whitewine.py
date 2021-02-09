@@ -50,12 +50,11 @@ test_results = wine_data.loc[test_data_index,'quality'] >= 7
 train_results = wine_data.loc[train_data_index,'quality'] >= 7
 
 # Intervalise data
-eps = {"fixed acidity":0.1,"pH":0.1}
+eps = {"fixed acidity":0.1,"pH":0.1,"alcohol":0.2}
 np.random.seed(0)
 UQdata = pd.DataFrame({
-    **{"fixed acidity":[intervalise(train_data.loc[i,"fixed acidity"],eps["fixed acidity"]) for i in train_data.index],
-       "pH":[intervalise(train_data.loc[i,"pH"],eps["pH"]) for i in train_data.index]},
-    **{c:train_data[c] for c in train_data.columns if c != "fixed acidity"}
+    **{k:[intervalise(train_data.loc[i,k],eps[k]) for i in train_data.index] for k, e in eps.items()},
+    **{c:train_data[c] for c in train_data.columns if c not in eps.keys()}
     }, dtype = 'O')
 
 # Base model is midpoints
@@ -93,30 +92,38 @@ for i in test_predict.index:
 
 
 ## Get confusion matrix
-with open('runinfo/whitewine-cm.out','w') as f:
-    a,b,c,d = generate_confusion_matrix(test_results,no_uq_predict)
-    print('TP=%i\tFP=%i\nFN=%i\tTN=%i' %(a,b,c,d),file = f)
 
+## Get confusion matrix
+with open('runinfo/whitewine_cm.out','w') as f:
+    
+    print('~~~~TRUE MODEL~~~~', file = f)
+    a,b,c,d = generate_confusion_matrix(test_results,truth_predict)
+    print('TP=%i\tFP=%i\nFN=%i\tTN=%i' %(a,b,c,d),file = f)
+    # Calculate sensitivity and specificity
+    print('Sensitivity = %.3f' %(a/(a+c)),file = f)
+    print('Specificity = %.3f' %(d/(b+d)),file = f)
+    
+    print('~~~~BASE MODEL~~~~', file = f)
+    a,b,c,d = generate_confusion_matrix(test_results,base_predict)
+    print('TP=%i\tFP=%i\nFN=%i\tTN=%i' %(a,b,c,d),file = f)
     # Calculate sensitivity and specificity
     print('Sensitivity = %.3f' %(a/(a+c)),file = f)
     print('Specificity = %.3f' %(d/(b+d)),file = f)
 
+    print('~~~~UQ MODEL~~~~', file = f)
     aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(test_results,predictions,throw = True)
+    print('TP=%i\tFP=%i\nFN=%i\tTN=%i\nNP(+)=%i\tNP(-)=%i' %(aaa,bbb,ccc,ddd,eee,fff),file = f)
     try:
         sss = 1/(1+ccc/aaa)
+        print('Sensitivity = %.3f' %(sss),file = f) 
     except:
-        sss = None
+        pass
     try:    
         ttt = 1/(1+bbb/ddd)
+        print('Specificity = %.3f' %(ttt),file = f)
     except:
-        ttt = 0
-        print(ddd,bbb)
-        
-    print('TP=%i\tFP=%i\nFN=%i\tTN=%i\nNP(+)=%i\tNP(-)=%i' %(aaa,bbb,ccc,ddd,eee,fff),file = f)
-    
-    # Calculate sensitivity and specificity
-    print('Sensitivity = %.3f' %(sss),file = f)
-    print('Specificity = %.3f' %(ttt),file = f)
+        pass
+
     print('sigma = %3f' %(eee/(aaa+ccc+eee)),file = f)
     print('tau = %3f' %(fff/(bbb+ddd+fff)),file = f)
 

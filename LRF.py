@@ -5,6 +5,7 @@ import itertools as it
 from tqdm import tqdm
 import pba
 import random
+from scipy.optimize import root
 
 def midpoints(data):
     n_data = data.copy()
@@ -72,89 +73,94 @@ def uc_logistic_regression(data,result,uncertain):
         
     return models
 
-def find_threshold(model,data,column):
-    probs = model.predict_proba(data)[:,1]
+        
+def find_zero_point(X, B0, B, uq_cols):
+
+    def F(B0,B,X):
+        f = float(B0)
+        for b,x in zip(B[0],X):
+            f += float(b*x)
+        return f
     
-    md = None
-    dist = np.inf
-       
-    for p,i in zip(probs,data[column]):
-
-        if abs(p-0.5) < dist:
-            md = i
-            dist = abs(p-0.5)
-
-    return md
-
-def get_bounds(UQdata,results,column,binary = False):
-
-    data = pd.DataFrame({c: [i.midpoint() if i.__class__.__name__ == 'Interval' else i for i in UQdata[c]] for c in UQdata.columns},index = UQdata.index) # assume midpoints everywhere else
+    zero_point = X.copy()
     
-    bounds = {
-        'minimum': data.copy(),    
-        'maximum': data.copy()
-    }
+    d = 0.0001
+    found = False
+    m = np.inf
+    zm = None
+    space = [np.linspace(X[c].Left,X[c].Right,100) for c in uq_cols]
+    
+    for n in it.product(*space):
 
+        for i,c in zip(n,uq_cols):
+            zero_point[c] = i
+        f = F(B0,B,zero_point)
+        if  abs(f) < d:
+            found = True
+            break
+        elif abs(f) < m:
+            m = abs(f)
+            zm = zero_point.copy()
+        
+    if not found:
+        print('X',m,zm)
+        return zm
+    else:
+        return zero_point
+    
+    
+def find_thresholds(B0,B,UQdata,uq_cols):
+
+    def F(B0,B,X):
+        f = float(B0)
+        for b,x in zip(B[0],X):
+            f += float(b*x)
+        return f
+
+    left = lambda x: x.Left
+    right = lambda x: x.Right
+    
+    dataMin = UQdata.copy()
+    dataMax = UQdata.copy()
+    
+    # need to find the min/max spread around these points
 
     for i in UQdata.index:
-        if UQdata.loc[i,column].__class__.__name__ == "Interval":
-            bounds['minimum'].loc[i,column] = UQdata.loc[i,column].Left
-            # maximum
-            bounds['maximum'].loc[i,column] = UQdata.loc[i,column].Right
-    # print(bounds)
-    models = {}
-    # predict from bounds
-    for n, b in bounds.items():
-
-        models[n] = LogisticRegression(max_iter = 1000).fit(b,results.to_numpy())
-
-    minThreshold = find_threshold(models['minimum'],data,column)
-    maxThreshold = find_threshold(models['maximum'],data,column)
-
-    bounds2 = {        
-        'minTs': data.copy(),
-        'maxTs': data.copy(),
-        'minTm': data.copy(),
-        'maxTm': data.copy()
-        }
-    
-    for i, j in zip(UQdata.index,UQdata[column]):
-        if j.__class__.__name__ == "Interval":
-            if abs(minThreshold - j.Left) > abs(minThreshold - j.Right):
-                bounds2['minTs'].loc[i,column] = j.Left
-            else:
-                bounds2['minTs'].loc[i,column] = j.Right
-
-            if abs(maxThreshold - j.Left) > abs(maxThreshold - j.Right):
-                bounds2['maxTs'].loc[i,column] = j.Left
-            else:
-                bounds2['maxTs'].loc[i,column] = j.Right
-
-            if j.straddles(maxThreshold):
-                bounds2['maxTm'].loc[i,column] = maxThreshold
-            elif abs(maxThreshold - j.Left) < abs(maxThreshold - j.Right):
-                bounds2['maxTm'].loc[i,column] = j.Left
-            else:
-                bounds2['maxTm'].loc[i,column] = j.Right
-
-            if j.straddles(minThreshold):
-                bounds2['minTm'].loc[i,column] = minThreshold
-            elif abs(minThreshold - j.Left) > abs(minThreshold - j.Right):
-                bounds2['minTm'].loc[i,column] = j.Left
-            else:
-                bounds2['minTm'].loc[i,column] = j.Right
-
-    # predict from bounds
-    for n, b in bounds2.items():
-        # d1 = np.array(b).reshape(-1,1)
-        model = LogisticRegression(max_iter = 1000)
-        models[n] = model.fit(b,results.to_numpy())
-
+        Xmin = None
+        Xmax = None
+        Dmin = np.inf
+        Dmax = 0
+        for G in it.product((left,right),repeat = len(uq_cols)):
+            X = UQdata.loc[i].copy()
             
-    return {str(column)+'_'+k:i for k,i in models.items()}
+            for g, c in zip(G,uq_cols):
+                X[c] = g(X[c])
+
+            D = F(B0,B,X)
+            
+            if ((D>0) ^ (Dmin>0)) and (Dmin != 0 and np.isfinite(Dmin)):
+                # There exists a point for which D = 0 within the interval space
+                Dmin = 0
+                Xmin = find_zero_point(UQdata.loc[i], B0, B, uq_cols)
+                
+            elif abs(D) < abs(Dmin):
+                Dmin = D
+                Xmin = X
+            if abs(D) > abs(Dmax):
+                Dmax = D
+                Xmax = X
+
+        dataMin.loc[i] = Xmin
+        dataMax.loc[i] = Xmax
+
+    return dataMin, dataMax
+
 
 def int_logistic_regression(UQdata,results):
 
+    left = lambda x: x.Left
+    right = lambda x: x.Right
+    
     uq_col = []
     
     for c in UQdata.columns:
@@ -164,19 +170,28 @@ def int_logistic_regression(UQdata,results):
                 uq_col.append(c)
                 break
     
-    data = {'lower':pd.DataFrame({
-                **{c:[i.Left for i in UQdata[c]] for c in uq_col},
-                **{c:UQdata[c] for c in UQdata.columns if c not in uq_col}
-                }, index = UQdata.index),
-            'upper':pd.DataFrame({
-                **{c:[i.Right for i in UQdata[c]] for c in uq_col},
+    
+    data = {''.join(k):pd.DataFrame({
+                **{c:[F(i) if i.__class__.__name__ == 'Interval' else i for i in UQdata[c]] for c,F in zip(uq_col,func)},
                 **{c:UQdata[c] for c in UQdata.columns if c not in uq_col}
                 }, index = UQdata.index)
+             for k, func in zip(it.product('lr',repeat = len(uq_col)),it.product((left,right),repeat = len(uq_col)))
             }
-
     models = {k:LogisticRegression(max_iter = 1000).fit(d,results) for k,d in data.items()}
-        
-    return models
+
+    n_data = {}
+    for k,m in models.items():
+        B0 = m.intercept_
+        B = m.coef_
+
+        nMin, nMax = find_thresholds(B0,B,UQdata,uq_col)
+
+        n_data[k+'min'] = nMin
+        n_data[k+'max'] = nMax
+ 
+    n_models = {k:LogisticRegression(max_iter = 1000).fit(d,results) for k,d in n_data.items()}
+    
+    return {**models,**n_models}
 
 def ROC(model = None, predictions = None, data = None, results = None, uq = False, drop = True):
     

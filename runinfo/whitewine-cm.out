@@ -2,10 +2,6 @@ TP=132	FP=339
 FN=35	TN=993
 Sensitivity = 0.790
 Specificity = 0.745
-TP=141	FP=651
-FN=22	TN=650
-NP(+)=4	NP(-)=31
-Sensitivity = 0.865
-Specificity = 0.500
-sigma = 0.023952
-tau = 0.023273
+TP=0	FP=5
+FN=162	TN=1322
+NP(+)=5	NP(-)=5

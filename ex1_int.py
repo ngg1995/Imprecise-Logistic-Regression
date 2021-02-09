@@ -38,7 +38,7 @@ np.random.seed(10)
 many = 50
 dim = 1
 some = 1000
-eps = 3
+eps = 2
 
 # Generate data
 data = pd.DataFrame(40*np.random.rand(many,dim))
@@ -88,7 +88,8 @@ for i in test_predict.index:
 
 
 # # Plot results
-lX = np.linspace(data.min(),data.max(),300)
+steps = 1000
+lX = np.linspace(data.min(),data.max(),steps)
 lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
 
 plt.xlabel('X')
@@ -98,13 +99,16 @@ for u,r in zip(UQdata[0],results.to_list()):
     plt.plot([u.Left,u.Right],[r,r], marker='|')
 plt.plot(lX,lY,color='k',zorder=10,lw=2)
 
-lYmin = np.ones(300)
-lYmax = np.zeros(300)
+lYmin = np.ones(steps)
+lYmax = np.zeros(steps)
 
 for n, model in uq_models.items():
-    lY = model.predict_proba(np.linspace(data.min(),data.max(),300).reshape(-1, 1))[:,1]
+
+    lY = model.predict_proba(np.linspace(data.min(),data.max(),steps).reshape(-1, 1))[:,1]
     lYmin = [min(i,j) for i,j in zip(lY,lYmin)]
     lYmax = [max(i,j) for i,j in zip(lY,lYmax)]
+
+
     plt.plot(lX,lY,color = 'grey')
 
 
@@ -135,20 +139,18 @@ with open('runinfo/ex1_int_cm.out','w') as f:
 
     print('~~~~UQ MODEL~~~~', file = f)
     aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(test_results,predictions,throw = True)
+    print('TP=%i\tFP=%i\nFN=%i\tTN=%i\nNP(+)=%i\tNP(-)=%i' %(aaa,bbb,ccc,ddd,eee,fff),file = f)
     try:
         sss = 1/(1+ccc/aaa)
+        print('Sensitivity = %.3f' %(sss),file = f) 
     except:
-        sss = None
+        pass
     try:    
         ttt = 1/(1+bbb/ddd)
+        print('Specificity = %.3f' %(ttt),file = f)
     except:
-        ttt = None
-        
-    print('TP=%i\tFP=%i\nFN=%i\tTN=%i\nNP(+)=%i\tNP(-)=%i' %(aaa,bbb,ccc,ddd,eee,fff),file = f)
-    
-    # Calculate sensitivity and specificity
-    print('Sensitivity = %.3f' %(sss),file = f)
-    print('Specificity = %.3f' %(ttt),file = f)
+        pass
+
     print('sigma = %3f' %(eee/(aaa+ccc+eee)),file = f)
     print('tau = %3f' %(fff/(bbb+ddd+fff)),file = f)
 
