@@ -75,7 +75,6 @@ def uc_logistic_regression(data,result,uncertain):
 
         
 def find_zero_point(X, B0, B, uq_cols):
-
     def min_F(X,Bx,Cx):
         for x,Bx in zip(X,Bx):
             Cx += float(b*x)
@@ -99,17 +98,18 @@ def find_zero_point(X, B0, B, uq_cols):
         Xmin[i] = x
         
     return Xmin
+
     
     
 def find_thresholds(B0,B,UQdata,uq_cols):
 
     def F(B0,B,X):
         f = float(B0)
+
         for b,x in zip(B,X):
             f += float(b*x)
         return f
 
-       
     left = lambda x: x.Left
     right = lambda x: x.Right
     
@@ -183,6 +183,7 @@ def int_logistic_regression(UQdata,results):
         n_data[k+'max'] = nMax
  
     n_models = {k:LogisticRegression(max_iter = 1000).fit(d,results) for k,d in tqdm(n_data.items(),desc ='Fitting Models (2)')}
+
     
     return {**models,**n_models}
 

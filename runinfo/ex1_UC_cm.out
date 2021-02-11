@@ -1,0 +1,13 @@
+TP=548	FP=46
+FN=58	TN=348
+Sensitivity = 0.904
+Specificity = 0.883
+TP=[505, 561]	FP=[25, 58]
+FN=[45, 101]	TN=[336, 369]
+Sensitivity = [0.833333, 0.925743]
+Specificity = [0.852792, 0.936548]
+TP=505	FP=25
+FN=45	TN=336
+NP(+)=56	NP(-)=33
+Sensitivity = 0.918
+Specificity = 0.931

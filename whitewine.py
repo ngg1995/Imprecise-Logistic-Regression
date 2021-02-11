@@ -40,7 +40,8 @@ wine_data = pd.read_csv('winequality-red.csv',index_col = None)
 # Split the data into test/train factors and result
 random.seed(1111) # for reproducability
 
-train_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 6].index], k = 60) + random.sample([i for i in wine_data[wine_data['quality'] >= 7].index ], k = 60)
+
+train_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 6].index], k = 50) + random.sample([i for i in wine_data[wine_data['quality'] >= 7].index ], k = 50)
 test_data_index = [i for i in wine_data.index if i not in train_data_index]
 
 test_data = wine_data.loc[test_data_index,[c for c in wine_data.columns if c != 'quality']]
@@ -62,12 +63,12 @@ eps = {"fixed acidity":0.2,
     #    "sulphates":0.01,
     #    "alcohol":0.1
        }
+
 np.random.seed(0)
 UQdata = pd.DataFrame({
     **{k:[intervalise(train_data.loc[i,k],eps[k]) for i in train_data.index] for k, e in eps.items()},
     **{c:train_data[c] for c in train_data.columns if c not in eps.keys()}
     }, dtype = 'O')
-
 
 # Fit true model
 truth = LogisticRegression(max_iter = 1000)
@@ -149,6 +150,7 @@ plt.plot(fpr,s,'k', label = 'Truth')
 plt.plot(fpr_b,s_b,'c', label = 'Midpoint')
 
 
+
 steps = 1001
 X = np.linspace(0,1,steps)
 Ymin = steps*[2]
@@ -166,6 +168,7 @@ with open('runinfo/whitewine-auc.out','w') as f:
     print('Truth: %.4f' %auc(s,fpr),file = f)
     print('Midpoints: %.4f' %auc(s_b,fpr_b), file = f)
     print('IP: %.4f' %auc(s_t,fpr_t), file = f)
+
 
 ######
 fig = plt.figure()

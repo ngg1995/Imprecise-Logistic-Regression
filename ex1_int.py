@@ -25,12 +25,15 @@ def intervalise(val,eps):
     
     return pba.I(m-eps,m+eps)
 
+
 def midpoints(data):
     n_data = data.copy()
     for c in data.columns:
         for i in data.index:
             if data.loc[i,c].__class__.__name__ == 'Interval':
+
                 n_data.loc[i,c] = data.loc[i,c].midpoint()-5
+
             
     return n_data
 
@@ -93,18 +96,23 @@ for i in test_predict.index:
 # # Plot results
 steps = 1000
 lX = np.linspace(data.min(),data.max(),steps)
+
 lYb = base.predict_proba(lX.reshape(-1, 1))[:,1]
 lYt = truth.predict_proba(lX.reshape(-1, 1))[:,1]
-
 
 plt.xlabel('X')
 plt.ylabel('$\Pr(Y=1|X)$')
 
+
+for u,r in zip(UQdata[0],results.to_list()):
+    plt.plot([u.Left,u.Right],[r,r], marker='|')
+plt.plot(lX,lY,color='k',zorder=10,lw=2)
 for u,m,r in zip(UQdata[0],data[0],results.to_list()):
     plt.plot(m,r,marker = 'x')
     plt.plot([u.Left,u.Right],[r,r], marker='|')
 plt.plot(lX,lYb,color='c',zorder=10,lw=2,label = 'Midpoint')
 plt.plot(lX,lYt,color='k',zorder=10,lw=2,label = 'Truth')
+
 
 lYmin = np.ones(steps)
 lYmax = np.zeros(steps)
@@ -115,8 +123,8 @@ for n, model in uq_models.items():
     lYmin = [min(i,j) for i,j in zip(lY,lYmin)]
     lYmax = [max(i,j) for i,j in zip(lY,lYmax)]
 
-
     # plt.plot(lX,lY,color = 'grey')
+
 
 
 plt.plot(lX,lYmax,color='red',lw=2)
@@ -174,6 +182,7 @@ plt.ylabel('$s$')
 plt.plot(fpr,s,'k', marker = 'x',label = 'Truth')
 plt.plot(fpr_b,s_b,'c',marker = 'o', label = 'Midpoint')
 
+
 steps = 1001
 X = np.linspace(0,1,steps)
 Ymin = steps*[2]
@@ -191,6 +200,7 @@ with open('runinfo/ex1_int_auc.out','w') as f:
     print('Truth: %.4f' %auc(s,fpr), file = f)
     print('Midpoints: %.4f' %auc(s_b,fpr_b), file = f)
     print('IP: %.4f' %auc(s_t,fpr_t), file = f)
+
 
 ######
 fig = plt.figure()

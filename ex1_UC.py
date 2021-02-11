@@ -151,12 +151,14 @@ with open('runinfo/ex1_UC_cm.out','w') as f:
 s,fpr = ROC(model = base, data = test_data, results = test_results)
 s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
 
+
 plt.plot([0,1],[0,1],'k:',label = 'Random Classifier')
 plt.plot([0],[1],'ro',label = 'Perfect Classifier')
 plt.xlabel('$1-t$')
 plt.ylabel('$s$')
 plt.plot(fpr,s,'k', label = 'Base')
 plt.legend()
+
 plt.savefig('figs/ex1_ROC.png',dpi = 600)
 plt.savefig('../paper/figs/ex1_ROC.png',dpi = 600)
 
