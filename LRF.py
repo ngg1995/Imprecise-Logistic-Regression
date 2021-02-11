@@ -5,7 +5,7 @@ import itertools as it
 from tqdm import tqdm
 import pba
 import random
-from scipy.optimize import root
+import scipy.optimize as so
 
 def midpoints(data):
     n_data = data.copy()
@@ -75,45 +75,38 @@ def uc_logistic_regression(data,result,uncertain):
 
         
 def find_zero_point(X, B0, B, uq_cols):
-
-    def F(B0,B,X):
-        f = float(B0)
-        for b,x in zip(B[0],X):
-            f += float(b*x)
-        return f
-    
-    zero_point = X.copy()
-    
-    d = 0.0001
-    found = False
-    m = np.inf
-    zm = None
-    space = [np.linspace(X[c].Left,X[c].Right,100) for c in uq_cols]
-    
-    for n in it.product(*space):
-
-        for i,c in zip(n,uq_cols):
-            zero_point[c] = i
-        f = F(B0,B,zero_point)
-        if  abs(f) < d:
-            found = True
-            break
-        elif abs(f) < m:
-            m = abs(f)
-            zm = zero_point.copy()
+    def min_F(X,Bx,Cx):
+        for x,Bx in zip(X,Bx):
+            Cx += float(b*x)
+        return abs(Cx)
         
-    if not found:
-        print('X',m,zm)
-        return zm
-    else:
-        return zero_point
+    Cx = float(B0)
+    Bx = []
+    X0 = []
+    for i,b in zip(X.index,B):
+        if i in uq_cols:
+            Bx.append(b)
+            X0.append(X[i].midpoint())
+        else:
+            Cx += float(X[i]*b)
+    
+    bounds = [(X[i].Left,X[i].Right) for i in uq_cols]
+    R = so.minimize(min_F,X0,args = (Bx,Cx),method = 'L-BFGS-B',bounds = bounds)
+    
+    Xmin = X.copy()
+    for i,x in zip(uq_cols,R.x):
+        Xmin[i] = x
+        
+    return Xmin
+
     
     
 def find_thresholds(B0,B,UQdata,uq_cols):
 
     def F(B0,B,X):
         f = float(B0)
-        for b,x in zip(B[0],X):
+
+        for b,x in zip(B,X):
             f += float(b*x)
         return f
 
@@ -175,21 +168,22 @@ def int_logistic_regression(UQdata,results):
                 **{c:[F(i) if i.__class__.__name__ == 'Interval' else i for i in UQdata[c]] for c,F in zip(uq_col,func)},
                 **{c:UQdata[c] for c in UQdata.columns if c not in uq_col}
                 }, index = UQdata.index)
-             for k, func in zip(it.product('lr',repeat = len(uq_col)),it.product((left,right),repeat = len(uq_col)))
+             for k, func in tqdm(zip(it.product('lr',repeat = len(uq_col)),it.product((left,right),repeat = len(uq_col))),desc='Getting Bounds (1)',total = 2**len(uq_col))
             }
-    models = {k:LogisticRegression(max_iter = 1000).fit(d,results) for k,d in data.items()}
+    models = {k:LogisticRegression(max_iter = 1000).fit(d,results) for k,d in tqdm(data.items(),desc ='Fitting Models (1)')}
 
     n_data = {}
-    for k,m in models.items():
+    for k,m in tqdm(models.items(),desc='Getting Bounds (2)'):
         B0 = m.intercept_
-        B = m.coef_
+        B = m.coef_[0]
 
         nMin, nMax = find_thresholds(B0,B,UQdata,uq_col)
 
         n_data[k+'min'] = nMin
         n_data[k+'max'] = nMax
  
-    n_models = {k:LogisticRegression(max_iter = 1000).fit(d,results) for k,d in n_data.items()}
+    n_models = {k:LogisticRegression(max_iter = 1000).fit(d,results) for k,d in tqdm(n_data.items(),desc ='Fitting Models (2)')}
+
     
     return {**models,**n_models}
 

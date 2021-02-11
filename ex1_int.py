@@ -6,6 +6,7 @@ import itertools as it
 from tqdm import tqdm
 import pba
 import tikzplotlib
+import random
 
 from LRF import *
 
@@ -19,15 +20,20 @@ def generate_results(data):
     return results
 
 def intervalise(val,eps):
-    r = np.random.rand()
-    return pba.I(val - r*eps, val + (1-r)*eps)
+
+    m = np.random.uniform(val-eps,val+eps)
+    
+    return pba.I(m-eps,m+eps)
+
 
 def midpoints(data):
     n_data = data.copy()
     for c in data.columns:
         for i in data.index:
             if data.loc[i,c].__class__.__name__ == 'Interval':
-                n_data.loc[i,c] = data.loc[i,c].midpoint()
+
+                n_data.loc[i,c] = data.loc[i,c].midpoint()-5
+
             
     return n_data
 
@@ -37,7 +43,7 @@ np.random.seed(10)
 # Params
 many = 50
 dim = 1
-some = 1000
+some = 10000
 eps = 2
 
 # Generate data
@@ -90,14 +96,23 @@ for i in test_predict.index:
 # # Plot results
 steps = 1000
 lX = np.linspace(data.min(),data.max(),steps)
-lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
+
+lYb = base.predict_proba(lX.reshape(-1, 1))[:,1]
+lYt = truth.predict_proba(lX.reshape(-1, 1))[:,1]
 
 plt.xlabel('X')
 plt.ylabel('$\Pr(Y=1|X)$')
 
+
 for u,r in zip(UQdata[0],results.to_list()):
     plt.plot([u.Left,u.Right],[r,r], marker='|')
 plt.plot(lX,lY,color='k',zorder=10,lw=2)
+for u,m,r in zip(UQdata[0],data[0],results.to_list()):
+    plt.plot(m,r,marker = 'x')
+    plt.plot([u.Left,u.Right],[r,r], marker='|')
+plt.plot(lX,lYb,color='c',zorder=10,lw=2,label = 'Midpoint')
+plt.plot(lX,lYt,color='k',zorder=10,lw=2,label = 'Truth')
+
 
 lYmin = np.ones(steps)
 lYmax = np.zeros(steps)
@@ -108,8 +123,8 @@ for n, model in uq_models.items():
     lYmin = [min(i,j) for i,j in zip(lY,lYmin)]
     lYmax = [max(i,j) for i,j in zip(lY,lYmax)]
 
+    # plt.plot(lX,lY,color = 'grey')
 
-    plt.plot(lX,lY,color = 'grey')
 
 
 plt.plot(lX,lYmax,color='red',lw=2)
@@ -155,12 +170,17 @@ with open('runinfo/ex1_int_cm.out','w') as f:
     print('tau = %3f' %(fff/(bbb+ddd+fff)),file = f)
 
 ### ROC CURVE
-s,fpr = ROC(model = base, data = test_data, results = test_results)
+s_b,fpr_b = ROC(model = base, data = test_data, results = test_results)
+s,fpr = ROC(model = truth, data = test_data, results = test_results)
 s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
-plt.step([0,1],[0,1],'k:',label = 'Random Classifer')
+with open('roc.txt','w') as f:
+    for i,j in zip(zip(s_b,fpr_b),zip(s,fpr)):
+        print(i,j,file =f)
+plt.plot([0,1],[0,1],'k:',label = 'Random Classifer')
 plt.xlabel('$1-t$')
 plt.ylabel('$s$')
-plt.step(fpr,s,'k', label = 'Base')
+plt.plot(fpr,s,'k', marker = 'x',label = 'Truth')
+plt.plot(fpr_b,s_b,'c',marker = 'o', label = 'Midpoint')
 
 
 steps = 1001
@@ -168,7 +188,7 @@ X = np.linspace(0,1,steps)
 Ymin = steps*[2]
 Ymax = steps*[-1]
 
-plt.step(fpr_t,s_t,'m', label = 'Not Predicting')
+plt.plot(fpr_t,s_t,'m', label = 'IP model')
 plt.legend()
 
 plt.savefig('figs/ex1_int_ROC.png',dpi = 600)
@@ -177,8 +197,10 @@ plt.savefig('../paper/figs/ex1_int_ROC.png',dpi = 600)
 plt.clf()
 
 with open('runinfo/ex1_int_auc.out','w') as f:
-    print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
-    print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
+    print('Truth: %.4f' %auc(s,fpr), file = f)
+    print('Midpoints: %.4f' %auc(s_b,fpr_b), file = f)
+    print('IP: %.4f' %auc(s_t,fpr_t), file = f)
+
 
 ######
 fig = plt.figure()

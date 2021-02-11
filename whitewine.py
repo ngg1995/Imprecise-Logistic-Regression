@@ -40,6 +40,7 @@ wine_data = pd.read_csv('winequality-red.csv',index_col = None)
 # Split the data into test/train factors and result
 random.seed(1111) # for reproducability
 
+
 train_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 6].index], k = 50) + random.sample([i for i in wine_data[wine_data['quality'] >= 7].index ], k = 50)
 test_data_index = [i for i in wine_data.index if i not in train_data_index]
 
@@ -50,34 +51,45 @@ test_results = wine_data.loc[test_data_index,'quality'] >= 7
 train_results = wine_data.loc[train_data_index,'quality'] >= 7
 
 # Intervalise data
-eps = {"fixed acidity":0.1,"pH":0.1,"alcohol":0.2}
+eps = {"fixed acidity":0.2,
+       "volatile acidity":0.05,
+       "citric acid":0.03,
+       "residual sugar":0.02,
+       "chlorides":0.003,
+       "free sulfur dioxide":2,
+       "total sulfur dioxide":2,
+       "density":0.001
+    #    "pH":0.01,
+    #    "sulphates":0.01,
+    #    "alcohol":0.1
+       }
+
 np.random.seed(0)
 UQdata = pd.DataFrame({
     **{k:[intervalise(train_data.loc[i,k],eps[k]) for i in train_data.index] for k, e in eps.items()},
     **{c:train_data[c] for c in train_data.columns if c not in eps.keys()}
     }, dtype = 'O')
 
-# Base model is midpoints
-MDdata = midpoints(UQdata)
+# Fit true model
+truth = LogisticRegression(max_iter = 1000)
+truth.fit(train_data.to_numpy(),train_results.to_numpy())
 
 # Fit base model
+# Base model is midpoints
+MDdata = midpoints(UQdata)
 base = LogisticRegression(max_iter = 1000)
 base.fit(MDdata.to_numpy(),train_results.to_numpy())
 
 # Classify test data
+truth_predict = truth.predict(test_data)
 base_predict = base.predict(test_data)
-
-# True model 
-no_uq_model = LogisticRegression(max_iter = 1000)
-no_uq_model.fit(train_data,train_results)
-no_uq_predict = no_uq_model.predict(test_data)
 
 ## fit interval model
 uq_models = int_logistic_regression(UQdata,train_results)
 
-# Test estimated vs Monte Carlo
+## Test estimated vs Monte Carlo
 ir, oor = check_int_MC(uq_models,UQdata,train_results,1000,test_data)
-with open('runinfo/whitewine-MCtest.out','w') as f:
+with open('runinfo/ex1_int_MCtest.out','w') as f:
     print('in bounds %i,%.3f\nout %i,%.3f'%(ir,(ir/(ir+oor)),oor,(oor/(ir+oor))),file = f)
 
 # Classify test data
@@ -129,13 +141,14 @@ with open('runinfo/whitewine_cm.out','w') as f:
 
 ### ROC CURVE
 s_b,fpr_b = ROC(model = base, data = test_data, results = test_results)
-s,fpr = ROC(model = no_uq_model, data = test_data, results = test_results)
+s,fpr = ROC(model = truth, data = test_data, results = test_results)
 s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
 plt.plot([0,1],[0,1],'k:',label = 'Random Classifer')
 plt.xlabel('$1-t$')
 plt.ylabel('$s$')
-plt.step(fpr_b,s_b,'k', label = 'Base')
-plt.step(fpr,s,'g', label = 'True Data')
+plt.plot(fpr,s,'k', label = 'Truth')
+plt.plot(fpr_b,s_b,'c', label = 'Midpoint')
+
 
 
 steps = 1001
@@ -143,7 +156,7 @@ X = np.linspace(0,1,steps)
 Ymin = steps*[2]
 Ymax = steps*[-1]
 
-plt.step(fpr_t,s_t,'m', label = 'Not Predicting')
+plt.plot(fpr_t,s_t,'m', label = 'Not Predicting')
 plt.legend()
 
 plt.savefig('figs/whitewine_ROC.png',dpi = 600)
@@ -152,8 +165,10 @@ plt.savefig('../paper/figs/whitewine_ROC.png',dpi = 600)
 plt.clf()
 
 with open('runinfo/whitewine-auc.out','w') as f:
-    print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
-    print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
+    print('Truth: %.4f' %auc(s,fpr),file = f)
+    print('Midpoints: %.4f' %auc(s_b,fpr_b), file = f)
+    print('IP: %.4f' %auc(s_t,fpr_t), file = f)
+
 
 ######
 fig = plt.figure()
