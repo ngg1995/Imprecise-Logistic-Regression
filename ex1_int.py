@@ -20,8 +20,8 @@ def generate_results(data):
     return results
 
 def intervalise(val,eps):
-
-    m = np.random.uniform(val-eps,val+eps)
+    
+    m = np.random.triangular(val-eps,val-0.9*eps,val+eps)
     
     return pba.I(m-eps,m+eps)
 
@@ -32,7 +32,7 @@ def midpoints(data):
         for i in data.index:
             if data.loc[i,c].__class__.__name__ == 'Interval':
 
-                n_data.loc[i,c] = data.loc[i,c].midpoint()-5
+                n_data.loc[i,c] = data.loc[i,c].midpoint()
 
             
     return n_data
@@ -44,7 +44,7 @@ np.random.seed(10)
 many = 50
 dim = 1
 some = 10000
-eps = 2
+eps = 1
 
 # Generate data
 data = pd.DataFrame(40*np.random.rand(many,dim))
@@ -104,9 +104,6 @@ plt.xlabel('X')
 plt.ylabel('$\Pr(Y=1|X)$')
 
 
-for u,r in zip(UQdata[0],results.to_list()):
-    plt.plot([u.Left,u.Right],[r,r], marker='|')
-plt.plot(lX,lY,color='k',zorder=10,lw=2)
 for u,m,r in zip(UQdata[0],data[0],results.to_list()):
     plt.plot(m,r,marker = 'x')
     plt.plot([u.Left,u.Right],[r,r], marker='|')
@@ -179,8 +176,8 @@ with open('roc.txt','w') as f:
 plt.plot([0,1],[0,1],'k:',label = 'Random Classifer')
 plt.xlabel('$1-t$')
 plt.ylabel('$s$')
-plt.plot(fpr,s,'k', marker = 'x',label = 'Truth')
-plt.plot(fpr_b,s_b,'c',marker = 'o', label = 'Midpoint')
+plt.plot(fpr,s,'k',label = 'Truth')
+plt.plot(fpr_b,s_b,'c',label = 'Midpoint')
 
 
 steps = 1001

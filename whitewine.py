@@ -56,9 +56,9 @@ eps = {"fixed acidity":0.2,
        "citric acid":0.03,
        "residual sugar":0.02,
        "chlorides":0.003,
-       "free sulfur dioxide":2,
-       "total sulfur dioxide":2,
-       "density":0.001
+    #    "free sulfur dioxide":2,
+    #    "total sulfur dioxide":2,
+    #    "density":0.001
     #    "pH":0.01,
     #    "sulphates":0.01,
     #    "alcohol":0.1
@@ -88,7 +88,7 @@ base_predict = base.predict(test_data)
 uq_models = int_logistic_regression(UQdata,train_results)
 
 ## Test estimated vs Monte Carlo
-ir, oor = check_int_MC(uq_models,UQdata,train_results,1000,test_data)
+ir, oor = check_int_MC(uq_models,UQdata,train_results,200,test_data)
 with open('runinfo/ex1_int_MCtest.out','w') as f:
     print('in bounds %i,%.3f\nout %i,%.3f'%(ir,(ir/(ir+oor)),oor,(oor/(ir+oor))),file = f)
 

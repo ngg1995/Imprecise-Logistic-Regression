@@ -79,7 +79,10 @@ def find_zero_point(X, B0, B, uq_cols):
         for x,Bx in zip(X,Bx):
             Cx += float(b*x)
         return abs(Cx)
-        
+    def min_F(X,Bx,Cx):
+        for x,Bx in zip(X,Bx):
+            Cx += float(b*x)
+        return -abs(Cx)        
     Cx = float(B0)
     Bx = []
     X0 = []
@@ -91,11 +94,17 @@ def find_zero_point(X, B0, B, uq_cols):
             Cx += float(X[i]*b)
     
     bounds = [(X[i].Left,X[i].Right) for i in uq_cols]
-    R = so.minimize(min_F,X0,args = (Bx,Cx),method = 'L-BFGS-B',bounds = bounds)
+    Rmin = so.minimize(min_F,X0,args = (Bx,Cx),method = 'L-BFGS-B',bounds = bounds)
+    Rmax = so.minimize(max_F,X0,args = (Bx,Cx),method = 'L-BFGS-B',bounds = bounds)
+    
     
     Xmin = X.copy()
-    for i,x in zip(uq_cols,R.x):
-        Xmin[i] = x
+    Xmax = X.copy()
+
+    for i,xmin,nmax in zip(uq_cols,Rmin.x,Rmax.x):
+        Xmin[i] = xmax
+        Xmax[i] = xmin
+        
         
     return Xmin
 
@@ -110,6 +119,16 @@ def find_thresholds(B0,B,UQdata,uq_cols):
             f += float(b*x)
         return f
 
+    def min_F(X,Bx,Cx):
+        for x,Bx in zip(X,Bx):
+            Cx += float(b*x)
+        return abs(Cx)
+    def max_F(X,Bx,Cx):
+        for x,Bx in zip(X,Bx):
+            Cx += float(b*x)
+        return -abs(Cx)        
+        
+        
     left = lambda x: x.Left
     right = lambda x: x.Right
     
@@ -118,33 +137,36 @@ def find_thresholds(B0,B,UQdata,uq_cols):
     
     # need to find the min/max spread around these points
 
-    for i in UQdata.index:
-        Xmin = None
-        Xmax = None
-        Dmin = np.inf
-        Dmax = 0
-        for G in it.product((left,right),repeat = len(uq_cols)):
-            X = UQdata.loc[i].copy()
-            
-            for g, c in zip(G,uq_cols):
-                X[c] = g(X[c])
+    for j in UQdata.index:
 
-            D = F(B0,B,X)
+        X = UQdata.loc[j].copy()
             
-            if ((D>0) ^ (Dmin>0)) and (Dmin != 0 and np.isfinite(Dmin)):
-                # There exists a point for which D = 0 within the interval space
-                Dmin = 0
-                Xmin = find_zero_point(UQdata.loc[i], B0, B, uq_cols)
-                
-            elif abs(D) < abs(Dmin):
-                Dmin = D
-                Xmin = X
-            if abs(D) > abs(Dmax):
-                Dmax = D
-                Xmax = X
+        Cx = float(B0)
+        Bx = []
+        X0 = []
+        for i,b in zip(X.index,B):
+            if i in uq_cols:
+                Bx.append(b)
+                X0.append(X[i].midpoint())
+            else:
+                Cx += float(X[i]*b)
+        
+        bounds = [(X[i].Left,X[i].Right) for i in uq_cols]
+        Rmin = so.minimize(min_F,X0,args = (Bx,Cx),method = 'L-BFGS-B',bounds = bounds)
+        Rmax = so.minimize(max_F,X0,args = (Bx,Cx),method = 'L-BFGS-B',bounds = bounds)
+        
+        
+        Xmin = X.copy()
+        Xmax = X.copy()
 
-        dataMin.loc[i] = Xmin
-        dataMax.loc[i] = Xmax
+        for i,xmin,xmax in zip(uq_cols,Rmin.x,Rmax.x):
+            Xmin[i] = xmax
+            Xmax[i] = xmin
+            
+
+        dataMin.loc[j] = Xmin
+        dataMax.loc[j] = Xmax
+
 
     return dataMin, dataMax
 
@@ -181,7 +203,8 @@ def int_logistic_regression(UQdata,results):
 
         n_data[k+'min'] = nMin
         n_data[k+'max'] = nMax
- 
+
+
     n_models = {k:LogisticRegression(max_iter = 1000).fit(d,results) for k,d in tqdm(n_data.items(),desc ='Fitting Models (2)')}
 
     
@@ -398,7 +421,9 @@ def check_int_MC(models,UQdata,results,many,test_data):
                 oor += 1
                 
     return ir, oor
-        
+
+def hosmer_lemeshow_test(model,data,results):
+    pass
     
 __all__ = [
     'generate_confusion_matrix',

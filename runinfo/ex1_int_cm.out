@@ -1,0 +1,18 @@
+~~~~TRUE MODEL~~~~
+TP=5639	FP=376
+FN=645	TN=3340
+Sensitivity = 0.897
+Specificity = 0.899
+~~~~BASE MODEL~~~~
+TP=5687	FP=413
+FN=597	TN=3303
+Sensitivity = 0.905
+Specificity = 0.889
+~~~~UQ MODEL~~~~
+TP=5524	FP=309
+FN=457	TN=3198
+NP(+)=303	NP(-)=209
+Sensitivity = 0.924
+Specificity = 0.912
+sigma = 0.048218
+tau = 0.056243

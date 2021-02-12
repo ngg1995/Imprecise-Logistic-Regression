@@ -95,7 +95,7 @@ for n, model in uq_models.items():
     lY = model.predict_proba(np.linspace(data.min(),data.max(),steps).reshape(-1, 1))[:,1]
     lYmin = [min(i,j) for i,j in zip(lY,lYmin)]
     lYmax = [max(i,j) for i,j in zip(lY,lYmax)]
-    plt.plot(lX,lY,color = 'grey')
+    plt.plot(lX,lY,color = 'grey',alpha = 0.2,lw = 0.5)
 
 
 plt.plot(lX,lYmax,color='red',lw=2)
