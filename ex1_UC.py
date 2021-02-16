@@ -2,57 +2,102 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from mpl_toolkits import mplot3d
-
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import roc_auc_score
 import itertools as it
 from tqdm import tqdm
 import pba
-import tikzplotlib
+import random
+
 from LRF import *
 
 def generate_results(data):
-
+    # set seed for reproducability
+    np.random.seed(10)
     results = pd.Series(index = data.index, dtype = 'bool')
-    for row in data.index:
-
-        results[row] = sum(data.loc[row]) >= len(data.columns)*(20+5*np.random.randn())
     
+    for i in data.index:
+
+        results.loc[i] = data.loc[i,0] >= 5+2*np.random.randn()    
+        
     return results
 
 
-# set seed to ensure same data
-np.random.seed(2)
+### Generate Data
+# set seed for reproducability
+np.random.seed(1)
+random.seed(2)
 
 # Params
-many = 50
-dim = 1
-few = 5
-some = 200
+some = 50 # training datapoints
+many = 500 # many test samples
 
-# Generate data
-data = pd.DataFrame(40*np.random.rand(many,dim))
-results = generate_results(data)
+train_data = pd.DataFrame(10*np.random.rand(some,1))
+train_results = generate_results(train_data)
 
-# Generate uncertain points
-uncertain = 15+pd.DataFrame(10*np.random.rand(few,dim))
-
-# Generate test data 
-np.random.seed(111)
-test_data = pd.DataFrame(40*np.random.rand(some,dim))
+test_data = pd.DataFrame(10*np.random.rand(many,1))
 test_results = generate_results(test_data)
 
-# Fit base model
+### Fit logistic regression model on full dataset
 base = LogisticRegression()
-base.fit(data.to_numpy(),results.to_numpy())
+base.fit(train_data.to_numpy(),train_results.to_numpy())
 
+### Remove uncertain datapoints from the training data
+few = 5 #uncertain points
+random.seed(5) # for reproducability
+uq_data_index = random.sample([i for i in train_data.index if abs(train_data.loc[i,0]-5) <= 1.5], k = few) # clustered around center
+
+uq_data = train_data.loc[uq_data_index]
+nuq_data = train_data.loc[[i for i in train_data.index if i not in uq_data_index]]
+nuq_results = train_results.loc[[i for i in train_data.index if i not in uq_data_index]]
+
+### Fit UQ models
+uq_models = uc_logistic_regression(train_data,train_results,uq_data)
+
+### Fit models with missing data
+nuq = LogisticRegression()
+nuq.fit(nuq_data.to_numpy(),nuq_results.to_numpy())
+
+### Plot results
+steps = 300
+lX = np.linspace(0,10,steps)
+lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
+lYn = nuq.predict_proba(lX.reshape(-1, 1))[:,1]
+
+plt.xlabel('$x$')
+plt.ylabel('$\pi_x$')
+plt.scatter(nuq_data,nuq_results,color='blue',zorder=10)
+plt.plot(lX,lY,color='k',zorder=10,lw=2,label = 'Truth')
+plt.plot(lX,lYn,color='m',zorder=10,lw=2,label = 'No UQ')
+
+for x in uq_data[0]:
+
+    plt.plot([x,x],[0,1],color='blue')
+
+lYmin = np.ones(steps)
+lYmax = np.zeros(steps)
+
+for n, model in uq_models.items():
+    lY = model.predict_proba(np.linspace(0,10,steps).reshape(-1, 1))[:,1]
+    lYmin = [min(i,j) for i,j in zip(lY,lYmin)]
+    lYmax = [max(i,j) for i,j in zip(lY,lYmax)]
+    plt.plot(lX,lY,color = 'grey',alpha = 0.2,lw = 0.5)
+
+plt.plot(lX,lYmax,color='red',lw=2)
+plt.plot(lX,lYmin,color='red',lw=2,label = 'Uncertainty Bounds')
+
+plt.savefig('../paper/figs/ex1_UC.png',dpi = 600)
+plt.savefig('figs/ex1_UC.png',dpi = 600)
+
+plt.clf()
+
+### Get confusion matrix
 # Classify test data
 base_predict = base.predict(test_data)
 
-# Fit model
-uq_models = uc_logistic_regression(data,results,uncertain)
+# CLASSIFY NO_UQ MODEL DATA 
+nuq_predict = nuq.predict(test_data)
 
-# Classify test data
+# CLASSIFY UQ MODEL 
 test_predict = pd.DataFrame(columns = uq_models.keys())
 
 for key, model in uq_models.items():
@@ -62,52 +107,8 @@ predictions = []
 for i in test_predict.index:
     predictions.append([min(test_predict.loc[i]),max(test_predict.loc[i])])
 
-# Fit base model
-base = LogisticRegression()
-base.fit(data.to_numpy(),results.to_numpy())
-
-# Classify test data
-base_predict = base.predict(test_data)
-print(base.coef_)
-
-# # Plot results
-steps = 300
-lX = np.linspace(data.min(),data.max(),steps)
-lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
-
-plt.xlabel('X')
-plt.ylabel('$\Pr(Y=1|X)$')
-plt.scatter(data,results,color='blue',zorder=10)
-# plt.scatter(test_data,test_results,color='green',zorder=10)
-plt.plot(lX,lY,color='k',zorder=10,lw=2)
-plt.savefig('../paper/figs/ex1.png',dpi = 600)
-plt.savefig('figs/ex1.png',dpi = 600)
-
-
-for x in uncertain[0]:
-
-    plt.plot([x,x],[0,1],color='blue')
-
-lYmin = np.ones(steps)
-lYmax = np.zeros(steps)
-
-for n, model in uq_models.items():
-    lY = model.predict_proba(np.linspace(data.min(),data.max(),steps).reshape(-1, 1))[:,1]
-    lYmin = [min(i,j) for i,j in zip(lY,lYmin)]
-    lYmax = [max(i,j) for i,j in zip(lY,lYmax)]
-    plt.plot(lX,lY,color = 'grey',alpha = 0.2,lw = 0.5)
-
-
-plt.plot(lX,lYmax,color='red',lw=2)
-plt.plot(lX,lYmin,color='red',lw=2)
-
-plt.savefig('../paper/figs/ex1_UC.png',dpi = 600)
-plt.savefig('figs/ex1_UC.png',dpi = 600)
-
-plt.clf()
-
-## Get confusion matrix
 with open('runinfo/ex1_UC_cm.out','w') as f:
+    print('TRUE MODEL',file = f)
     a,b,c,d = generate_confusion_matrix(test_results,base_predict)
     print('TP=%i\tFP=%i\nFN=%i\tTN=%i' %(a,b,c,d),file = f)
 
@@ -115,8 +116,8 @@ with open('runinfo/ex1_UC_cm.out','w') as f:
     print('Sensitivity = %.3f' %(a/(a+c)),file = f)
     print('Specificity = %.3f' %(d/(b+d)),file = f)
 
-
-    aa,bb,cc,dd = generate_confusion_matrix(test_results,predictions)
+    print('DISCARDED DATA MODEL',file = f)
+    aa,bb,cc,dd = generate_confusion_matrix(test_results,nuq_predict)
     try:
         ss = 1/(1+cc/aa)
     except:
@@ -128,9 +129,27 @@ with open('runinfo/ex1_UC_cm.out','w') as f:
     print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aa,bb,cc,dd),file = f)
 
     # Calculate sensitivity and specificity
-    print('Sensitivity = %s' %(ss),file = f)
-    print('Specificity = %s' %(tt),file = f)
+    print('Sensitivity = %.3f' %(ss),file = f)
+    print('Specificity = %.3f' %(tt),file = f)
+    
+    print('UQ MODEL',file = f)
+    
+    aaai,bbbi,ccci,dddi = generate_confusion_matrix(test_results,predictions,throw = False)
+    try:
+        sssi = 1/(1+ccci/aaai)
+    except:
+        sssi = None
+    try:    
+        ttti = 1/(1+bbbi/dddi)
+    except:
+        ttti = None
+        
+    print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aaai,bbbi,ccci,dddi),file = f)
 
+    # Calculate sensitivity and specificity
+    print('Sensitivity = %s' %(sssi),file = f)
+    print('Specificity = %s' %(ttti),file = f)
+    
     aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(test_results,predictions,throw = True)
     try:
         sss = 1/(1+ccc/aaa)
@@ -146,47 +165,30 @@ with open('runinfo/ex1_UC_cm.out','w') as f:
     # Calculate sensitivity and specificity
     print('Sensitivity = %.3f' %(sss),file = f)
     print('Specificity = %.3f' %(ttt),file = f)
+    print('sigma = %.3f' %(eee/(aaa+ccc+eee)),file = f)
+    print('tau = %.3f' %(fff/(bbb+ddd+fff)),file = f)
+    
 
-### ROC CURVE
+# ### ROC CURVE
 s,fpr = ROC(model = base, data = test_data, results = test_results)
+nuq_s,nuq_fpr = ROC(model = nuq, data = test_data, results = test_results)
 s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
 
-
-plt.plot([0,1],[0,1],'k:',label = 'Random Classifier')
-plt.plot([0],[1],'ro',label = 'Perfect Classifier')
 plt.xlabel('$1-t$')
 plt.ylabel('$s$')
-plt.plot(fpr,s,'k', label = 'Base')
+plt.step(fpr,s,'k', label = 'Base')
+plt.step(nuq_fpr,nuq_s,'m--', label = 'Discarded')
+plt.step(fpr_t,s_t,'r', label = 'Not Predicting')
 plt.legend()
 
-plt.savefig('figs/ex1_ROC.png',dpi = 600)
-plt.savefig('../paper/figs/ex1_ROC.png',dpi = 600)
-
-
-steps = 1001
-X = np.linspace(0,1,steps)
-Ymin = steps*[2]
-Ymax = steps*[-1]
-
-plt.step(fpr_t,s_t,'m', label = 'Not Predicting')
-plt.legend()
-
-# tikzplotlib.save('../paper/figs/ex1_UQ_ROC.png')
 plt.savefig('figs/ex1_UC_ROC.png',dpi = 600)
 plt.savefig('../paper/figs/ex1_UC_ROC.png',dpi = 600)
-
-# plt.clf()
+plt.clf()
 
 with open('runinfo/ex1_UC_auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
-    # print('NO UNCERTAINTY: %.4f' %roc_auc_score(base.predict_proba(test_data)[:,1],test_results), file = f)
-    # print('LOWER BOUND: %.4f' %auc(Ymin,Xmin), file = f)
-    # print('UPPER BOUND: %.4f' %auc(Ymax,Xmax), file = f)
+    print('DISCARDED: %.4F' %auc(nuq_s,nuq_fpr),file = f)
     print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
-
-
-
-######
 
 fig = plt.figure()
 
@@ -204,8 +206,10 @@ ax.legend()
 plt.savefig('figs/ex1_UC_ROC3D.png',dpi = 600)
 plt.savefig('../paper/figs/ex1_UC_ROC3D.png',dpi = 600)
 
-## Hosmer-Lemeshow
-hl_b, pval_b = hosmer_lemeshow_test(base,data,results,Q = 10)
+### Hosmer-Lemeshow
+hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,Q = 10)
+
+hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,Q = 10)
 
 hl_min = np.inf
 hl_max = 0
@@ -213,7 +217,7 @@ pval_max = 0
 pval_min = 1
 
 for k,m in uq_models.items():
-    hl_,pval_ = hosmer_lemeshow_test(m,data,results,Q = 10)
+    hl_,pval_ = hosmer_lemeshow_test(m,train_data,train_results,Q = 10)
     hl_min = min(hl_min,hl_)
     pval_min = min(pval_min,pval_)
     
@@ -222,7 +226,7 @@ for k,m in uq_models.items():
     
     
 with open('runinfo/ex1_UC_HL.out','w') as f:
-    print('base\nhl = %.3f, p = %.5f' %(hl_b,pval_b),file = f) 
+    print('base\nhl = %.3f, p = %.5f' %(hl_b,pval_b),file = f)
+    print('no UQ\nhl = %.3f, p = %.5f' %(hl_nuq,pval_nuq),file = f) 
 
-    print('min')
-    print('hl = [%.3f,%.3f], p = [%.5f,%.5f]' %(hl_min,hl_max,pval_min,pval_max)) 
+    print('UQ\nhl = [%.3f,%.3f], p = [%.5f,%.5f]' %(hl_min,hl_max,pval_min,pval_max),file = f) 

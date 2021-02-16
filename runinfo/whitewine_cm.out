@@ -1,18 +1,16 @@
-~~~~TRUE MODEL~~~~
-TP=132	FP=339
-FN=35	TN=993
-Sensitivity = 0.790
-Specificity = 0.745
-~~~~BASE MODEL~~~~
-TP=132	FP=338
-FN=35	TN=994
-Sensitivity = 0.790
-Specificity = 0.746
-~~~~UQ MODEL~~~~
-TP=132	FP=333
-FN=35	TN=988
-NP(+)=0	NP(-)=11
-Sensitivity = 0.790
-Specificity = 0.748
-sigma = 0.000000
-tau = 0.008258
+TRUE MODEL
+TP=56	FP=42
+FN=111	TN=1140
+Sensitivity = 0.335
+Specificity = 0.964
+DISCARDED DATA MODEL
+TP=54	FP=42
+FN=113	TN=1140
+Sensitivity = 0.323
+Specificity = 0.964
+UQ MODEL
+TP=30	FP=23
+FN=98	TN=1126
+NP(+)=39	NP(-)=33
+Sensitivity = 0.234
+Specificity = 0.980

@@ -29,6 +29,7 @@ def generate_confusion_matrix(results,predictions,throw = False):
     f = 0
     
     for result, prediction in zip(results,predictions):
+  
         if prediction.__class__.__name__ != 'list':
             prediction = [prediction,prediction]
 
@@ -176,14 +177,14 @@ def int_logistic_regression(UQdata,results):
     return {**models,**n_models}
 
 def ROC(model = None, predictions = None, data = None, results = None, uq = False, drop = True):
-    
+
     s = []
     fpr = []
     
     if predictions is None:
         predictions = model.predict_proba(data)[:,1]
     
-    for p in tqdm(np.linspace(0,1,1001),desc='ROC calcualtion'):
+    for p in tqdm(np.linspace(0,1,1000),desc='ROC calcualtion'):
         a = 0
         b = 0
         c = 0
@@ -298,12 +299,12 @@ def UQ_ROC_alt(models, data, results):
     
     
     probabilities = []
-    for d in data.index:
+    for d in tqdm(data.index, desc = 'UQ ROC (1)'):
         l = [m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1] for k,m in models.items()]
         probabilities.append((min(l),max(l)))
     
     
-    for p in tqdm(np.linspace(0,1,1001),desc = 'UQ_ROC_Calculation'):
+    for p in tqdm(np.linspace(0,1,1000),desc = 'UQ ROC (2)'):
         a = 0
         b = 0
         c = 0
@@ -414,9 +415,8 @@ def hosmer_lemeshow_test(model, data ,results,Q = 10, uq = False):
     buckets = pd.DataFrame(buckets).transpose()
     # print(buckets)
     hl = sum(((buckets['observed_cases']-buckets['expected_cases'])**2)/(buckets['expected_cases'])) + sum(((buckets['observed_n_cases']-buckets['expected_n_cases'])**2)/(buckets['expected_n_cases']))
-    print(hl)
+
     pval = 1-chi2.cdf(hl,Q-2)
-    
     
     return hl, pval
     
