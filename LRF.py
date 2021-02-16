@@ -6,6 +6,8 @@ from tqdm import tqdm
 import pba
 import random
 import scipy.optimize as so
+from scipy.stats import chi2
+from scipy.stats import chisquare
 
 def midpoints(data):
     n_data = data.copy()
@@ -72,44 +74,7 @@ def uc_logistic_regression(data,result,uncertain):
         models[str(i)] = model.fit(new_data.to_numpy(),new_result.to_numpy())
         
     return models
-
-        
-def find_zero_point(X, B0, B, uq_cols):
-    def min_F(X,Bx,Cx):
-        for x,Bx in zip(X,Bx):
-            Cx += float(b*x)
-        return abs(Cx)
-    def min_F(X,Bx,Cx):
-        for x,Bx in zip(X,Bx):
-            Cx += float(b*x)
-        return -abs(Cx)        
-    Cx = float(B0)
-    Bx = []
-    X0 = []
-    for i,b in zip(X.index,B):
-        if i in uq_cols:
-            Bx.append(b)
-            X0.append(X[i].midpoint())
-        else:
-            Cx += float(X[i]*b)
-    
-    bounds = [(X[i].Left,X[i].Right) for i in uq_cols]
-    Rmin = so.minimize(min_F,X0,args = (Bx,Cx),method = 'L-BFGS-B',bounds = bounds)
-    Rmax = so.minimize(max_F,X0,args = (Bx,Cx),method = 'L-BFGS-B',bounds = bounds)
-    
-    
-    Xmin = X.copy()
-    Xmax = X.copy()
-
-    for i,xmin,nmax in zip(uq_cols,Rmin.x,Rmax.x):
-        Xmin[i] = xmax
-        Xmax[i] = xmin
-        
-        
-    return Xmin
-
-    
-    
+   
 def find_thresholds(B0,B,UQdata,uq_cols):
 
     def F(B0,B,X):
@@ -422,8 +387,38 @@ def check_int_MC(models,UQdata,results,many,test_data):
                 
     return ir, oor
 
-def hosmer_lemeshow_test(model,data,results):
-    pass
+def hosmer_lemeshow_test(model, data ,results,Q = 10, uq = False):
+    
+
+    probs = pd.DataFrame(model.predict_proba(data),index = data.index)
+    probs.sort_values(by = 1,inplace = True)
+ 
+    # number of datapoints
+    N = len(data.index)
+    # number of items in buckets
+    s = N/Q
+    
+    buckets = {}
+    
+    for i in range(Q):
+        
+        idx = probs.iloc[round(s*i):round(s*(1+i))].index
+
+        buckets[i] = {
+            'observed_cases': sum(results.loc[idx]),
+            'expected_cases': sum(probs.loc[idx,1]),
+            'observed_n_cases': len(idx) - sum(results.loc[idx]),
+            'expected_n_cases': sum(probs.loc[idx,0])
+        }
+        
+    buckets = pd.DataFrame(buckets).transpose()
+    # print(buckets)
+    hl = sum(((buckets['observed_cases']-buckets['expected_cases'])**2)/(buckets['expected_cases'])) + sum(((buckets['observed_n_cases']-buckets['expected_n_cases'])**2)/(buckets['expected_n_cases']))
+    print(hl)
+    pval = 1-chi2.cdf(hl,Q-2)
+    
+    
+    return hl, pval
     
 __all__ = [
     'generate_confusion_matrix',
@@ -433,5 +428,6 @@ __all__ = [
     'UQ_ROC',
     'auc',
     'UQ_ROC_alt',
-    'check_int_MC'
+    'check_int_MC',
+    'hosmer_lemeshow_test'
 ]

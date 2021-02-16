@@ -89,7 +89,7 @@ uq_models = int_logistic_regression(UQdata,train_results)
 
 ## Test estimated vs Monte Carlo
 ir, oor = check_int_MC(uq_models,UQdata,train_results,200,test_data)
-with open('runinfo/ex1_int_MCtest.out','w') as f:
+with open('runinfo/whitewine_MCtest.out','w') as f:
     print('in bounds %i,%.3f\nout %i,%.3f'%(ir,(ir/(ir+oor)),oor,(oor/(ir+oor))),file = f)
 
 # Classify test data
@@ -102,8 +102,11 @@ predictions = []
 for i in test_predict.index:
     predictions.append([min(test_predict.loc[i]),max(test_predict.loc[i])])
 
+## Hosmer-Lemeshow
+hosmer_lemeshow_test(base,train_data,train_results,Q = 10)
+hosmer_lemeshow_test(truth,train_data,train_results,Q = 10)
 
-## Get confusion matrix
+# Get confusion matrix
 
 ## Get confusion matrix
 with open('runinfo/whitewine_cm.out','w') as f:

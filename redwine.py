@@ -26,7 +26,7 @@ test_results = wine_data.loc[test_data_index,'quality'] >= 7
 train_results = wine_data.loc[train_data_index,'quality'] >= 7
 print('prev = %.2f' %(sum(test_results)/len(wine_data)))
 # # Fit model
-base = LogisticRegression(max_iter=500)
+base = LogisticRegression(max_iter=1000)
 base.fit(train_data, train_results)
 
 # Make preictions from test data
@@ -125,3 +125,4 @@ ax.legend()
 
 plt.savefig('figs/redwine_ROC3D.png')
 plt.savefig('../paper/figs/redwine_ROC3D.png')
+hosmer_lemeshow_test(base,train_data,train_results,Q = 10)

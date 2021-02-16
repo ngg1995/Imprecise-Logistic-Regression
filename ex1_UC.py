@@ -16,26 +16,26 @@ def generate_results(data):
     results = pd.Series(index = data.index, dtype = 'bool')
     for row in data.index:
 
-        results[row] = sum(data.loc[row]) >= len(data.columns)*(15+5*np.random.randn())
+        results[row] = sum(data.loc[row]) >= len(data.columns)*(20+5*np.random.randn())
     
     return results
 
 
 # set seed to ensure same data
-np.random.seed(10)
+np.random.seed(2)
 
 # Params
 many = 50
 dim = 1
 few = 5
-some = 1000
+some = 200
 
 # Generate data
 data = pd.DataFrame(40*np.random.rand(many,dim))
 results = generate_results(data)
 
 # Generate uncertain points
-uncertain = 15+pd.DataFrame(5*np.random.rand(few,dim))
+uncertain = 15+pd.DataFrame(10*np.random.rand(few,dim))
 
 # Generate test data 
 np.random.seed(111)
@@ -203,3 +203,26 @@ ax.legend()
 
 plt.savefig('figs/ex1_UC_ROC3D.png',dpi = 600)
 plt.savefig('../paper/figs/ex1_UC_ROC3D.png',dpi = 600)
+
+## Hosmer-Lemeshow
+hl_b, pval_b = hosmer_lemeshow_test(base,data,results,Q = 10)
+
+hl_min = np.inf
+hl_max = 0
+pval_max = 0
+pval_min = 1
+
+for k,m in uq_models.items():
+    hl_,pval_ = hosmer_lemeshow_test(m,data,results,Q = 10)
+    hl_min = min(hl_min,hl_)
+    pval_min = min(pval_min,pval_)
+    
+    hl_max = max(hl_max,hl_)
+    pval_max = max(pval_max,pval_)
+    
+    
+with open('runinfo/ex1_UC_HL.out','w') as f:
+    print('base\nhl = %.3f, p = %.5f' %(hl_b,pval_b),file = f) 
+
+    print('min')
+    print('hl = [%.3f,%.3f], p = [%.5f,%.5f]' %(hl_min,hl_max,pval_min,pval_max)) 
