@@ -15,8 +15,8 @@ wine_data = pd.read_csv('winequality-red.csv',index_col = None)
 # Split the data into test/train factors and result and generate uncertain points
 random.seed(1111) # for reproducability
 
-uq_data_index = random.sample([i for i in wine_data.index if wine_data.loc[i,'quality'] == 6 or wine_data.loc[i,'quality'] == 7], k = 8)
-nuq_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 6].index if i not in uq_data_index], k = 150) + random.sample([i for i in wine_data[wine_data['quality'] >= 7].index if i not in uq_data_index], k = 50)
+uq_data_index = random.sample([i for i in wine_data.index if wine_data.loc[i,'quality'] == 6 or wine_data.loc[i,'quality'] == 7], k = 12)
+nuq_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 6].index if i not in uq_data_index], k = 50) + random.sample([i for i in wine_data[wine_data['quality'] >= 7].index if i not in uq_data_index], k = 50)
 test_data_index = [i for i in wine_data.index if i not in uq_data_index and i not in nuq_data_index]
 
 uq_data = wine_data.loc[uq_data_index,[c for c in wine_data.columns if c != 'quality']]
@@ -81,8 +81,24 @@ with open('runinfo/redwine_cm.out','w') as f:
     # Calculate sensitivity and specificity
     print('Sensitivity = %.3f' %(ss),file = f)
     print('Specificity = %.3f' %(tt),file = f)
-    
+
     print('UQ MODEL',file = f)
+    
+    aaai,bbbi,ccci,dddi = generate_confusion_matrix(test_results,predictions,throw = False)
+    try:
+        sssi = 1/(1+ccci/aaai)
+    except:
+        sssi = None
+    try:    
+        ttti = 1/(1+bbbi/dddi)
+    except:
+        ttti = None
+        
+    print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aaai,bbbi,ccci,dddi),file = f)
+
+    # Calculate sensitivity and specificity
+    print('Sensitivity = %s' %(sssi),file = f)
+    print('Specificity = %s' %(ttti),file = f)
     aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(test_results,predictions,throw = True)
     try:
         sss = 1/(1+ccc/aaa)
@@ -104,28 +120,55 @@ s,fpr = ROC(model = base, data = test_data, results = test_results)
 nuq_s,nuq_fpr = ROC(model = nuq, data = test_data, results = test_results)
 s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
 
+s_i, fpr_i = UQ_ROC(uq_models, test_data, test_results)
+
+steps = 1000
+X = np.linspace(0,1,steps)
+Ymin = steps*[2]
+Ymax = steps*[-1]
+
+for i, x in tqdm(enumerate(X)):
+    for k,j in zip(s_i,fpr_i):
+
+        if j.straddles(x,endpoints = True):
+            Ymin[i] = min((Ymin[i],k.Left))
+            Ymax[i] = max((Ymax[i],k.Right))
+
+Xmax = [0]+[x for i,x in enumerate(X) if Ymax[i] != -1]+[1]
+Xmin = [0]+[x for i,x in enumerate(X) if Ymin[i] != 2]+[1]
+Ymax = [0]+[y for i,y in enumerate(Ymax) if Ymax[i] != -1]+[1]
+Ymin = [0]+[y for i,y in enumerate(Ymin) if Ymin[i] != 2]+[1]
+
+auc_int_min = sum([(Xmin[i]-Xmin[i-1])*Ymin[i] for i in range(1,len(Xmin))])
+auc_int_max = sum([(Xmax[i]-Xmax[i-1])*Ymax[i] for i in range(1,len(Xmin))])
+   
 plt.xlabel('$1-t$')
 plt.ylabel('$s$')
 plt.step(fpr,s,'k', label = 'Base')
 plt.step(nuq_fpr,nuq_s,'m', label = 'Discarded')
-plt.step(fpr_t,s_t,'r', label = 'Not Predicting')
+plt.step(fpr_t,s_t,'y', label = 'Not Predicting')
+plt.plot(Xmax,Ymax,'r',label = 'Interval Bounds')
+plt.plot(Xmin,Ymin,'r')
+
 plt.legend()
 
 plt.savefig('figs/redwine_ROC.png',dpi = 600)
 plt.savefig('../paper/figs/redwine_ROC.png',dpi = 600)
 plt.clf()
-fig = plt.figure()
 
-with open('runinfo/ex1_UC_auc.out','w') as f:
+with open('runinfo/redwine_auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
     print('DISCARDED: %.4F' %auc(nuq_s,nuq_fpr),file = f)
     print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
+    print('INTERVALS: [%.4f,%.4f]' %(auc_int_min,auc_int_max), file = f)
+    
 
+fig = plt.figure()
 
 ax = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
 ax.set_xlabel('$1-t$')
 ax.set_ylabel('$s$')
-ax.set_zlabel('$\\sigma,\\tau$')
+# ax.set_zlabel('$1-\sigma,1-\\tau$')
 ax.plot(fpr_t,s_t,'m',alpha = 0.5)
 ax.plot3D(fpr,s,Sigma,'b',label = '$\\sigma$')
 ax.plot3D(fpr,s,Tau,'r',label = '$\\tau$')

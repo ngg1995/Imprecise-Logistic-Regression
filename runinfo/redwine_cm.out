@@ -9,6 +9,10 @@ FN=50	TN=1057
 Sensitivity = 0.697
 Specificity = 0.800
 UQ MODEL
+TP=[95, 135]	FP=[167, 349]
+FN=[30, 70]	TN=[973, 1155]
+Sensitivity = [0.575758, 0.818182]
+Specificity = [0.736006, 0.873676]
 TP=95	FP=167
 FN=30	TN=973
 NP(+)=40	NP(-)=182

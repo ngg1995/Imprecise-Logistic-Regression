@@ -273,13 +273,13 @@ def UQ_ROC(models, data, results):
     
         
     s_i,fpr_i = ROC(predictions = predictions, data = data, results = results, uq = True, drop = False)
-    s_t,fpr_t = ROC(predictions = predictions, data = data, results = results, uq = True, drop = True)
+
     
     s_i = [pba.I(i) for i in s_i]
     fpr_i = [pba.I(i) for i in fpr_i]
     
 
-    return s_i, fpr_i, s_t, fpr_t
+    return s_i, fpr_i
 
 
 def auc(s,fpr):

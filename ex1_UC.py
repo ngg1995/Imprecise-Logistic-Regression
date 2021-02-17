@@ -169,16 +169,41 @@ with open('runinfo/ex1_UC_cm.out','w') as f:
     print('tau = %.3f' %(fff/(bbb+ddd+fff)),file = f)
     
 
-# ### ROC CURVE
+### ROC CURVE
 s,fpr = ROC(model = base, data = test_data, results = test_results)
 nuq_s,nuq_fpr = ROC(model = nuq, data = test_data, results = test_results)
 s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
 
+s_i, fpr_i = UQ_ROC(uq_models, test_data, test_results)
+
+steps = 1000
+X = np.linspace(0,1,steps)
+Ymin = steps*[2]
+Ymax = steps*[-1]
+
+for i, x in tqdm(enumerate(X)):
+    for k,j in zip(s_i,fpr_i):
+
+        if j.straddles(x,endpoints = True):
+            Ymin[i] = min((Ymin[i],k.Left))
+            Ymax[i] = max((Ymax[i],k.Right))
+
+Xmax = [0]+[x for i,x in enumerate(X) if Ymax[i] != -1]+[1]
+Xmin = [0]+[x for i,x in enumerate(X) if Ymin[i] != 2]+[1]
+Ymax = [0]+[y for i,y in enumerate(Ymax) if Ymax[i] != -1]+[1]
+Ymin = [0]+[y for i,y in enumerate(Ymin) if Ymin[i] != 2]+[1]
+
+auc_int_min = sum([(Xmin[i]-Xmin[i-1])*Ymin[i] for i in range(1,len(Xmin))])
+auc_int_max = sum([(Xmax[i]-Xmax[i-1])*Ymax[i] for i in range(1,len(Xmin))])
+   
 plt.xlabel('$1-t$')
 plt.ylabel('$s$')
 plt.step(fpr,s,'k', label = 'Base')
 plt.step(nuq_fpr,nuq_s,'m--', label = 'Discarded')
-plt.step(fpr_t,s_t,'r', label = 'Not Predicting')
+plt.step(fpr_t,s_t,'y', label = 'Not Predicting')
+plt.plot(Xmax,Ymax,'r',label = 'Interval Bounds')
+plt.plot(Xmin,Ymin,'r')
+
 plt.legend()
 
 plt.savefig('figs/ex1_UC_ROC.png',dpi = 600)
@@ -189,6 +214,8 @@ with open('runinfo/ex1_UC_auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
     print('DISCARDED: %.4F' %auc(nuq_s,nuq_fpr),file = f)
     print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
+    print('INTERVALS: [%.4f,%.4f]' %(auc_int_min,auc_int_max), file = f)
+    
 
 fig = plt.figure()
 
