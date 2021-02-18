@@ -388,7 +388,7 @@ def check_int_MC(models,UQdata,results,many,test_data):
                 
     return ir, oor
 
-def hosmer_lemeshow_test(model, data ,results,Q = 10, uq = False):
+def hosmer_lemeshow_test(model, data ,results,g = 10):
     
 
     probs = pd.DataFrame(model.predict_proba(data),index = data.index)
@@ -397,11 +397,11 @@ def hosmer_lemeshow_test(model, data ,results,Q = 10, uq = False):
     # number of datapoints
     N = len(data.index)
     # number of items in buckets
-    s = N/Q
+    s = N/g
     
     buckets = {}
     
-    for i in range(Q):
+    for i in range(g):
         
         idx = probs.iloc[round(s*i):round(s*(1+i))].index
 
@@ -416,10 +416,64 @@ def hosmer_lemeshow_test(model, data ,results,Q = 10, uq = False):
     # print(buckets)
     hl = sum(((buckets['observed_cases']-buckets['expected_cases'])**2)/(buckets['expected_cases'])) + sum(((buckets['observed_n_cases']-buckets['expected_n_cases'])**2)/(buckets['expected_n_cases']))
 
-    pval = 1-chi2.cdf(hl,Q-2)
+    pval = 1-chi2.cdf(hl,g-2)
     
     return hl, pval
+  
+def UQ_hosmer_lemeshow_test(models, data, results, g=10):
     
+    probabs_0 = []
+    probabs_1 = []
+    
+    for d in tqdm(data.index, desc = 'UQ HL Test'):
+        p = [(m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,0],m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1]) for k,m in models.items()]
+        
+        p = list(zip(*p))
+        
+        probabs_0.append(pba.I(min(p[0]),max(p[0])))
+        probabs_1.append(pba.I(min(p[1]),max(p[1])))
+        
+    
+    probs = pd.DataFrame({0:probabs_0,1:probabs_1},index = data.index, dtype = 'O')
+    probs.sort_values(by = 1,inplace = True)
+
+    # number of datapoints
+    N = len(data.index)
+    # number of items in buckets
+    s = N/g
+    
+    buckets = {}
+    
+    for i in range(g):
+        
+        idx = probs.iloc[round(s*i):round(s*(1+i))].index
+
+        buckets[i] = {
+            'observed_cases': sum(results.loc[idx]),
+            'expected_cases': sum(probs.loc[idx,1]),
+            'observed_n_cases': len(idx) - sum(results.loc[idx]),
+            'expected_n_cases': sum(probs.loc[idx,0])
+        }
+        
+    # print(buckets)
+
+    hl = 0
+    for i in range(g):
+
+        a = buckets[i]['observed_cases']/(buckets[i]['expected_cases']**.5)
+        b = buckets[i]['expected_cases']**.5
+        c = pba.I(a.Left - b.Right, a.Right - b.Left)**2
+        
+        d = buckets[i]['observed_n_cases']/(buckets[i]['expected_n_cases']**.5)
+        e = buckets[i]['expected_n_cases']**.5
+        f = pba.I(d.Left - e.Right, d.Right - e.Left)**2
+
+        hl += c+f
+
+    pval = pba.I(1-chi2.cdf(hl.Left,g-2),1-chi2.cdf(hl.Right,g-2))
+    
+    return hl, pval
+
 __all__ = [
     'generate_confusion_matrix',
     'uc_logistic_regression',
@@ -429,5 +483,7 @@ __all__ = [
     'auc',
     'UQ_ROC_alt',
     'check_int_MC',
-    'hosmer_lemeshow_test'
+    'hosmer_lemeshow_test',
+    'UQ_hosmer_lemeshow_test'
+    
 ]

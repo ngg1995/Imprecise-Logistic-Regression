@@ -15,7 +15,7 @@ wine_data = pd.read_csv('winequality-red.csv',index_col = None)
 # Split the data into test/train factors and result and generate uncertain points
 random.seed(1111) # for reproducability
 
-uq_data_index = random.sample([i for i in wine_data.index if wine_data.loc[i,'quality'] == 6 or wine_data.loc[i,'quality'] == 7], k = 12)
+uq_data_index = random.sample([i for i in wine_data.index if wine_data.loc[i,'quality'] == 6 or wine_data.loc[i,'quality'] == 7], k = 10)
 nuq_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 6].index if i not in uq_data_index], k = 50) + random.sample([i for i in wine_data[wine_data['quality'] >= 7].index if i not in uq_data_index], k = 50)
 test_data_index = [i for i in wine_data.index if i not in uq_data_index and i not in nuq_data_index]
 
@@ -144,8 +144,10 @@ auc_int_max = sum([(Xmax[i]-Xmax[i-1])*Ymax[i] for i in range(1,len(Xmin))])
    
 plt.xlabel('$1-t$')
 plt.ylabel('$s$')
+plt.ylabel('$\\sigma,\\tau$')
+
 plt.step(fpr,s,'k', label = 'Base')
-plt.step(nuq_fpr,nuq_s,'m', label = 'Discarded')
+plt.step(nuq_fpr,nuq_s,'m--', label = 'Discarded')
 plt.step(fpr_t,s_t,'y', label = 'Not Predicting')
 plt.plot(Xmax,Ymax,'r',label = 'Interval Bounds')
 plt.plot(Xmin,Ymin,'r')
@@ -154,8 +156,11 @@ plt.legend()
 
 plt.savefig('figs/redwine_ROC.png',dpi = 600)
 plt.savefig('../paper/figs/redwine_ROC.png',dpi = 600)
-plt.clf()
+# plt.clf()
 
+for i,j in zip(fpr_i,s_i):
+    plt.plot([i.Left,i.Right],[j.Left,j.Right])
+plt.show()
 with open('runinfo/redwine_auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
     print('DISCARDED: %.4F' %auc(nuq_s,nuq_fpr),file = f)
@@ -178,28 +183,27 @@ ax.legend()
 
 plt.savefig('figs/redwine_ROC3D.png',dpi = 600)
 plt.savefig('../paper/figs/redwine_ROC3D.png',dpi = 600)
+plt.clf()
+
+plt.xlabel('$(1-t)$/$s$')
+plt.ylabel('$\\sigma$/$\\tau$')
+plt.plot(s,Sigma,'g',label = '$\\sigma$ v $s$')
+plt.plot(fpr,Tau,'r',label = '$\\tau$ v $t$')
+plt.legend()
+
+plt.savefig('figs/redwine_ST.png',dpi = 600)
+plt.savefig('../paper/figs/redwine_ST.png',dpi = 600)
+
+plt.clf()
 
 ### Hosmer-Lemeshow
-hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,Q = 20)
+hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,g = 10)
 
-hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,Q = 20)
+hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,g = 10)
 
-hl_min = np.inf
-hl_max = 0
-pval_max = 0
-pval_min = 1
+hl_uq, pval_uq = UQ_hosmer_lemeshow_test(uq_models,train_data,train_results,g = 10)
 
-for k,m in uq_models.items():
-    hl_,pval_ = hosmer_lemeshow_test(m,train_data,train_results,Q = 20)
-    hl_min = min(hl_min,hl_)
-    pval_min = min(pval_min,pval_)
-    
-    hl_max = max(hl_max,hl_)
-    pval_max = max(pval_max,pval_)
-    
-    
 with open('runinfo/redwine_HL.out','w') as f:
     print('base\nhl = %.3f, p = %.5f' %(hl_b,pval_b),file = f)
     print('no UQ\nhl = %.3f, p = %.5f' %(hl_nuq,pval_nuq),file = f) 
-
-    print('UQ\nhl = [%.3f,%.3f], p = [%.5f,%.5f]' %(hl_min,hl_max,pval_min,pval_max),file = f) 
+    print('UQ\nhl = %s, p = %s' %(hl_uq,pval_uq),file = f) 

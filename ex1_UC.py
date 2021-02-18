@@ -232,11 +232,23 @@ ax.legend()
 
 plt.savefig('figs/ex1_UC_ROC3D.png',dpi = 600)
 plt.savefig('../paper/figs/ex1_UC_ROC3D.png',dpi = 600)
+plt.clf()
+
+plt.xlabel('$(1-t)$/$s$')
+plt.ylabel('$\\sigma$/$\\tau$')
+plt.plot(s,Sigma,'g',label = '$\\sigma$ v $s$')
+plt.plot(fpr,Tau,'r',label = '$\\tau$ v $t$')
+plt.legend()
+
+plt.savefig('figs/ex1_UC_ST.png',dpi = 600)
+plt.savefig('../paper/figs/ex1_UC_ST.png',dpi = 600)
+
+plt.clf()
 
 ### Hosmer-Lemeshow
-hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,Q = 10)
+hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,g = 10)
 
-hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,Q = 10)
+hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,g = 10)
 
 hl_min = np.inf
 hl_max = 0
@@ -244,7 +256,7 @@ pval_max = 0
 pval_min = 1
 
 for k,m in uq_models.items():
-    hl_,pval_ = hosmer_lemeshow_test(m,train_data,train_results,Q = 10)
+    hl_,pval_ = hosmer_lemeshow_test(m,train_data,train_results,g = 10)
     hl_min = min(hl_min,hl_)
     pval_min = min(pval_min,pval_)
     
@@ -252,8 +264,11 @@ for k,m in uq_models.items():
     pval_max = max(pval_max,pval_)
     
     
+hl_uq, pval_uq = UQ_hosmer_lemeshow_test(uq_models,train_data,train_results,g = 10)
+
 with open('runinfo/ex1_UC_HL.out','w') as f:
     print('base\nhl = %.3f, p = %.5f' %(hl_b,pval_b),file = f)
     print('no UQ\nhl = %.3f, p = %.5f' %(hl_nuq,pval_nuq),file = f) 
 
-    print('UQ\nhl = [%.3f,%.3f], p = [%.5f,%.5f]' %(hl_min,hl_max,pval_min,pval_max),file = f) 
+    # print('UQ\nhl = [%.3f,%.3f], p = [%.5f,%.5f]' %(hl_min,hl_max,pval_min,pval_max),file = f) 
+    print('UQ\nhl = %s, p = %s' %(hl_uq,pval_uq),file = f) 

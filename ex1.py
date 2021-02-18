@@ -83,6 +83,6 @@ with open('runinfo/ex1_auc.out','w') as f:
 
 
 ### Hosmer-Lemeshow
-hl, pval = hosmer_lemeshow_test(base,train_data,train_results,Q = 10)
+hl, pval = hosmer_lemeshow_test(base,train_data,train_results,g = 10)
 with open('runinfo/ex1_HL.out','w') as f:
     print('hl = %.3f, p = %.5f' %(hl,pval),file = f) 

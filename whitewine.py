@@ -40,6 +40,7 @@ wine_data = pd.read_csv('winequality-white.csv',index_col = None)
 
 # Split the data into test/train factors and result
 random.seed(1111) # for reproducability
+np.random.seed(1)
 
 train_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 6].index], k = 50) + random.sample([i for i in wine_data[wine_data['quality'] >= 7].index ], k = 50)
 test_data_index = [i for i in wine_data.index if i not in train_data_index]
@@ -56,11 +57,11 @@ eps = {"fixed acidity":(0.2,'u'),
        "citric acid":(0.03,'t',-0.75),
        "residual sugar":(0.02,'u'),
        "chlorides":(0.003,'u'),
-       "free sulfur dioxide":(2,'u'),
-       "total sulfur dioxide":(2,'u'),
-       "density":(0.01,'t',0.9,(0,1)),
-       "pH":(.01,'t'),
-       "sulphates":(0.01,'t'),
+    #    "free sulfur dioxide":(2,'u'),
+    #    "total sulfur dioxide":(2,'u'),
+    #    "density":(0.01,'t',0.9,(0,1)),
+    #    "pH":(.01,'t',1),
+    #    "sulphates":(0.01,'t'),
        "alcohol":(0.1,'t')
        }
 
@@ -159,6 +160,7 @@ with open('runinfo/whitewine_cm.out','w') as f:
     print('Sensitivity = %.3f' %(sss),file = f)
     print('Specificity = %.3f' %(ttt),file = f)
 
+
 ### ROC CURVE
 s,fpr = ROC(model = base, data = test_data, results = test_results)
 nuq_s,nuq_fpr = ROC(model = nuq, data = test_data, results = test_results)
@@ -188,6 +190,8 @@ auc_int_max = sum([(Xmax[i]-Xmax[i-1])*Ymax[i] for i in range(1,len(Xmin))])
    
 plt.xlabel('$1-t$')
 plt.ylabel('$s$')
+plt.ylabel('$\\sigma,\\tau$')
+
 plt.step(fpr,s,'k', label = 'Base')
 plt.step(nuq_fpr,nuq_s,'m', label = 'Discarded')
 plt.step(fpr_t,s_t,'y', label = 'Not Predicting')
@@ -198,11 +202,14 @@ plt.legend()
 
 plt.savefig('figs/whitewine_ROC.png',dpi = 600)
 plt.savefig('../paper/figs/whitewine_ROC.png',dpi = 600)
-plt.clf()
+# plt.clf()
 
+# for i,j in zip(fpr_i,s_i):
+#     plt.plot([i.Left,i.Right],[j.Left,j.Right])
+# plt.show()
 with open('runinfo/whitewine_auc.out','w') as f:
-    print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
-    print('DISCARDED: %.4F' %auc(nuq_s,nuq_fpr),file = f)
+    print('TRUTH: %.4f' %auc(s,fpr), file = f)
+    print('No UQ: %.4F' %auc(nuq_s,nuq_fpr),file = f)
     print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
     print('INTERVALS: [%.4f,%.4f]' %(auc_int_min,auc_int_max), file = f)
     
@@ -222,28 +229,29 @@ ax.legend()
 
 plt.savefig('figs/whitewine_ROC3D.png',dpi = 600)
 plt.savefig('../paper/figs/whitewine_ROC3D.png',dpi = 600)
+plt.clf()
+
+plt.xlabel('$(1-t)$/$s$')
+plt.ylabel('$\\sigma$/$\\tau$')
+plt.plot(s,Sigma,'g',label = '$\\sigma$ v $s$')
+plt.plot(fpr,Tau,'r',label = '$\\tau$ v $t$')
+plt.legend()
+
+plt.savefig('figs/whitewine_ST.png',dpi = 600)
+plt.savefig('../paper/figs/whitewine_ST.png',dpi = 600)
+
+plt.clf()
 
 ### Hosmer-Lemeshow
-hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,Q = 20)
+hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,g = 10)
 
-hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,Q = 20)
+hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,g = 10)
 
-hl_min = np.inf
-hl_max = 0
-pval_max = 0
-pval_min = 1
+hl_uq, pval_uq = UQ_hosmer_lemeshow_test(uq_models,train_data,train_results,g = 10)
 
-for k,m in uq_models.items():
-    hl_,pval_ = hosmer_lemeshow_test(m,train_data,train_results,Q = 10)
-    hl_min = min(hl_min,hl_)
-    pval_min = min(pval_min,pval_)
-    
-    hl_max = max(hl_max,hl_)
-    pval_max = max(pval_max,pval_)
     
     
 with open('runinfo/whitewine_HL.out','w') as f:
     print('base\nhl = %.3f, p = %.5f' %(hl_b,pval_b),file = f)
     print('no UQ\nhl = %.3f, p = %.5f' %(hl_nuq,pval_nuq),file = f) 
-
-    print('UQ\nhl = [%.3f,%.3f], p = [%.5f,%.5f]' %(hl_min,hl_max,pval_min,pval_max),file = f) 
+    print('UQ\nhl = %s, p = %s' %(hl_uq,pval_uq),file = f) 
