@@ -16,7 +16,7 @@ wine_data = pd.read_csv('winequality-red.csv',index_col = None)
 random.seed(1111) # for reproducability
 
 uq_data_index = random.sample([i for i in wine_data.index if wine_data.loc[i,'quality'] == 6 or wine_data.loc[i,'quality'] == 7], k = 10)
-nuq_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 6].index if i not in uq_data_index], k = 50) + random.sample([i for i in wine_data[wine_data['quality'] >= 7].index if i not in uq_data_index], k = 50)
+nuq_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 6].index if i not in uq_data_index], k = 150) + random.sample([i for i in wine_data[wine_data['quality'] >= 7].index if i not in uq_data_index], k = 50)
 test_data_index = [i for i in wine_data.index if i not in uq_data_index and i not in nuq_data_index]
 
 uq_data = wine_data.loc[uq_data_index,[c for c in wine_data.columns if c != 'quality']]
@@ -94,11 +94,10 @@ with open('runinfo/redwine_cm.out','w') as f:
     except:
         ttti = None
         
-    print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aaai,bbbi,ccci,dddi),file = f)
+    print('TP=[%.3f,%.3f]\tFP=[%.3f,%.3f]\nFN=[%.3f,%.3f]\tTN=[%.3f,%.3f]' %(*aaai,*bbbi,*ccci,*dddi),file = f)
 
     # Calculate sensitivity and specificity
-    print('Sensitivity = %s' %(sssi),file = f)
-    print('Specificity = %s' %(ttti),file = f)
+    print('Sensitivity = [%.3f,%.3f]\nSpecificity = [%.3f,%.3f]' %(*sssi,*ttti),file = f)
     aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(test_results,predictions,throw = True)
     try:
         sss = 1/(1+ccc/aaa)
@@ -147,7 +146,7 @@ plt.ylabel('$s$')
 plt.ylabel('$\\sigma,\\tau$')
 
 plt.step(fpr,s,'k', label = 'Base')
-plt.step(nuq_fpr,nuq_s,'m--', label = 'Discarded')
+plt.step(nuq_fpr,nuq_s,'m', label = 'Discarded')
 plt.step(fpr_t,s_t,'y', label = 'Not Predicting')
 plt.plot(Xmax,Ymax,'r',label = 'Interval Bounds')
 plt.plot(Xmin,Ymin,'r')
@@ -158,14 +157,12 @@ plt.savefig('figs/redwine_ROC.png',dpi = 600)
 plt.savefig('../paper/figs/redwine_ROC.png',dpi = 600)
 # plt.clf()
 
-for i,j in zip(fpr_i,s_i):
-    plt.plot([i.Left,i.Right],[j.Left,j.Right])
-plt.show()
+
 with open('runinfo/redwine_auc.out','w') as f:
-    print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
-    print('DISCARDED: %.4F' %auc(nuq_s,nuq_fpr),file = f)
-    print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
-    print('INTERVALS: [%.4f,%.4f]' %(auc_int_min,auc_int_max), file = f)
+    print('TRUTH: %.3f' %auc(s,fpr), file = f)
+    print('No UQ: %.3F' %auc(nuq_s,nuq_fpr),file = f)
+    print('THROW: %.3f' %auc(s_t,fpr_t), file = f)
+    print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
     
 
 fig = plt.figure()
@@ -204,6 +201,6 @@ hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,g = 10)
 hl_uq, pval_uq = UQ_hosmer_lemeshow_test(uq_models,train_data,train_results,g = 10)
 
 with open('runinfo/redwine_HL.out','w') as f:
-    print('base\nhl = %.3f, p = %.5f' %(hl_b,pval_b),file = f)
-    print('no UQ\nhl = %.3f, p = %.5f' %(hl_nuq,pval_nuq),file = f) 
-    print('UQ\nhl = %s, p = %s' %(hl_uq,pval_uq),file = f) 
+    print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
+    print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
+    print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 

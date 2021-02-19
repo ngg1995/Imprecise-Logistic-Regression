@@ -404,7 +404,7 @@ def hosmer_lemeshow_test(model, data ,results,g = 10):
     for i in range(g):
         
         idx = probs.iloc[round(s*i):round(s*(1+i))].index
-
+        
         buckets[i] = {
             'observed_cases': sum(results.loc[idx]),
             'expected_cases': sum(probs.loc[idx,1]),
@@ -413,7 +413,6 @@ def hosmer_lemeshow_test(model, data ,results,g = 10):
         }
         
     buckets = pd.DataFrame(buckets).transpose()
-    # print(buckets)
     hl = sum(((buckets['observed_cases']-buckets['expected_cases'])**2)/(buckets['expected_cases'])) + sum(((buckets['observed_n_cases']-buckets['expected_n_cases'])**2)/(buckets['expected_n_cases']))
 
     pval = 1-chi2.cdf(hl,g-2)
@@ -424,6 +423,7 @@ def UQ_hosmer_lemeshow_test(models, data, results, g=10):
     
     probabs_0 = []
     probabs_1 = []
+    probabs_mp = []
     
     for d in tqdm(data.index, desc = 'UQ HL Test'):
         p = [(m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,0],m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1]) for k,m in models.items()]
@@ -432,10 +432,11 @@ def UQ_hosmer_lemeshow_test(models, data, results, g=10):
         
         probabs_0.append(pba.I(min(p[0]),max(p[0])))
         probabs_1.append(pba.I(min(p[1]),max(p[1])))
+        probabs_mp.append(np.mean(p[1]))
         
     
-    probs = pd.DataFrame({0:probabs_0,1:probabs_1},index = data.index, dtype = 'O')
-    probs.sort_values(by = 1,inplace = True)
+    probs = pd.DataFrame({0:probabs_0,1:probabs_1,'mp':probabs_mp},index = data.index, dtype = 'O')
+    probs.sort_values(by = 'mp',inplace = True)
 
     # number of datapoints
     N = len(data.index)
@@ -454,8 +455,6 @@ def UQ_hosmer_lemeshow_test(models, data, results, g=10):
             'observed_n_cases': len(idx) - sum(results.loc[idx]),
             'expected_n_cases': sum(probs.loc[idx,0])
         }
-        
-    # print(buckets)
 
     hl = 0
     for i in range(g):
@@ -468,7 +467,14 @@ def UQ_hosmer_lemeshow_test(models, data, results, g=10):
         e = buckets[i]['expected_n_cases']**.5
         f = pba.I(d.Left - e.Right, d.Right - e.Left)**2
 
-        hl += c+f
+        if c.straddles_zero(endpoints=True):
+            c2 = pba.I((a.Left - b.Right)**2, (a.Right - b.Left)**2)
+            f2 = pba.I((d.Left - e.Right)**2, (d.Right - e.Left)**2)
+            
+                        
+            hl += pba.I(0, c2.oadd(f2))
+        else:
+            hl += c.oadd(f)
 
     pval = pba.I(1-chi2.cdf(hl.Left,g-2),1-chi2.cdf(hl.Right,g-2))
     

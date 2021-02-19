@@ -144,11 +144,11 @@ with open('runinfo/ex1_UC_cm.out','w') as f:
     except:
         ttti = None
         
-    print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aaai,bbbi,ccci,dddi),file = f)
+    print('TP=[%i,%i]\tFP=[%i,%i]\nFN=[%i,%i]\tTN=[%i,%i]' %(*aaai,*bbbi,*ccci,*dddi),file = f)
 
     # Calculate sensitivity and specificity
-    print('Sensitivity = %s' %(sssi),file = f)
-    print('Specificity = %s' %(ttti),file = f)
+    print('Sensitivity = [%.3f,%.3f]\nSpecificity = [%.3f,%.3f]' %(*sssi,*ttti),file = f)
+
     
     aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(test_results,predictions,throw = True)
     try:
@@ -211,10 +211,10 @@ plt.savefig('../paper/figs/ex1_UC_ROC.png',dpi = 600)
 plt.clf()
 
 with open('runinfo/ex1_UC_auc.out','w') as f:
-    print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
+    print('NO UNCERTAINTY: %.3f' %auc(s,fpr), file = f)
     print('DISCARDED: %.4F' %auc(nuq_s,nuq_fpr),file = f)
-    print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
-    print('INTERVALS: [%.4f,%.4f]' %(auc_int_min,auc_int_max), file = f)
+    print('THROW: %.3f' %auc(s_t,fpr_t), file = f)
+    print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
     
 
 fig = plt.figure()
@@ -249,26 +249,12 @@ plt.clf()
 hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,g = 10)
 
 hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,g = 10)
-
-hl_min = np.inf
-hl_max = 0
-pval_max = 0
-pval_min = 1
-
-for k,m in uq_models.items():
-    hl_,pval_ = hosmer_lemeshow_test(m,train_data,train_results,g = 10)
-    hl_min = min(hl_min,hl_)
-    pval_min = min(pval_min,pval_)
-    
-    hl_max = max(hl_max,hl_)
-    pval_max = max(pval_max,pval_)
-    
-    
+   
 hl_uq, pval_uq = UQ_hosmer_lemeshow_test(uq_models,train_data,train_results,g = 10)
 
 with open('runinfo/ex1_UC_HL.out','w') as f:
-    print('base\nhl = %.3f, p = %.5f' %(hl_b,pval_b),file = f)
-    print('no UQ\nhl = %.3f, p = %.5f' %(hl_nuq,pval_nuq),file = f) 
+    print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
+    print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
 
-    # print('UQ\nhl = [%.3f,%.3f], p = [%.5f,%.5f]' %(hl_min,hl_max,pval_min,pval_max),file = f) 
-    print('UQ\nhl = %s, p = %s' %(hl_uq,pval_uq),file = f) 
+    # print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(hl_min,hl_max,pval_min,pval_max),file = f) 
+    print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 

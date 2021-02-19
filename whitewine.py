@@ -42,7 +42,7 @@ wine_data = pd.read_csv('winequality-white.csv',index_col = None)
 random.seed(1111) # for reproducability
 np.random.seed(1)
 
-train_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 6].index], k = 50) + random.sample([i for i in wine_data[wine_data['quality'] >= 7].index ], k = 50)
+train_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 6].index], k = 300) + random.sample([i for i in wine_data[wine_data['quality'] >= 7].index ], k = 300)
 test_data_index = [i for i in wine_data.index if i not in train_data_index]
 
 test_data = wine_data.loc[test_data_index,[c for c in wine_data.columns if c != 'quality']]
@@ -56,13 +56,13 @@ eps = {"fixed acidity":(0.2,'u'),
        "volatile acidity":(0.05,'t'),
        "citric acid":(0.03,'t',-0.75),
        "residual sugar":(0.02,'u'),
-       "chlorides":(0.003,'u'),
+    #    "chlorides":(0.003,'u'),
     #    "free sulfur dioxide":(2,'u'),
     #    "total sulfur dioxide":(2,'u'),
     #    "density":(0.01,'t',0.9,(0,1)),
     #    "pH":(.01,'t',1),
     #    "sulphates":(0.01,'t'),
-       "alcohol":(0.1,'t')
+    #    "alcohol":(0.1,'t')
        }
 
 np.random.seed(0)
@@ -141,8 +141,7 @@ with open('runinfo/whitewine_cm.out','w') as f:
     print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aaai,bbbi,ccci,dddi),file = f)
 
     # Calculate sensitivity and specificity
-    print('Sensitivity = %s' %(sssi),file = f)
-    print('Specificity = %s' %(ttti),file = f)
+    print('Sensitivity = [%.3f,%.3f]\nSpecificity = [%.3f,%.3f]' %(*sssi,*ttti),file = f)
 
     aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(test_results,predictions,throw = True)
     try:
@@ -161,86 +160,86 @@ with open('runinfo/whitewine_cm.out','w') as f:
     print('Specificity = %.3f' %(ttt),file = f)
 
 
-### ROC CURVE
-s,fpr = ROC(model = base, data = test_data, results = test_results)
-nuq_s,nuq_fpr = ROC(model = nuq, data = test_data, results = test_results)
-s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
+# ### ROC CURVE
+# s,fpr = ROC(model = base, data = test_data, results = test_results)
+# nuq_s,nuq_fpr = ROC(model = nuq, data = test_data, results = test_results)
+# s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
 
-s_i, fpr_i = UQ_ROC(uq_models, test_data, test_results)
+# s_i, fpr_i = UQ_ROC(uq_models, test_data, test_results)
 
-steps = 1000
-X = np.linspace(0,1,steps)
-Ymin = steps*[2]
-Ymax = steps*[-1]
+# steps = 1000
+# X = np.linspace(0,1,steps)
+# Ymin = steps*[2]
+# Ymax = steps*[-1]
 
-for i, x in tqdm(enumerate(X)):
-    for k,j in zip(s_i,fpr_i):
+# for i, x in tqdm(enumerate(X)):
+#     for k,j in zip(s_i,fpr_i):
 
-        if j.straddles(x,endpoints = True):
-            Ymin[i] = min((Ymin[i],k.Left))
-            Ymax[i] = max((Ymax[i],k.Right))
+#         if j.straddles(x,endpoints = True):
+#             Ymin[i] = min((Ymin[i],k.Left))
+#             Ymax[i] = max((Ymax[i],k.Right))
 
-Xmax = [0]+[x for i,x in enumerate(X) if Ymax[i] != -1]+[1]
-Xmin = [0]+[x for i,x in enumerate(X) if Ymin[i] != 2]+[1]
-Ymax = [0]+[y for i,y in enumerate(Ymax) if Ymax[i] != -1]+[1]
-Ymin = [0]+[y for i,y in enumerate(Ymin) if Ymin[i] != 2]+[1]
+# Xmax = [0]+[x for i,x in enumerate(X) if Ymax[i] != -1]+[1]
+# Xmin = [0]+[x for i,x in enumerate(X) if Ymin[i] != 2]+[1]
+# Ymax = [0]+[y for i,y in enumerate(Ymax) if Ymax[i] != -1]+[1]
+# Ymin = [0]+[y for i,y in enumerate(Ymin) if Ymin[i] != 2]+[1]
 
-auc_int_min = sum([(Xmin[i]-Xmin[i-1])*Ymin[i] for i in range(1,len(Xmin))])
-auc_int_max = sum([(Xmax[i]-Xmax[i-1])*Ymax[i] for i in range(1,len(Xmin))])
+# auc_int_min = sum([(Xmin[i]-Xmin[i-1])*Ymin[i] for i in range(1,len(Xmin))])
+# auc_int_max = sum([(Xmax[i]-Xmax[i-1])*Ymax[i] for i in range(1,len(Xmin))])
    
-plt.xlabel('$1-t$')
-plt.ylabel('$s$')
-plt.ylabel('$\\sigma,\\tau$')
+# plt.xlabel('$1-t$')
+# plt.ylabel('$s$')
+# plt.ylabel('$\\sigma,\\tau$')
 
-plt.step(fpr,s,'k', label = 'Base')
-plt.step(nuq_fpr,nuq_s,'m', label = 'Discarded')
-plt.step(fpr_t,s_t,'y', label = 'Not Predicting')
-plt.plot(Xmax,Ymax,'r',label = 'Interval Bounds')
-plt.plot(Xmin,Ymin,'r')
+# plt.step(fpr,s,'k', label = 'Base')
+# plt.step(nuq_fpr,nuq_s,'m--', label = 'Discarded')
+# plt.step(fpr_t,s_t,'y', label = 'Not Predicting')
+# plt.plot(Xmax,Ymax,'r',label = 'Interval Bounds')
+# plt.plot(Xmin,Ymin,'r')
 
-plt.legend()
+# plt.legend()
 
-plt.savefig('figs/whitewine_ROC.png',dpi = 600)
-plt.savefig('../paper/figs/whitewine_ROC.png',dpi = 600)
-# plt.clf()
+# plt.savefig('figs/whitewine_ROC.png',dpi = 600)
+# plt.savefig('../paper/figs/whitewine_ROC.png',dpi = 600)
+# # plt.clf()
 
-# for i,j in zip(fpr_i,s_i):
-#     plt.plot([i.Left,i.Right],[j.Left,j.Right])
-# plt.show()
-with open('runinfo/whitewine_auc.out','w') as f:
-    print('TRUTH: %.4f' %auc(s,fpr), file = f)
-    print('No UQ: %.4F' %auc(nuq_s,nuq_fpr),file = f)
-    print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
-    print('INTERVALS: [%.4f,%.4f]' %(auc_int_min,auc_int_max), file = f)
+# # for i,j in zip(fpr_i,s_i):
+# #     plt.plot([i.Left,i.Right],[j.Left,j.Right])
+# # plt.show()
+# with open('runinfo/whitewine_auc.out','w') as f:
+#     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
+#     print('DISCARDED: %.4F' %auc(nuq_s,nuq_fpr),file = f)
+#     print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
+#     print('INTERVALS: [%.4f,%.4f]' %(auc_int_min,auc_int_max), file = f)
     
 
-fig = plt.figure()
+# fig = plt.figure()
 
-ax = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
-ax.set_xlabel('$1-t$')
-ax.set_ylabel('$s$')
-# ax.set_zlabel('$1-\sigma,1-\\tau$')
-ax.plot(fpr_t,s_t,'m',alpha = 0.5)
-ax.plot3D(fpr,s,Sigma,'b',label = '$\\sigma$')
-ax.plot3D(fpr,s,Tau,'r',label = '$\\tau$')
-# ax.plot3D(fpr,s,Nu,'k',label = '$1-\\nu$')
+# ax = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
+# ax.set_xlabel('$1-t$')
+# ax.set_ylabel('$s$')
+# # ax.set_zlabel('$1-\sigma,1-\\tau$')
+# ax.plot(fpr_t,s_t,'m',alpha = 0.5)
+# ax.plot3D(fpr,s,Sigma,'b',label = '$\\sigma$')
+# ax.plot3D(fpr,s,Tau,'r',label = '$\\tau$')
+# # ax.plot3D(fpr,s,Nu,'k',label = '$1-\\nu$')
 
-ax.legend()
+# ax.legend()
 
-plt.savefig('figs/whitewine_ROC3D.png',dpi = 600)
-plt.savefig('../paper/figs/whitewine_ROC3D.png',dpi = 600)
-plt.clf()
+# plt.savefig('figs/whitewine_ROC3D.png',dpi = 600)
+# plt.savefig('../paper/figs/whitewine_ROC3D.png',dpi = 600)
+# plt.clf()
 
-plt.xlabel('$(1-t)$/$s$')
-plt.ylabel('$\\sigma$/$\\tau$')
-plt.plot(s,Sigma,'g',label = '$\\sigma$ v $s$')
-plt.plot(fpr,Tau,'r',label = '$\\tau$ v $t$')
-plt.legend()
+# plt.xlabel('$(1-t)$/$s$')
+# plt.ylabel('$\\sigma$/$\\tau$')
+# plt.plot(s,Sigma,'g',label = '$\\sigma$ v $s$')
+# plt.plot(fpr,Tau,'r',label = '$\\tau$ v $t$')
+# plt.legend()
 
-plt.savefig('figs/whitewine_ST.png',dpi = 600)
-plt.savefig('../paper/figs/whitewine_ST.png',dpi = 600)
+# plt.savefig('figs/whitewine_ST.png',dpi = 600)
+# plt.savefig('../paper/figs/whitewine_ST.png',dpi = 600)
 
-plt.clf()
+# plt.clf()
 
 ### Hosmer-Lemeshow
 hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,g = 10)

@@ -1,20 +1,20 @@
 TRUE MODEL
-TP=116	FP=237
-FN=50	TN=1086
-Sensitivity = 0.699
-Specificity = 0.821
+TP=47	FP=49
+FN=119	TN=1174
+Sensitivity = 0.283
+Specificity = 0.960
 DISCARDED DATA MODEL
-TP=119	FP=269
-FN=47	TN=1054
-Sensitivity = 0.717
-Specificity = 0.797
+TP=48	FP=53
+FN=118	TN=1170
+Sensitivity = 0.289
+Specificity = 0.957
 UQ MODEL
-TP=[99, 134]	FP=[166, 340]
-FN=[32, 67]	TN=[983, 1157]
-Sensitivity = [0.596386, 0.807229]
-Specificity = [0.743008, 0.874528]
-TP=99	FP=166
-FN=32	TN=983
-NP(+)=35	NP(-)=174
-Sensitivity = 0.756
-Specificity = 0.856
+TP=[35.000,66.000]	FP=[26.000,88.000]
+FN=[100.000,131.000]	TN=[1135.000,1197.000]
+Sensitivity = [0.211,0.398]
+Specificity = [0.928,0.979]
+TP=35	FP=26
+FN=100	TN=1135
+NP(+)=31	NP(-)=62
+Sensitivity = 0.259
+Specificity = 0.978
