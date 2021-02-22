@@ -9,7 +9,7 @@ import pba
 
 from LRF import *
 
-def intervalise(val,eps,method='u',b=0.5,bounds = None):
+def intervalise(val,eps,method='u',b=0,bounds = None):
     
     if method == 'u':
         m = np.random.uniform(val-eps,val+eps)
@@ -36,33 +36,34 @@ def midpoints(data):
 
     
 # Import the data
-wine_data = pd.read_csv('winequality-white.csv',index_col = None)
+wine_data = pd.read_csv('winequality-white.csv',index_col = None,usecols = ['volatile acidity','citric acid','chlorides','pH','sulphates','alcohol','quality'])
 
 # Split the data into test/train factors and result
 random.seed(1111) # for reproducability
 np.random.seed(1)
 
-train_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 6].index], k = 300) + random.sample([i for i in wine_data[wine_data['quality'] >= 7].index ], k = 300)
+train_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 5].index], k = 100) + random.sample([i for i in wine_data[wine_data['quality'] >= 6].index ], k = 100)
 test_data_index = [i for i in wine_data.index if i not in train_data_index]
 
 test_data = wine_data.loc[test_data_index,[c for c in wine_data.columns if c != 'quality']]
 train_data = wine_data.loc[train_data_index,[c for c in wine_data.columns if c != 'quality']]
 
-test_results = wine_data.loc[test_data_index,'quality'] >= 7
-train_results = wine_data.loc[train_data_index,'quality'] >= 7
+test_results = wine_data.loc[test_data_index,'quality'] >= 6
+train_results = wine_data.loc[train_data_index,'quality'] >= 6
 
 # Intervalise data
-eps = {"fixed acidity":(0.2,'u'),
+eps = {
+    # "fixed acidity":(0.2,'u'),
        "volatile acidity":(0.05,'t'),
        "citric acid":(0.03,'t',-0.75),
-       "residual sugar":(0.02,'u'),
-    #    "chlorides":(0.003,'u'),
+    #    "residual sugar":(0.02,'u'),
+       "chlorides":(0.003,'u'),
     #    "free sulfur dioxide":(2,'u'),
     #    "total sulfur dioxide":(2,'u'),
     #    "density":(0.01,'t',0.9,(0,1)),
-    #    "pH":(.01,'t',1),
-    #    "sulphates":(0.01,'t'),
-    #    "alcohol":(0.1,'t')
+       "pH":(.01,'t',1),
+       "sulphates":(0.01,'u'),
+       "alcohol":(0.1,'u')
        }
 
 np.random.seed(0)
@@ -253,4 +254,4 @@ hl_uq, pval_uq = UQ_hosmer_lemeshow_test(uq_models,train_data,train_results,g = 
 with open('runinfo/whitewine_HL.out','w') as f:
     print('base\nhl = %.3f, p = %.5f' %(hl_b,pval_b),file = f)
     print('no UQ\nhl = %.3f, p = %.5f' %(hl_nuq,pval_nuq),file = f) 
-    print('UQ\nhl = %s, p = %s' %(hl_uq,pval_uq),file = f) 
+    print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 

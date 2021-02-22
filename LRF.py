@@ -472,7 +472,7 @@ def UQ_hosmer_lemeshow_test(models, data, results, g=10):
             f2 = pba.I((d.Left - e.Right)**2, (d.Right - e.Left)**2)
             
                         
-            hl += pba.I(0, c2.oadd(f2))
+            hl += pba.I(0, c2+f2)
         else:
             hl += c.oadd(f)
 
