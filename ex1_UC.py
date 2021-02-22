@@ -256,5 +256,4 @@ with open('runinfo/ex1_UC_HL.out','w') as f:
     print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
     print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
 
-    # print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(hl_min,hl_max,pval_min,pval_max),file = f) 
     print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 

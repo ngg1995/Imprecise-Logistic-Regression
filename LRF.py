@@ -455,26 +455,22 @@ def UQ_hosmer_lemeshow_test(models, data, results, g=10):
             'observed_n_cases': len(idx) - sum(results.loc[idx]),
             'expected_n_cases': sum(probs.loc[idx,0])
         }
-
+    # print(buckets)
     hl = 0
     for i in range(g):
-
-        a = buckets[i]['observed_cases']/(buckets[i]['expected_cases']**.5)
-        b = buckets[i]['expected_cases']**.5
-        c = pba.I(a.Left - b.Right, a.Right - b.Left)**2
         
-        d = buckets[i]['observed_n_cases']/(buckets[i]['expected_n_cases']**.5)
-        e = buckets[i]['expected_n_cases']**.5
-        f = pba.I(d.Left - e.Right, d.Right - e.Left)**2
-
-        if c.straddles_zero(endpoints=True):
-            c2 = pba.I((a.Left - b.Right)**2, (a.Right - b.Left)**2)
-            f2 = pba.I((d.Left - e.Right)**2, (d.Right - e.Left)**2)
+        cl = ((buckets[i]['observed_cases'] - buckets[i]['expected_cases'].Left)**2)/buckets[i]['expected_cases'].Left
+        cr = ((buckets[i]['observed_cases'] - buckets[i]['expected_cases'].Right)**2)/buckets[i]['expected_cases'].Right
+        
+        nl = ((buckets[i]['observed_n_cases'] - buckets[i]['expected_n_cases'].Left)**2)/buckets[i]['expected_n_cases'].Left
+        nr = ((buckets[i]['observed_n_cases'] - buckets[i]['expected_n_cases'].Right)**2)/buckets[i]['expected_n_cases'].Right
             
-                        
-            hl += pba.I(0, c2+f2)
+        if pba.always(buckets[i]['observed_cases'] - buckets[i]['expected_cases'] != 0):
+            hl += pba.I(cl+nr,cr+nl)
         else:
-            hl += c.oadd(f)
+            hl += pba.I(0,pba.I(cl+nr,cr+nl))
+            
+            
 
     pval = pba.I(1-chi2.cdf(hl.Left,g-2),1-chi2.cdf(hl.Right,g-2))
     
