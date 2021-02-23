@@ -188,9 +188,8 @@ Ymin = [0]+[y for i,y in enumerate(Ymin) if Ymin[i] != 2]+[1]
 auc_int_min = sum([(Xmin[i]-Xmin[i-1])*Ymin[i] for i in range(1,len(Xmin))])
 auc_int_max = sum([(Xmax[i]-Xmax[i-1])*Ymax[i] for i in range(1,len(Xmin))])
    
-plt.xlabel('$1-t$')
+plt.xlabel('$fpr$')
 plt.ylabel('$s$')
-plt.ylabel('$\\sigma,\\tau$')
 
 plt.step(fpr,s,'k', label = 'Base')
 plt.step(nuq_fpr,nuq_s,'m--', label = 'Midpoints')
@@ -217,7 +216,7 @@ with open('runinfo/whitewine_auc.out','w') as f:
 fig = plt.figure()
 
 ax = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
-ax.set_xlabel('$1-t$')
+ax.set_xlabel('$fpr$')
 ax.set_ylabel('$s$')
 # ax.set_zlabel('$1-\sigma,1-\\tau$')
 ax.plot(fpr_t,s_t,'m',alpha = 0.5)
@@ -231,7 +230,7 @@ plt.savefig('figs/whitewine_ROC3D.png',dpi = 600)
 plt.savefig('../paper/figs/whitewine_ROC3D.png',dpi = 600)
 plt.clf()
 
-plt.xlabel('$(1-t)$/$s$')
+plt.xlabel('$fpr$/$s$')
 plt.ylabel('$\\sigma$/$\\tau$')
 plt.plot(s,Sigma,'g',label = '$\\sigma$ v $s$')
 plt.plot(fpr,Tau,'r',label = '$\\tau$ v $t$')

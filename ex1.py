@@ -70,7 +70,7 @@ with open('runinfo/ex1_cm.out','w') as f:
 s,fpr = ROC(model = base, data = test_data, results = test_results)
 plt.plot([0,1],[0,1],'k:',label = 'Random Classifier')
 plt.plot([0],[1],'ro',label = 'Perfect Classifier')
-plt.xlabel('$1-t$')
+plt.xlabel('$fpr$')
 plt.ylabel('$s$')
 plt.plot(fpr,s,'k', label = 'Model')
 plt.legend()
