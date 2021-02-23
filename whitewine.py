@@ -39,8 +39,8 @@ def midpoints(data):
 wine_data = pd.read_csv('winequality-white.csv',index_col = None,usecols = ['volatile acidity','citric acid','chlorides','pH','sulphates','alcohol','quality'])
 
 # Split the data into test/train factors and result
-random.seed(1111) # for reproducability
-np.random.seed(1)
+random.seed(10) # for reproducability
+np.random.seed(10)
 
 train_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 5].index], k = 100) + random.sample([i for i in wine_data[wine_data['quality'] >= 6].index ], k = 100)
 test_data_index = [i for i in wine_data.index if i not in train_data_index]
@@ -193,7 +193,7 @@ plt.ylabel('$s$')
 plt.ylabel('$\\sigma,\\tau$')
 
 plt.step(fpr,s,'k', label = 'Base')
-plt.step(nuq_fpr,nuq_s,'m--', label = 'Discarded')
+plt.step(nuq_fpr,nuq_s,'m--', label = 'Midpoints')
 plt.step(fpr_t,s_t,'y', label = 'Not Predicting')
 plt.plot(Xmax,Ymax,'r',label = 'Interval Bounds')
 plt.plot(Xmin,Ymin,'r')
@@ -209,7 +209,7 @@ plt.savefig('../paper/figs/whitewine_ROC.png',dpi = 600)
 # plt.show()
 with open('runinfo/whitewine_auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
-    print('DISCARDED: %.4F' %auc(nuq_s,nuq_fpr),file = f)
+    print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)
     print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
     print('INTERVALS: [%.4f,%.4f]' %(auc_int_min,auc_int_max), file = f)
     

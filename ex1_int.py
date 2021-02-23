@@ -234,7 +234,7 @@ plt.ylabel('$s$')
 plt.ylabel('$\\sigma,\\tau$')
 
 plt.step(fpr,s,'k', label = 'Base')
-plt.step(nuq_fpr,nuq_s,'m--', label = 'Discarded')
+plt.step(nuq_fpr,nuq_s,'m--', label = 'Midpoints')
 plt.step(fpr_t,s_t,'y', label = 'Not Predicting')
 plt.plot(Xmax,Ymax,'r',label = 'Interval Bounds')
 plt.plot(Xmin,Ymin,'r')
@@ -247,7 +247,7 @@ plt.savefig('../paper/figs/ex1_int_ROC.png',dpi = 600)
 
 with open('runinfo/ex1_int_auc.out','w') as f:
     print('NO UNCERTAINTY: %.3f' %auc(s,fpr), file = f)
-    print('DISCARDED: %.4F' %auc(nuq_s,nuq_fpr),file = f)
+    print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)
     print('THROW: %.3f' %auc(s_t,fpr_t), file = f)
     print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
     
@@ -290,5 +290,5 @@ hl_uq, pval_uq = UQ_hosmer_lemeshow_test(uq_models,train_data,train_results,g = 
 
 with open('runinfo/ex1_int_HL.out','w') as f:
     print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
-    print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
+    print('Midpoints\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
     print('UQ\nhl = %s, p = %s' %(hl_uq,pval_uq),file = f) 
