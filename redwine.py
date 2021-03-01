@@ -9,7 +9,7 @@ import pba
 
 from LRF import *
 
-# Import the data
+### Import the data
 wine_data = pd.read_csv('winequality-red.csv',index_col = None,usecols = ['volatile acidity','citric acid','chlorides','pH','sulphates','alcohol','quality'])
 
 # Split the data into test/train factors and result and generate uncertain points
@@ -115,55 +115,43 @@ with open('runinfo/redwine_cm.out','w') as f:
     print('Specificity = %.3f' %(ttt),file = f)
 
 ### ROC CURVE
-s,fpr = ROC(model = base, data = test_data, results = test_results)
-nuq_s,nuq_fpr = ROC(model = nuq, data = test_data, results = test_results)
-s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
+s,fpr,predictions = ROC(model = base, data = train_data, results = train_results)
+nuq_s,nuq_fpr,nuq_predictions = ROC(model = nuq, data = train_data, results = train_results)
+s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, train_data, train_results)
 
-s_i, fpr_i = UQ_ROC(uq_models, test_data, test_results)
+s_i, fpr_i,uq_predictions = UQ_ROC(uq_models, train_data, train_results)
 
-steps = 1000
-X = np.linspace(0,1,steps)
-Ymin = steps*[2]
-Ymax = steps*[-1]
+densfig,axdens = plt.subplots(1,1)
+axdens.scatter(predictions,train_results+np.random.uniform(-0.05,0.05,len(predictions)),marker = '.',color='k',edgecolor = None,alpha = 0.5,label='Base')
+axdens.scatter(nuq_predictions,train_results+np.random.uniform(0.06,0.16,len(predictions)),marker = '.',color='m',edgecolor = None,alpha = 0.5,label = 'No Uncertainty')
+for i,(u,r) in enumerate(zip(uq_predictions,train_results.to_list())):
+    yd = np.random.uniform(-0.06,-0.16)
+    # plt.plot(m,r+yd,color = 'b',marker = 'x')
+    if i == 0:
+        axdens.plot([u[0],u[1]],[r+yd,r+yd],color = 'b',alpha = 0.3,label  = 'Uncertain')
+    else:
+        axdens.plot([u[0],u[1]],[r+yd,r+yd],color = 'b',alpha = 0.3)
+    
+axdens.set(xlabel = '$\pi$',ylabel = 'Outcome',yticks = [0,1])
+axdens.legend()
 
-for i, x in tqdm(enumerate(X)):
-    for k,j in zip(s_i,fpr_i):
-
-        if j.straddles(x,endpoints = True):
-            Ymin[i] = min((Ymin[i],k.Left))
-            Ymax[i] = max((Ymax[i],k.Right))
-
-Xmax = [0]+[x for i,x in enumerate(X) if Ymax[i] != -1]+[1]
-Xmin = [0]+[x for i,x in enumerate(X) if Ymin[i] != 2]+[1]
-Ymax = [0]+[y for i,y in enumerate(Ymax) if Ymax[i] != -1]+[1]
-Ymin = [0]+[y for i,y in enumerate(Ymin) if Ymin[i] != 2]+[1]
-
-auc_int_min = sum([(Xmin[i]-Xmin[i-1])*Ymin[i] for i in range(1,len(Xmin))])
-auc_int_max = sum([(Xmax[i]-Xmax[i-1])*Ymax[i] for i in range(1,len(Xmin))])
-   
-plt.xlabel('$fpr$')
-plt.ylabel('$s$')
-
-plt.step(fpr,s,'k', label = 'Base')
-plt.step(nuq_fpr,nuq_s,'m', label = 'Discarded')
-plt.step(fpr_t,s_t,'y', label = 'Not Predicting')
-plt.plot(Xmax,Ymax,'r',label = 'Interval Bounds')
-plt.plot(Xmin,Ymin,'r')
-
-plt.legend()
-
-plt.savefig('figs/redwine_ROC.png',dpi = 600)
-plt.savefig('../paper/figs/redwine_ROC.png',dpi = 600)
-# plt.clf()
-
+rocfig,axroc = plt.subplots(1,1)
+axroc.plot([0,1],[0,1],'k:',label = 'Random Classifier')
+axroc.set(xlabel = '$fpr$',ylabel='$s$')
+axroc.plot(fpr,s,'k',label = 'Base')
+axroc.plot(nuq_fpr,nuq_s,'m--',label='No Uncertainty')
+axroc.plot(fpr_t,s_t,'c',label='Uncertain (No prediction)')
+axroc.legend()
+rocfig.savefig('figs/redwine_ROC.png',dpi = 600)
+rocfig.savefig('../paper/figs/redwine_ROC.png',dpi = 600)
+densfig.savefig('figs/redwine_dens.png',dpi =600)
 
 with open('runinfo/redwine_auc.out','w') as f:
-    print('TRUTH: %.3f' %auc(s,fpr), file = f)
-    print('No UQ: %.3F' %auc(nuq_s,nuq_fpr),file = f)
+    print('NO UNCERTAINTY: %.3f' %auc(s,fpr), file = f)
+    print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)
     print('THROW: %.3f' %auc(s_t,fpr_t), file = f)
-    print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
+    # print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
     
-
 fig = plt.figure()
 
 ax = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')

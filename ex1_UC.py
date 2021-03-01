@@ -8,7 +8,47 @@ from tqdm import tqdm
 import pba
 import random
 
+
 from LRF import *
+
+def histogram(probs, dif = 0.05, uq = False, bars = 10):
+    x = np.arange(bars)/bars
+    if uq: 
+        low_height = bars*[0]
+        hi_height = bars*[0]
+    else:
+        height = bars*[0]
+    for p in probs:
+        for i,j in reversed(list(enumerate(x))):
+            if uq:
+                if i + 1 == bars:
+                    if p[0] > j:
+                        low_height[i] += 1/len(probs)
+                        hi_height[i] += 1/len(probs)
+                        break
+                    if p[1] > j:
+                        hi_height[i] += 1/len(probs)
+                else:
+                    if p[0] > j and p[1] < x[i+1]:
+                        low_height[i] += 1/len(probs)
+                        hi_height[i] += 1/len(probs)
+                        break
+                    if p[1] > j:
+                        hi_height[i] += 1/len(probs)
+                    if p[0] > j:
+                        hi_height[i] += 1/len(probs)
+                        break
+            else:
+                if p > j:
+                    height[i] += 1/len(probs)
+                    break
+            
+    if dif != 0:
+        x = [i+dif for i in x]    
+    
+    if uq:
+        return x,low_height, hi_height
+    return x, height
 
 def generate_results(data):
     # set seed for reproducability
@@ -168,58 +208,45 @@ with open('runinfo/ex1_UC_cm.out','w') as f:
     print('sigma = %.3f' %(eee/(aaa+ccc+eee)),file = f)
     print('tau = %.3f' %(fff/(bbb+ddd+fff)),file = f)
     
-
 ### ROC CURVE
-s,fpr = ROC(model = base, data = test_data, results = test_results)
-nuq_s,nuq_fpr = ROC(model = nuq, data = test_data, results = test_results)
+s,fpr,predictions = ROC(model = base, data = test_data, results = test_results)
+nuq_s,nuq_fpr,nuq_predictions = ROC(model = nuq, data = test_data, results = test_results)
 s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
 
-s_i, fpr_i = UQ_ROC(uq_models, test_data, test_results)
+s_i, fpr_i,uq_predictions = UQ_ROC(uq_models, test_data, test_results)
 
-steps = 1000
-X = np.linspace(0,1,steps)
-Ymin = steps*[2]
-Ymax = steps*[-1]
+densfig,axdens = plt.subplots(1,1)
+axdens.scatter(predictions,test_results+np.random.uniform(-0.05,0.05,len(predictions)),marker = '.',color='k',edgecolor = None,alpha = 0.5,label='Base')
+axdens.scatter(nuq_predictions,test_results+np.random.uniform(0.06,0.16,len(predictions)),marker = '.',color='m',edgecolor = None,alpha = 0.5,label = 'No Uncertainty')
+for i,(u,r) in enumerate(zip(uq_predictions,test_results.to_list())):
+    yd = np.random.uniform(-0.06,-0.16)
+    # plt.plot(m,r+yd,color = 'b',marker = 'x')
+    if i == 0:
+        axdens.plot([u[0],u[1]],[r+yd,r+yd],color = 'blue',alpha = 0.3,label  = 'Uncertain')
+    else:
+        axdens.plot([u[0],u[1]],[r+yd,r+yd],color = 'blue',alpha = 0.3)
+    
+axdens.set(xlabel = '$\pi$',ylabel = 'Outcome',yticks = [0,1])
+axdens.legend()
 
-for i, x in tqdm(enumerate(X)):
-    for k,j in zip(s_i,fpr_i):
+rocfig,axroc = plt.subplots(1,1)
+axroc.plot([0,1],[0,1],'k:',label = 'Random Classifier')
+axroc.set(xlabel = '$fpr$',ylabel='$s$')
+axroc.plot(fpr,s,'k',label = 'Base')
+axroc.plot(nuq_fpr,nuq_s,'m--',label='No Uncertainty')
+axroc.plot(fpr_t,s_t,'blue',label='Uncertain (No prediction)')
+axroc.legend()
+rocfig.savefig('figs/ex1_UC_ROC.png',dpi = 600)
+rocfig.savefig('../paper/figs/ex1_UC_ROC.png',dpi = 600)
+densfig.savefig('figs/ex1_UC_dens.png',dpi =600)
 
-        if j.straddles(x,endpoints = True):
-            Ymin[i] = min((Ymin[i],k.Left))
-            Ymax[i] = max((Ymax[i],k.Right))
-
-Xmax = [0]+[x for i,x in enumerate(X) if Ymax[i] != -1]+[1]
-Xmin = [0]+[x for i,x in enumerate(X) if Ymin[i] != 2]+[1]
-Ymax = [0]+[y for i,y in enumerate(Ymax) if Ymax[i] != -1]+[1]
-Ymin = [0]+[y for i,y in enumerate(Ymin) if Ymin[i] != 2]+[1]
-
-auc_int_min = sum([(Xmin[i]-Xmin[i-1])*Ymin[i] for i in range(1,len(Xmin))])
-auc_int_max = sum([(Xmax[i]-Xmax[i-1])*Ymax[i] for i in range(1,len(Xmin))])
-   
-plt.xlabel('$fpr$')
-plt.ylabel('$s$')
-plt.step(fpr,s,'k', label = 'Base')
-plt.step(nuq_fpr,nuq_s,'m--', label = 'Discarded')
-plt.step(fpr_t,s_t,'y', label = 'Not Predicting')
-plt.plot(Xmax,Ymax,'r',label = 'Interval Bounds')
-plt.plot(Xmin,Ymin,'r')
-
-plt.legend()
-
-plt.savefig('figs/ex1_UC_ROC.png',dpi = 600)
-plt.savefig('../paper/figs/ex1_UC_ROC.png',dpi = 600)
-plt.clf()
-
-with open('roc.txt','w') as f:
-    for i,j,k,l in zip(s,fpr,nuq_s,nuq_fpr):
-        print('%.3f,%.3f|%.3f,%.3f'%(i,j,k,l),file = f)
-        
 with open('runinfo/ex1_UC_auc.out','w') as f:
     print('NO UNCERTAINTY: %.3f' %auc(s,fpr), file = f)
-    print('DISCARDED: %.4F' %auc(nuq_s,nuq_fpr),file = f)
+    print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)
     print('THROW: %.3f' %auc(s_t,fpr_t), file = f)
-    print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
+    # print('INTERVALS: [%.3f,%.3f]' %(auc_UC_min,auc_UC_max), file = f)
     
+
 
 fig = plt.figure()
 

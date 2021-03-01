@@ -69,29 +69,20 @@ with open('runinfo/ex1_cm.out','w') as f:
 ### ROC/AUC
 s,fpr, predictions = ROC(model = base, data = test_data, results = test_results)
 
-rocfig,ax = plt.subplots(2,2)
+rocfig,axroc = plt.subplots(1)
+densfig,axdens = plt.subplots(1)
+axdens.scatter(predictions,test_results+np.random.uniform(-0.05,0.05,len(predictions)),marker = 'o',color='k')
+axdens.set(xlabel = '$\pi$',ylabel = 'Outcome')
 
-ax[0,0].scatter(predictions,test_results+np.random.uniform(-0.05,0.05,len(predictions)),marker = '.',color='k')
-ax[0,0].set(xlabel = '$\pi$',ylabel = 'Outcome')
 
+axroc.plot([0,1],[0,1],'k:',label = 'Random Classifier')
+axroc.set(xlabel = '$\pi$',ylabel = 'Outcome',yticks = [0,1])
+axroc.plot(fpr,s,'k')
 
-ax[1,0].plot([0,1],[0,1],'k:',label = 'Random Classifier')
-ax[1,0].set(xlabel = '$fpr$',ylabel='$s$')
-ax[1,0].plot(fpr,s,'k')
-
-ax[0,1].hist([p for p,r in zip(predictions,test_results) if r],bins = 20,color='k')
-ax[0,1].set(title = 'Outcome = 1',xlabel = '$\pi$',ylabel = 'Density')
-ax[0,1].yaxis.set_label_position("right")
-ax[0,1].yaxis.tick_right()
-
-ax[1,1].hist([p for p,r in zip(predictions,test_results) if not r],bins = 20,color='k')
-ax[1,1].set(title = 'Outcome = 0',xlabel = '$\pi$',ylabel = 'Density')
-ax[1,1].yaxis.set_label_position("right")
-ax[1,1].yaxis.tick_right()
-
-rocfig.tight_layout()
 rocfig.savefig('figs/ex1_ROC.png',dpi = 600)
 rocfig.savefig('../paper/figs/ex1_ROC.png',dpi = 600)
+densfig.savefig('figs/ex1_dens.png',dpi = 600)
+densfig.savefig('../paper/figs/ex1_dens.png',dpi = 600)
 
 with open('runinfo/ex1_auc.out','w') as f:
     print('AUC: %.4f' %auc(s,fpr), file = f)

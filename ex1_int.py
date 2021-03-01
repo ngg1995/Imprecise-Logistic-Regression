@@ -7,7 +7,10 @@ from tqdm import tqdm
 import pba
 import tikzplotlib
 import random
-def histogram(probs, dif = 0, uq = False, bars = 10):
+
+from LRF import *
+
+def histogram(probs, dif = 0.05, uq = False, bars = 10):
     x = np.arange(bars)/bars
     if uq: 
         low_height = bars*[0]
@@ -15,28 +18,20 @@ def histogram(probs, dif = 0, uq = False, bars = 10):
     else:
         height = bars*[0]
     for p in probs:
-        for i,j in reversed(list(enumerate(x))):
-            if uq:
-                if i + 1 == bars:
-                    if p[0] > j:
-                        low_height[i] += 1
-                        hi_height[i] += 1
-                        break
-                    if p[1] > j:
-                        hi_height[i] += 1
-                else:
-                    if p[0] > j and p[1] < x[i+1]:
-                        low_height[i] += 1
-                        hi_height[i] += 1
-                        break
-                    if p[1] > j:
-                        hi_height[i] += 1
-                    if p[0] > j:
-                        hi_height[i] += 1
-                        break
-            else:
+        if uq:
+            for i,j in reversed(list(enumerate(x))):
+                if p[0] > j:
+                    low_height[i] += 1/len(probs)
+                    break
+            for i,j in reversed(list(enumerate(x))):
+                if p[1] > j:
+                    hi_height[i] += 1/len(probs)
+                    break         
+        else:       
+            for i,j in reversed(list(enumerate(x))):
+
                 if p > j:
-                    height[i] += 1
+                    height[i] += 1/len(probs)
                     break
             
     if dif != 0:
@@ -45,7 +40,9 @@ def histogram(probs, dif = 0, uq = False, bars = 10):
     if uq:
         return x,low_height, hi_height
     return x, height
-from LRF import *
+
+
+
 
 def intervalise(val,eps,method,b=0.5,bounds = None):
     
@@ -130,7 +127,7 @@ uq_models = int_logistic_regression(UQdata,train_results)
 
 
 ### Plot results
-steps = 300
+steps = 250
 lX = np.linspace(0,10,steps)
 lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
 lYn = nuq.predict_proba(lX.reshape(-1, 1))[:,1]
@@ -247,46 +244,30 @@ s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
 
 s_i, fpr_i,uq_predictions = UQ_ROC(uq_models, test_data, test_results)
 
-rocfig,ax = plt.subplots(2,2)
-
-ax[0,0].scatter(predictions,test_results+np.random.uniform(-0.05,0.05,len(predictions)),marker = '.',color='k',alpha = 0.2)
-ax[0,0].scatter(nuq_predictions,test_results+np.random.uniform(0.1,0.2,len(predictions)),marker = '.',color='m',alpha = 0.2)
-ax[0,0].set(xlabel = '$\pi$',ylabel = 'Outcome',yticks = [0,1])
-for u,r in zip(uq_predictions,test_results.to_list()):
-    yd = np.random.uniform(-0.1,-0.2)
+densfig,axdens = plt.subplots(1,1)
+axdens.scatter(predictions,test_results+np.random.uniform(-0.05,0.05,len(predictions)),marker = '.',color='k',edgecolor = None,alpha = 0.5,label='Base')
+axdens.scatter(nuq_predictions,test_results+np.random.uniform(0.06,0.16,len(predictions)),marker = '.',color='m',edgecolor = None,alpha = 0.5,label = 'No Uncertainty')
+for i,(u,r) in enumerate(zip(uq_predictions,test_results.to_list())):
+    yd = np.random.uniform(-0.06,-0.16)
     # plt.plot(m,r+yd,color = 'b',marker = 'x')
-    ax[0,0].plot([u[0],u[1]],[r+yd,r+yd],color = 'b',alpha = 0.1)
+    if i == 0:
+        axdens.plot([u[0],u[1]],[r+yd,r+yd],color = 'b',alpha = 0.3,label  = 'Uncertain')
+    else:
+        axdens.plot([u[0],u[1]],[r+yd,r+yd],color = 'b',alpha = 0.3)
+    
+axdens.set(xlabel = '$\pi$',ylabel = 'Outcome',yticks = [0,1])
+axdens.legend()
 
-ax[1,0].plot([0,1],[0,1],'k:',label = 'Random Classifier')
-ax[1,0].set(xlabel = '$fpr$',ylabel='$s$')
-ax[1,0].plot(fpr,s,'k')
-ax[1,0].plot(nuq_fpr,nuq_s,'m--')
-ax[1,0].plot(fpr_t,s_t,'b')
-
-
-ax[0,1].bar(*histogram([p for p,r in zip(predictions,test_results) if r]),width = 0.0333,color = 'k',align = 'edge')
-ax[0,1].bar(*histogram([p for p,r in zip(nuq_predictions,test_results) if r],dif = 0.0333),width = 0.0333,color = 'm',align = 'edge')
-x,low_height, hi_height = histogram([p for p,r in zip(uq_predictions,test_results) if r],uq=True,dif = 0.0666)
-ax[0,1].bar(x,hi_height,width = 0.0333,color = 'w',edgecolor = 'b',align = 'edge')
-ax[0,1].bar(x,low_height,width = 0.0333,color = 'b',align = 'edge')
-
-ax[0,1].set(title = 'Outcome = 1',xlabel = '$\pi$',ylabel = 'Density',xticks = np.linspace(0,1,11),xticklabels = [0,'',.2,'',.4,'',.6,'',.8,'',1])
-ax[0,1].yaxis.set_label_position("right")
-ax[0,1].yaxis.tick_right()
-
-ax[1,1].bar(*histogram([p for p,r in zip(predictions,test_results) if not r]),width = 0.0333,color = 'k',align = 'edge')
-ax[1,1].bar(*histogram([p for p,r in zip(nuq_predictions,test_results) if not r],dif = 0.0333),width = 0.0333,color = 'm',align = 'edge')
-x,low_height, hi_height = histogram([p for p,r in zip(uq_predictions,test_results) if not r],uq=True,dif = 0.0666)
-ax[1,1].bar(x,hi_height,width = 0.0333,color = 'w',edgecolor = 'b',align = 'edge')
-ax[1,1].bar(x,low_height,width = 0.0333,color = 'b',align = 'edge')
-
-ax[1,1].set(title = 'Outcome = 0',xlabel = '$\pi$',ylabel = 'Density',xticks = np.linspace(0,1,11),xticklabels = [0,'',.2,'',.4,'',.6,'',.8,'',1])
-ax[1,1].yaxis.set_label_position("right")
-ax[1,1].yaxis.tick_right()
-
-rocfig.tight_layout()
+rocfig,axroc = plt.subplots(1,1)
+axroc.plot([0,1],[0,1],'k:',label = 'Random Classifier')
+axroc.set(xlabel = '$fpr$',ylabel='$s$')
+axroc.plot(fpr,s,'k',label = 'Base')
+axroc.plot(nuq_fpr,nuq_s,'m--',label='No Uncertainty')
+axroc.plot(fpr_t,s_t,'c',label='Uncertain (No prediction)')
+axroc.legend()
 rocfig.savefig('figs/ex1_int_ROC.png',dpi = 600)
 rocfig.savefig('../paper/figs/ex1_int_ROC.png',dpi = 600)
+densfig.savefig('figs/ex1_int_dens.png',dpi =600)
 
 with open('runinfo/ex1_int_auc.out','w') as f:
     print('NO UNCERTAINTY: %.3f' %auc(s,fpr), file = f)

@@ -7,8 +7,9 @@ import itertools as it
 from tqdm import tqdm
 import pba
 
+from LRF import *
 
-def histogram(probs, dif = 0, uq = False, bars = 10):
+def histogram(probs, dif = 0.05, uq = False, bars = 10):
     x = np.arange(bars)/bars
     if uq: 
         low_height = bars*[0]
@@ -20,24 +21,24 @@ def histogram(probs, dif = 0, uq = False, bars = 10):
             if uq:
                 if i + 1 == bars:
                     if p[0] > j:
-                        low_height[i] += 1
-                        hi_height[i] += 1
+                        low_height[i] += 1/len(probs)
+                        hi_height[i] += 1/len(probs)
                         break
                     if p[1] > j:
-                        hi_height[i] += 1
+                        hi_height[i] += 1/len(probs)
                 else:
                     if p[0] > j and p[1] < x[i+1]:
-                        low_height[i] += 1
-                        hi_height[i] += 1
+                        low_height[i] += 1/len(probs)
+                        hi_height[i] += 1/len(probs)
                         break
                     if p[1] > j:
-                        hi_height[i] += 1
+                        hi_height[i] += 1/len(probs)
                     if p[0] > j:
-                        hi_height[i] += 1
+                        hi_height[i] += 1/len(probs)
                         break
             else:
                 if p > j:
-                    height[i] += 1
+                    height[i] += 1/len(probs)
                     break
             
     if dif != 0:
@@ -47,7 +48,6 @@ def histogram(probs, dif = 0, uq = False, bars = 10):
         return x,low_height, hi_height
     return x, height
 
-from LRF import *
 
 def intervalise(val,eps,method='u',b=0,bounds = None):
     
@@ -200,7 +200,6 @@ with open('runinfo/whitewine_cm.out','w') as f:
     print('Sensitivity = %.3f' %(sss),file = f)
     print('Specificity = %.3f' %(ttt),file = f)
 
-
 ### ROC CURVE
 s,fpr,predictions = ROC(model = base, data = train_data, results = train_results)
 nuq_s,nuq_fpr,nuq_predictions = ROC(model = nuq, data = train_data, results = train_results)
@@ -208,56 +207,38 @@ s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, train_data, train_results)
 
 s_i, fpr_i,uq_predictions = UQ_ROC(uq_models, train_data, train_results)
 
-
-rocfig,ax = plt.subplots(2,2)
-
-ax[0,0].scatter(predictions,train_results+np.random.uniform(-0.05,0.05,len(predictions)),marker = '.',color='k')
-ax[0,0].scatter(nuq_predictions,train_results+np.random.uniform(0.1,0.2,len(predictions)),marker = '.',color='m')
-ax[0,0].set(xlabel = '$\pi$',ylabel = 'Outcome',yticks = [0,1])
-for u,r in zip(uq_predictions,train_results.to_list()):
-    yd = np.random.uniform(-0.1,-0.2)
+densfig,axdens = plt.subplots(1,1)
+axdens.scatter(predictions,train_results+np.random.uniform(-0.05,0.05,len(predictions)),marker = '.',color='k',edgecolor = None,alpha = 0.5,label='Base')
+axdens.scatter(nuq_predictions,train_results+np.random.uniform(0.06,0.16,len(predictions)),marker = '.',color='m',edgecolor = None,alpha = 0.5,label = 'No Uncertainty')
+for i,(u,r) in enumerate(zip(uq_predictions,train_results.to_list())):
+    yd = np.random.uniform(-0.06,-0.16)
     # plt.plot(m,r+yd,color = 'b',marker = 'x')
-    ax[0,0].plot([u[0],u[1]],[r+yd,r+yd],color = 'b',alpha = 0.1)
+    if i == 0:
+        axdens.plot([u[0],u[1]],[r+yd,r+yd],color = 'b',alpha = 0.3,label  = 'Uncertain')
+    else:
+        axdens.plot([u[0],u[1]],[r+yd,r+yd],color = 'b',alpha = 0.3)
+    
+axdens.set(xlabel = '$\pi$',ylabel = 'Outcome',yticks = [0,1])
+axdens.legend()
 
-ax[1,0].plot([0,1],[0,1],'k:',label = 'Random Classifier')
-ax[1,0].set(xlabel = '$fpr$',ylabel='$s$')
-ax[1,0].plot(fpr,s,'k')
-ax[1,0].plot(nuq_fpr,nuq_s,'m--')
-
-
-ax[0,1].bar(*histogram([p for p,r in zip(predictions,train_results) if r]),width = 0.0333,color = 'k',align = 'edge')
-ax[0,1].bar(*histogram([p for p,r in zip(nuq_predictions,train_results) if r],dif = 0.0333),width = 0.0333,color = 'm',align = 'edge')
-x,low_height, hi_height = histogram([p for p,r in zip(uq_predictions,train_results) if r],uq=True,dif = 0.0666)
-ax[0,1].bar(x,hi_height,width = 0.0333,color = 'w',edgecolor = 'b',align = 'edge')
-ax[0,1].bar(x,low_height,width = 0.0333,color = 'b',align = 'edge')
-
-ax[0,1].set(title = 'Outcome = 1',xlabel = '$\pi$',ylabel = 'Density',xticks = np.linspace(0,1,11),xticklabels = [0,'',.2,'',.4,'',.6,'',.8,'',1])
-ax[0,1].yaxis.set_label_position("right")
-ax[0,1].yaxis.tick_right()
-
-ax[1,1].bar(*histogram([p for p,r in zip(predictions,train_results) if not r]),width = 0.0333,color = 'k',align = 'edge')
-ax[1,1].bar(*histogram([p for p,r in zip(nuq_predictions,train_results) if not r],dif = 0.0333),width = 0.0333,color = 'm',align = 'edge')
-x,low_height, hi_height = histogram([p for p,r in zip(uq_predictions,train_results) if not r],uq=True,dif = 0.0666)
-ax[1,1].bar(x,hi_height,width = 0.0333,color = 'w',edgecolor = 'b',align = 'edge')
-ax[1,1].bar(x,low_height,width = 0.0333,color = 'b',align = 'edge')
-
-ax[1,1].set(title = 'Outcome = 0',xlabel = '$\pi$',ylabel = 'Density',xticks = np.linspace(0,1,11),xticklabels = [0,'',.2,'',.4,'',.6,'',.8,'',1])
-ax[1,1].yaxis.set_label_position("right")
-ax[1,1].yaxis.tick_right()
-
-rocfig.tight_layout()
+rocfig,axroc = plt.subplots(1,1)
+axroc.plot([0,1],[0,1],'k:',label = 'Random Classifier')
+axroc.set(xlabel = '$fpr$',ylabel='$s$')
+axroc.plot(fpr,s,'k',label = 'Base')
+axroc.plot(nuq_fpr,nuq_s,'m--',label='No Uncertainty')
+axroc.plot(fpr_t,s_t,'c',label='Uncertain (No prediction)')
+axroc.legend()
 rocfig.savefig('figs/whitewine_ROC.png',dpi = 600)
 rocfig.savefig('../paper/figs/whitewine_ROC.png',dpi = 600)
+densfig.savefig('figs/whitewine_dens.png',dpi =600)
 
-# for i,j in zip(fpr_i,s_i):
-#     plt.plot([i.Left,i.Right],[j.Left,j.Right])
-# plt.show()
 with open('runinfo/whitewine_auc.out','w') as f:
-    print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
+    print('NO UNCERTAINTY: %.3f' %auc(s,fpr), file = f)
     print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)
-    print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
-    print('INTERVALS: [%.4f,%.4f]' %(auc_int_min,auc_int_max), file = f)
+    print('THROW: %.3f' %auc(s_t,fpr_t), file = f)
+    # print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
     
+
 
 fig = plt.figure()
 
