@@ -114,37 +114,45 @@ with open('runinfo/redwine_cm.out','w') as f:
     print('Sensitivity = %.3f' %(sss),file = f)
     print('Specificity = %.3f' %(ttt),file = f)
 
-### ROC CURVE
+### Descriminatory Performance Plots
 s,fpr,predictions = ROC(model = base, data = train_data, results = train_results)
 nuq_s,nuq_fpr,nuq_predictions = ROC(model = nuq, data = train_data, results = train_results)
 s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, train_data, train_results)
 
 s_i, fpr_i,uq_predictions = UQ_ROC(uq_models, train_data, train_results)
 
-densfig,axdens = plt.subplots(1,1)
-axdens.scatter(predictions,train_results+np.random.uniform(-0.05,0.05,len(predictions)),marker = '.',color='k',edgecolor = None,alpha = 0.5,label='Base')
-axdens.scatter(nuq_predictions,train_results+np.random.uniform(0.06,0.16,len(predictions)),marker = '.',color='m',edgecolor = None,alpha = 0.5,label = 'No Uncertainty')
-for i,(u,r) in enumerate(zip(uq_predictions,train_results.to_list())):
-    yd = np.random.uniform(-0.06,-0.16)
-    # plt.plot(m,r+yd,color = 'b',marker = 'x')
-    if i == 0:
-        axdens.plot([u[0],u[1]],[r+yd,r+yd],color = 'b',alpha = 0.3,label  = 'Uncertain')
+densfig,axdens = plt.subplots(nrows = 2, sharex= True)
+
+for i,(p,u,nuqp,r) in enumerate(zip(predictions,uq_predictions,nuq_predictions,train_results.to_list())):
+    yd = np.random.uniform(-0.11,-.31)
+    if r:
+        axdens[0].scatter(p,np.random.uniform(-0.1,0.1),color = 'k',marker = 'o',alpha = 0.5)
+        axdens[0].scatter(nuqp,np.random.uniform(0.11,0.31),color = '#DC143C',marker = 'o',alpha = 0.5)
+        axdens[0].plot([u[0],u[1]],[yd,yd],color = '#4169E1',alpha = 0.3)
+        axdens[0].scatter([u[0],u[1]],[yd,yd],color = '#4169E1',marker = '|')
     else:
-        axdens.plot([u[0],u[1]],[r+yd,r+yd],color = 'b',alpha = 0.3)
-    
-axdens.set(xlabel = '$\pi$',ylabel = 'Outcome',yticks = [0,1])
-axdens.legend()
+        axdens[1].scatter(p,np.random.uniform(-.1,0.1),color = 'k',marker = 'o',alpha = 0.5)
+        axdens[1].scatter(nuqp,np.random.uniform(0.11,.31),color = '#DC143C',marker = 'o',alpha = 0.5)
+        axdens[1].plot([u[0],u[1]],[yd,yd],color = '#4169E1',alpha = 0.3)
+        axdens[1].scatter([u[0],u[1]],[yd,yd],color = '#4169E1',marker = '|')
+        
+        
+axdens[0].set(ylabel = 'Outcome = 1',yticks = [])
+axdens[1].set(xlabel = '$\pi$',ylabel = 'Outcome = 0',yticks = [])
+densfig.tight_layout()
 
 rocfig,axroc = plt.subplots(1,1)
 axroc.plot([0,1],[0,1],'k:',label = 'Random Classifier')
 axroc.set(xlabel = '$fpr$',ylabel='$s$')
 axroc.plot(fpr,s,'k',label = 'Base')
-axroc.plot(nuq_fpr,nuq_s,'m--',label='No Uncertainty')
-axroc.plot(fpr_t,s_t,'c',label='Uncertain (No prediction)')
+axroc.plot(nuq_fpr,nuq_s,color='#DC143C',linestyle='--',label='No Uncertainty')
+axroc.plot(fpr_t,s_t,'#4169E1',label='Uncertain (No prediction)')
 axroc.legend()
 rocfig.savefig('figs/redwine_ROC.png',dpi = 600)
 rocfig.savefig('../paper/figs/redwine_ROC.png',dpi = 600)
 densfig.savefig('figs/redwine_dens.png',dpi =600)
+densfig.savefig('../paper/figs/redwine_dens.png',dpi =600)
+
 
 with open('runinfo/redwine_auc.out','w') as f:
     print('NO UNCERTAINTY: %.3f' %auc(s,fpr), file = f)
@@ -152,15 +160,16 @@ with open('runinfo/redwine_auc.out','w') as f:
     print('THROW: %.3f' %auc(s_t,fpr_t), file = f)
     # print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
     
-fig = plt.figure()
 
+
+fig = plt.figure()
 ax = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
 ax.set_xlabel('$fpr$')
 ax.set_ylabel('$s$')
 # ax.set_zlabel('$1-\sigma,1-\\tau$')
-ax.plot(fpr_t,s_t,'m',alpha = 0.5)
-ax.plot3D(fpr,s,Sigma,'b',label = '$\\sigma$')
-ax.plot3D(fpr,s,Tau,'r',label = '$\\tau$')
+ax.plot(fpr_t,s_t,'#4169E1',alpha = 0.5)
+ax.plot3D(fpr,s,Sigma,'#FF8C00',label = '$\\sigma$')
+ax.plot3D(fpr,s,Tau,'#008000',label = '$\\tau$')
 # ax.plot3D(fpr,s,Nu,'k',label = '$1-\\nu$')
 
 ax.legend()
@@ -171,8 +180,8 @@ plt.clf()
 
 plt.xlabel('$fpr$/$s$')
 plt.ylabel('$\\sigma$/$\\tau$')
-plt.plot(s,Sigma,'g',label = '$\\sigma$ v $s$')
-plt.plot(fpr,Tau,'r',label = '$\\tau$ v $t$')
+plt.plot(s,Sigma,'#FF8C00',label = '$\\sigma$ v $s$')
+plt.plot(fpr,Tau,'#008000',label = '$\\tau$ v $fpr$')
 plt.legend()
 
 plt.savefig('figs/redwine_ST.png',dpi = 600)

@@ -105,13 +105,13 @@ lYn = nuq.predict_proba(lX.reshape(-1, 1))[:,1]
 
 plt.xlabel('$x$')
 plt.ylabel('$\pi_x$')
-plt.scatter(nuq_data,nuq_results,color='blue',zorder=10)
+plt.scatter(nuq_data,nuq_results,color='grey',zorder=10)
 plt.plot(lX,lY,color='k',zorder=10,lw=2,label = 'Truth')
-plt.plot(lX,lYn,color='m',zorder=10,lw=2,label = 'No UQ')
+plt.plot(lX,lYn,color='#DC143C',zorder=10,lw=2,label = 'No UQ')
 
 for x in uq_data[0]:
 
-    plt.plot([x,x],[0,1],color='blue')
+    plt.plot([x,x],[0,1],color='grey')
 
 lYmin = np.ones(steps)
 lYmax = np.zeros(steps)
@@ -120,10 +120,10 @@ for n, model in uq_models.items():
     lY = model.predict_proba(np.linspace(0,10,steps).reshape(-1, 1))[:,1]
     lYmin = [min(i,j) for i,j in zip(lY,lYmin)]
     lYmax = [max(i,j) for i,j in zip(lY,lYmax)]
-    plt.plot(lX,lY,color = 'grey',alpha = 0.2,lw = 0.5)
+    # plt.plot(lX,lY,color = 'grey',alpha = 0.2,lw = 0.5) 
 
-plt.plot(lX,lYmax,color='red',lw=2)
-plt.plot(lX,lYmin,color='red',lw=2,label = 'Uncertainty Bounds')
+plt.plot(lX,lYmax,color='#4169E1',lw=2)
+plt.plot(lX,lYmin,color='#4169E1',lw=2,label = 'Uncertainty Bounds')
 
 plt.savefig('../paper/figs/ex1_UC.png',dpi = 600)
 plt.savefig('figs/ex1_UC.png',dpi = 600)
@@ -207,56 +207,63 @@ with open('runinfo/ex1_UC_cm.out','w') as f:
     print('Specificity = %.3f' %(ttt),file = f)
     print('sigma = %.3f' %(eee/(aaa+ccc+eee)),file = f)
     print('tau = %.3f' %(fff/(bbb+ddd+fff)),file = f)
-    
-### ROC CURVE
+   
+### Descriminatory Performance Plots
 s,fpr,predictions = ROC(model = base, data = test_data, results = test_results)
 nuq_s,nuq_fpr,nuq_predictions = ROC(model = nuq, data = test_data, results = test_results)
 s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
 
 s_i, fpr_i,uq_predictions = UQ_ROC(uq_models, test_data, test_results)
 
-densfig,axdens = plt.subplots(1,1)
-axdens.scatter(predictions,test_results+np.random.uniform(-0.05,0.05,len(predictions)),marker = '.',color='k',edgecolor = None,alpha = 0.5,label='Base')
-axdens.scatter(nuq_predictions,test_results+np.random.uniform(0.06,0.16,len(predictions)),marker = '.',color='m',edgecolor = None,alpha = 0.5,label = 'No Uncertainty')
-for i,(u,r) in enumerate(zip(uq_predictions,test_results.to_list())):
-    yd = np.random.uniform(-0.06,-0.16)
-    # plt.plot(m,r+yd,color = 'b',marker = 'x')
-    if i == 0:
-        axdens.plot([u[0],u[1]],[r+yd,r+yd],color = 'blue',alpha = 0.3,label  = 'Uncertain')
+densfig,axdens = plt.subplots(nrows = 2, sharex= True)
+
+for i,(p,u,nuqp,r) in enumerate(zip(predictions,uq_predictions,nuq_predictions,test_results.to_list())):
+    yd = np.random.uniform(-0.11,-.31)
+    if r:
+        axdens[0].scatter(p,np.random.uniform(-0.1,0.1),color = 'k',marker = 'o',alpha = 0.5)
+        axdens[0].scatter(nuqp,np.random.uniform(0.11,0.31),color = '#DC143C',marker = 'o',alpha = 0.5)
+        axdens[0].plot([u[0],u[1]],[yd,yd],color = '#4169E1',alpha = 0.3)
+        axdens[0].scatter([u[0],u[1]],[yd,yd],color = '#4169E1',marker = '|')
     else:
-        axdens.plot([u[0],u[1]],[r+yd,r+yd],color = 'blue',alpha = 0.3)
-    
-axdens.set(xlabel = '$\pi$',ylabel = 'Outcome',yticks = [0,1])
-axdens.legend()
+        axdens[1].scatter(p,np.random.uniform(-.1,0.1),color = 'k',marker = 'o',alpha = 0.5)
+        axdens[1].scatter(nuqp,np.random.uniform(0.11,.31),color = '#DC143C',marker = 'o',alpha = 0.5)
+        axdens[1].plot([u[0],u[1]],[yd,yd],color = '#4169E1',alpha = 0.3)
+        axdens[1].scatter([u[0],u[1]],[yd,yd],color = '#4169E1',marker = '|')
+        
+        
+axdens[0].set(ylabel = 'Outcome = 1',yticks = [])
+axdens[1].set(xlabel = '$\pi$',ylabel = 'Outcome = 0',yticks = [])
+densfig.tight_layout()
 
 rocfig,axroc = plt.subplots(1,1)
 axroc.plot([0,1],[0,1],'k:',label = 'Random Classifier')
 axroc.set(xlabel = '$fpr$',ylabel='$s$')
 axroc.plot(fpr,s,'k',label = 'Base')
-axroc.plot(nuq_fpr,nuq_s,'m--',label='No Uncertainty')
-axroc.plot(fpr_t,s_t,'blue',label='Uncertain (No prediction)')
+axroc.plot(nuq_fpr,nuq_s,color='#DC143C',linestyle='--',label='No Uncertainty')
+axroc.plot(fpr_t,s_t,'#4169E1',label='Uncertain (No prediction)')
 axroc.legend()
 rocfig.savefig('figs/ex1_UC_ROC.png',dpi = 600)
 rocfig.savefig('../paper/figs/ex1_UC_ROC.png',dpi = 600)
 densfig.savefig('figs/ex1_UC_dens.png',dpi =600)
+densfig.savefig('../paper/figs/ex1_UC_dens.png',dpi =600)
+
 
 with open('runinfo/ex1_UC_auc.out','w') as f:
     print('NO UNCERTAINTY: %.3f' %auc(s,fpr), file = f)
     print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)
     print('THROW: %.3f' %auc(s_t,fpr_t), file = f)
-    # print('INTERVALS: [%.3f,%.3f]' %(auc_UC_min,auc_UC_max), file = f)
+    # print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
     
 
 
 fig = plt.figure()
-
 ax = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
 ax.set_xlabel('$fpr$')
 ax.set_ylabel('$s$')
 # ax.set_zlabel('$1-\sigma,1-\\tau$')
-ax.plot(fpr_t,s_t,'m',alpha = 0.5)
-ax.plot3D(fpr,s,Sigma,'b',label = '$\\sigma$')
-ax.plot3D(fpr,s,Tau,'r',label = '$\\tau$')
+ax.plot(fpr_t,s_t,'#4169E1',alpha = 0.5)
+ax.plot3D(fpr,s,Sigma,'#FF8C00',label = '$\\sigma$')
+ax.plot3D(fpr,s,Tau,'#008000',label = '$\\tau$')
 # ax.plot3D(fpr,s,Nu,'k',label = '$1-\\nu$')
 
 ax.legend()
@@ -267,14 +274,15 @@ plt.clf()
 
 plt.xlabel('$fpr$/$s$')
 plt.ylabel('$\\sigma$/$\\tau$')
-plt.plot(s,Sigma,'g',label = '$\\sigma$ v $s$')
-plt.plot(fpr,Tau,'r',label = '$\\tau$ v $t$')
+plt.plot(s,Sigma,'#FF8C00',label = '$\\sigma$ v $s$')
+plt.plot(fpr,Tau,'#008000',label = '$\\tau$ v $fpr$')
 plt.legend()
 
 plt.savefig('figs/ex1_UC_ST.png',dpi = 600)
 plt.savefig('../paper/figs/ex1_UC_ST.png',dpi = 600)
 
 plt.clf()
+
 
 ### Hosmer-Lemeshow
 hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,g = 10)
