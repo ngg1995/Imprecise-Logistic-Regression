@@ -258,7 +258,7 @@ def ROC(model = None, predictions = None, data = None, results = None, uq = Fals
         else:
             fpr.append(1/(1+(d/b)))
         
-    return s, fpr
+    return s, fpr, predictions
    
 def UQ_ROC(models, data, results):
     
@@ -272,14 +272,14 @@ def UQ_ROC(models, data, results):
         predictions.append((min(l),max(l)))
     
         
-    s_i,fpr_i = ROC(predictions = predictions, data = data, results = results, uq = True, drop = False)
+    s_i,fpr_i,_ = ROC(predictions = predictions, data = data, results = results, uq = True, drop = False)
 
     
     s_i = [pba.I(i) for i in s_i]
     fpr_i = [pba.I(i) for i in fpr_i]
     
 
-    return s_i, fpr_i
+    return s_i, fpr_i, predictions
 
 
 def auc(s,fpr):

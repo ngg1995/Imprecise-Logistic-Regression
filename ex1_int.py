@@ -7,7 +7,44 @@ from tqdm import tqdm
 import pba
 import tikzplotlib
 import random
-
+def histogram(probs, dif = 0, uq = False, bars = 10):
+    x = np.arange(bars)/bars
+    if uq: 
+        low_height = bars*[0]
+        hi_height = bars*[0]
+    else:
+        height = bars*[0]
+    for p in probs:
+        for i,j in reversed(list(enumerate(x))):
+            if uq:
+                if i + 1 == bars:
+                    if p[0] > j:
+                        low_height[i] += 1
+                        hi_height[i] += 1
+                        break
+                    if p[1] > j:
+                        hi_height[i] += 1
+                else:
+                    if p[0] > j and p[1] < x[i+1]:
+                        low_height[i] += 1
+                        hi_height[i] += 1
+                        break
+                    if p[1] > j:
+                        hi_height[i] += 1
+                    if p[0] > j:
+                        hi_height[i] += 1
+                        break
+            else:
+                if p > j:
+                    height[i] += 1
+                    break
+            
+    if dif != 0:
+        x = [i+dif for i in x]    
+    
+    if uq:
+        return x,low_height, hi_height
+    return x, height
 from LRF import *
 
 def intervalise(val,eps,method,b=0.5,bounds = None):
@@ -72,7 +109,7 @@ base = LogisticRegression()
 base.fit(train_data.to_numpy(),train_results.to_numpy())
 
 # Intervalise data
-eps = 0.5
+eps = 0.25
 
 UQdata = pd.DataFrame({
     0:[intervalise(train_data.iloc[i,0],eps,'t',0.75,(0,10)) for i in train_data.index]
@@ -103,9 +140,10 @@ plt.ylabel('$\pi_x$')
 plt.plot(lX,lY,color='k',zorder=10,lw=2)
 plt.plot(lX,lYn,color='m',zorder=10,lw=2)
 
-# for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
-#     plt.plot(m,r,marker = 'x')
-#     plt.plot([u.Left,u.Right],[r,r], marker='|')
+for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
+    yd = np.random.uniform(-0.05,0.05)
+    # plt.plot(m,r+yd,color = 'b',marker = 'x')
+    plt.plot([u.Left,u.Right],[r+yd,r+yd],color = 'b', marker='|')
 
 lYmin = np.ones(steps)
 lYmax = np.zeros(steps)
@@ -203,56 +241,62 @@ with open('runinfo/ex1_int_cm.out','w') as f:
 
 
 ### ROC CURVE
-s,fpr = ROC(model = base, data = test_data, results = test_results)
-nuq_s,nuq_fpr = ROC(model = nuq, data = test_data, results = test_results)
+s,fpr,predictions = ROC(model = base, data = test_data, results = test_results)
+nuq_s,nuq_fpr,nuq_predictions = ROC(model = nuq, data = test_data, results = test_results)
 s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
 
-s_i, fpr_i = UQ_ROC(uq_models, test_data, test_results)
+s_i, fpr_i,uq_predictions = UQ_ROC(uq_models, test_data, test_results)
 
-steps = 1000
-X = np.linspace(0,1,steps)
-Ymin = steps*[2]
-Ymax = steps*[-1]
+rocfig,ax = plt.subplots(2,2)
 
-for i, x in tqdm(enumerate(X)):
-    for k,j in zip(s_i,fpr_i):
+ax[0,0].scatter(predictions,test_results+np.random.uniform(-0.05,0.05,len(predictions)),marker = '.',color='k',alpha = 0.2)
+ax[0,0].scatter(nuq_predictions,test_results+np.random.uniform(0.1,0.2,len(predictions)),marker = '.',color='m',alpha = 0.2)
+ax[0,0].set(xlabel = '$\pi$',ylabel = 'Outcome',yticks = [0,1])
+for u,r in zip(uq_predictions,test_results.to_list()):
+    yd = np.random.uniform(-0.1,-0.2)
+    # plt.plot(m,r+yd,color = 'b',marker = 'x')
+    ax[0,0].plot([u[0],u[1]],[r+yd,r+yd],color = 'b',alpha = 0.1)
 
-        if j.straddles(x,endpoints = True):
-            Ymin[i] = min((Ymin[i],k.Left))
-            Ymax[i] = max((Ymax[i],k.Right))
+ax[1,0].plot([0,1],[0,1],'k:',label = 'Random Classifier')
+ax[1,0].set(xlabel = '$fpr$',ylabel='$s$')
+ax[1,0].plot(fpr,s,'k')
+ax[1,0].plot(nuq_fpr,nuq_s,'m--')
+ax[1,0].plot(fpr_t,s_t,'b')
 
-Xmax = [0]+[x for i,x in enumerate(X) if Ymax[i] != -1]+[1]
-Xmin = [0]+[x for i,x in enumerate(X) if Ymin[i] != 2]+[1]
-Ymax = [0]+[y for i,y in enumerate(Ymax) if Ymax[i] != -1]+[1]
-Ymin = [0]+[y for i,y in enumerate(Ymin) if Ymin[i] != 2]+[1]
 
-auc_int_min = sum([(Xmin[i]-Xmin[i-1])*Ymin[i] for i in range(1,len(Xmin))])
-auc_int_max = sum([(Xmax[i]-Xmax[i-1])*Ymax[i] for i in range(1,len(Xmin))])
-   
-plt.xlabel('$fpr$')
-plt.ylabel('$s$')
+ax[0,1].bar(*histogram([p for p,r in zip(predictions,test_results) if r]),width = 0.0333,color = 'k',align = 'edge')
+ax[0,1].bar(*histogram([p for p,r in zip(nuq_predictions,test_results) if r],dif = 0.0333),width = 0.0333,color = 'm',align = 'edge')
+x,low_height, hi_height = histogram([p for p,r in zip(uq_predictions,test_results) if r],uq=True,dif = 0.0666)
+ax[0,1].bar(x,hi_height,width = 0.0333,color = 'w',edgecolor = 'b',align = 'edge')
+ax[0,1].bar(x,low_height,width = 0.0333,color = 'b',align = 'edge')
 
-plt.step(fpr,s,'k', label = 'Base')
-plt.step(nuq_fpr,nuq_s,'m--', label = 'Midpoints')
-plt.step(fpr_t,s_t,'y', label = 'Not Predicting')
-plt.plot(Xmax,Ymax,'r',label = 'Interval Bounds')
-plt.plot(Xmin,Ymin,'r')
+ax[0,1].set(title = 'Outcome = 1',xlabel = '$\pi$',ylabel = 'Density',xticks = np.linspace(0,1,11),xticklabels = [0,'',.2,'',.4,'',.6,'',.8,'',1])
+ax[0,1].yaxis.set_label_position("right")
+ax[0,1].yaxis.tick_right()
 
-plt.legend()
+ax[1,1].bar(*histogram([p for p,r in zip(predictions,test_results) if not r]),width = 0.0333,color = 'k',align = 'edge')
+ax[1,1].bar(*histogram([p for p,r in zip(nuq_predictions,test_results) if not r],dif = 0.0333),width = 0.0333,color = 'm',align = 'edge')
+x,low_height, hi_height = histogram([p for p,r in zip(uq_predictions,test_results) if not r],uq=True,dif = 0.0666)
+ax[1,1].bar(x,hi_height,width = 0.0333,color = 'w',edgecolor = 'b',align = 'edge')
+ax[1,1].bar(x,low_height,width = 0.0333,color = 'b',align = 'edge')
 
-plt.savefig('figs/ex1_int_ROC.png',dpi = 600)
-plt.savefig('../paper/figs/ex1_int_ROC.png',dpi = 600)
-# plt.clf()
+ax[1,1].set(title = 'Outcome = 0',xlabel = '$\pi$',ylabel = 'Density',xticks = np.linspace(0,1,11),xticklabels = [0,'',.2,'',.4,'',.6,'',.8,'',1])
+ax[1,1].yaxis.set_label_position("right")
+ax[1,1].yaxis.tick_right()
+
+rocfig.tight_layout()
+rocfig.savefig('figs/ex1_int_ROC.png',dpi = 600)
+rocfig.savefig('../paper/figs/ex1_int_ROC.png',dpi = 600)
 
 with open('runinfo/ex1_int_auc.out','w') as f:
     print('NO UNCERTAINTY: %.3f' %auc(s,fpr), file = f)
     print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)
     print('THROW: %.3f' %auc(s_t,fpr_t), file = f)
-    print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
+    # print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
     
 
-fig = plt.figure()
 
+fig = plt.figure()
 ax = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
 ax.set_xlabel('$fpr$')
 ax.set_ylabel('$s$')

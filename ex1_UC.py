@@ -210,6 +210,10 @@ plt.savefig('figs/ex1_UC_ROC.png',dpi = 600)
 plt.savefig('../paper/figs/ex1_UC_ROC.png',dpi = 600)
 plt.clf()
 
+with open('roc.txt','w') as f:
+    for i,j,k,l in zip(s,fpr,nuq_s,nuq_fpr):
+        print('%.3f,%.3f|%.3f,%.3f'%(i,j,k,l),file = f)
+        
 with open('runinfo/ex1_UC_auc.out','w') as f:
     print('NO UNCERTAINTY: %.3f' %auc(s,fpr), file = f)
     print('DISCARDED: %.4F' %auc(nuq_s,nuq_fpr),file = f)

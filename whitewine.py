@@ -7,6 +7,46 @@ import itertools as it
 from tqdm import tqdm
 import pba
 
+
+def histogram(probs, dif = 0, uq = False, bars = 10):
+    x = np.arange(bars)/bars
+    if uq: 
+        low_height = bars*[0]
+        hi_height = bars*[0]
+    else:
+        height = bars*[0]
+    for p in probs:
+        for i,j in reversed(list(enumerate(x))):
+            if uq:
+                if i + 1 == bars:
+                    if p[0] > j:
+                        low_height[i] += 1
+                        hi_height[i] += 1
+                        break
+                    if p[1] > j:
+                        hi_height[i] += 1
+                else:
+                    if p[0] > j and p[1] < x[i+1]:
+                        low_height[i] += 1
+                        hi_height[i] += 1
+                        break
+                    if p[1] > j:
+                        hi_height[i] += 1
+                    if p[0] > j:
+                        hi_height[i] += 1
+                        break
+            else:
+                if p > j:
+                    height[i] += 1
+                    break
+            
+    if dif != 0:
+        x = [i+dif for i in x]    
+    
+    if uq:
+        return x,low_height, hi_height
+    return x, height
+
 from LRF import *
 
 def intervalise(val,eps,method='u',b=0,bounds = None):
@@ -42,14 +82,14 @@ wine_data = pd.read_csv('winequality-white.csv',index_col = None,usecols = ['vol
 random.seed(10) # for reproducability
 np.random.seed(10)
 
-train_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 5].index], k = 100) + random.sample([i for i in wine_data[wine_data['quality'] >= 6].index ], k = 100)
-test_data_index = [i for i in wine_data.index if i not in train_data_index]
+train_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 5].index], k = 250) + random.sample([i for i in wine_data[wine_data['quality'] >= 6].index ], k = 250)
+# train_data_index = [i for i in wine_data.index if i not in train_data_index]
 
-test_data = wine_data.loc[test_data_index,[c for c in wine_data.columns if c != 'quality']]
 train_data = wine_data.loc[train_data_index,[c for c in wine_data.columns if c != 'quality']]
+# train_data = wine_data.loc[train_data_index,[c for c in wine_data.columns if c != 'quality']]
 
-test_results = wine_data.loc[test_data_index,'quality'] >= 6
 train_results = wine_data.loc[train_data_index,'quality'] >= 6
+# train_results = wine_data.loc[train_data_index,'quality'] >= 6
 
 # Intervalise data
 eps = {
@@ -87,24 +127,24 @@ uq_models = int_logistic_regression(UQdata,train_results)
 
 ### Get confusion matrix
 # Classify test data
-base_predict = base.predict(test_data)
+base_predict = base.predict(train_data)
 
 # CLASSIFY NO_UQ MODEL DATA 
-nuq_predict = nuq.predict(test_data)
+nuq_predict = nuq.predict(train_data)
 
 # CLASSIFY UQ MODEL 
-test_predict = pd.DataFrame(columns = uq_models.keys())
+train_predict = pd.DataFrame(columns = uq_models.keys())
 
 for key, model in uq_models.items():
-    test_predict[key] = model.predict(test_data)
+    train_predict[key] = model.predict(train_data)
     
 predictions = []
-for i in test_predict.index:
-    predictions.append([min(test_predict.loc[i]),max(test_predict.loc[i])])
+for i in train_predict.index:
+    predictions.append([min(train_predict.loc[i]),max(train_predict.loc[i])])
 
 with open('runinfo/whitewine_cm.out','w') as f:
     print('TRUE MODEL',file = f)
-    a,b,c,d = generate_confusion_matrix(test_results,base_predict)
+    a,b,c,d = generate_confusion_matrix(train_results,base_predict)
     print('TP=%i\tFP=%i\nFN=%i\tTN=%i' %(a,b,c,d),file = f)
 
     # Calculate sensitivity and specificity
@@ -112,7 +152,7 @@ with open('runinfo/whitewine_cm.out','w') as f:
     print('Specificity = %.3f' %(d/(b+d)),file = f)
 
     print('DISCARDED DATA MODEL',file = f)
-    aa,bb,cc,dd = generate_confusion_matrix(test_results,nuq_predict)
+    aa,bb,cc,dd = generate_confusion_matrix(train_results,nuq_predict)
     try:
         ss = 1/(1+cc/aa)
     except:
@@ -129,7 +169,7 @@ with open('runinfo/whitewine_cm.out','w') as f:
     
     print('UQ MODEL',file = f)
     
-    aaai,bbbi,ccci,dddi = generate_confusion_matrix(test_results,predictions,throw = False)
+    aaai,bbbi,ccci,dddi = generate_confusion_matrix(train_results,predictions,throw = False)
     try:
         sssi = 1/(1+ccci/aaai)
     except:
@@ -144,7 +184,7 @@ with open('runinfo/whitewine_cm.out','w') as f:
     # Calculate sensitivity and specificity
     print('Sensitivity = [%.3f,%.3f]\nSpecificity = [%.3f,%.3f]' %(*sssi,*ttti),file = f)
 
-    aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(test_results,predictions,throw = True)
+    aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(train_results,predictions,throw = True)
     try:
         sss = 1/(1+ccc/aaa)
     except:
@@ -162,46 +202,52 @@ with open('runinfo/whitewine_cm.out','w') as f:
 
 
 ### ROC CURVE
-s,fpr = ROC(model = base, data = test_data, results = test_results)
-nuq_s,nuq_fpr = ROC(model = nuq, data = test_data, results = test_results)
-s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
+s,fpr,predictions = ROC(model = base, data = train_data, results = train_results)
+nuq_s,nuq_fpr,nuq_predictions = ROC(model = nuq, data = train_data, results = train_results)
+s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, train_data, train_results)
 
-s_i, fpr_i = UQ_ROC(uq_models, test_data, test_results)
+s_i, fpr_i,uq_predictions = UQ_ROC(uq_models, train_data, train_results)
 
-steps = 1000
-X = np.linspace(0,1,steps)
-Ymin = steps*[2]
-Ymax = steps*[-1]
 
-for i, x in tqdm(enumerate(X)):
-    for k,j in zip(s_i,fpr_i):
+rocfig,ax = plt.subplots(2,2)
 
-        if j.straddles(x,endpoints = True):
-            Ymin[i] = min((Ymin[i],k.Left))
-            Ymax[i] = max((Ymax[i],k.Right))
+ax[0,0].scatter(predictions,train_results+np.random.uniform(-0.05,0.05,len(predictions)),marker = '.',color='k')
+ax[0,0].scatter(nuq_predictions,train_results+np.random.uniform(0.1,0.2,len(predictions)),marker = '.',color='m')
+ax[0,0].set(xlabel = '$\pi$',ylabel = 'Outcome',yticks = [0,1])
+for u,r in zip(uq_predictions,train_results.to_list()):
+    yd = np.random.uniform(-0.1,-0.2)
+    # plt.plot(m,r+yd,color = 'b',marker = 'x')
+    ax[0,0].plot([u[0],u[1]],[r+yd,r+yd],color = 'b',alpha = 0.1)
 
-Xmax = [0]+[x for i,x in enumerate(X) if Ymax[i] != -1]+[1]
-Xmin = [0]+[x for i,x in enumerate(X) if Ymin[i] != 2]+[1]
-Ymax = [0]+[y for i,y in enumerate(Ymax) if Ymax[i] != -1]+[1]
-Ymin = [0]+[y for i,y in enumerate(Ymin) if Ymin[i] != 2]+[1]
+ax[1,0].plot([0,1],[0,1],'k:',label = 'Random Classifier')
+ax[1,0].set(xlabel = '$fpr$',ylabel='$s$')
+ax[1,0].plot(fpr,s,'k')
+ax[1,0].plot(nuq_fpr,nuq_s,'m--')
 
-auc_int_min = sum([(Xmin[i]-Xmin[i-1])*Ymin[i] for i in range(1,len(Xmin))])
-auc_int_max = sum([(Xmax[i]-Xmax[i-1])*Ymax[i] for i in range(1,len(Xmin))])
-   
-plt.xlabel('$fpr$')
-plt.ylabel('$s$')
 
-plt.step(fpr,s,'k', label = 'Base')
-plt.step(nuq_fpr,nuq_s,'m--', label = 'Midpoints')
-plt.step(fpr_t,s_t,'y', label = 'Not Predicting')
-plt.plot(Xmax,Ymax,'r',label = 'Interval Bounds')
-plt.plot(Xmin,Ymin,'r')
+ax[0,1].bar(*histogram([p for p,r in zip(predictions,train_results) if r]),width = 0.0333,color = 'k',align = 'edge')
+ax[0,1].bar(*histogram([p for p,r in zip(nuq_predictions,train_results) if r],dif = 0.0333),width = 0.0333,color = 'm',align = 'edge')
+x,low_height, hi_height = histogram([p for p,r in zip(uq_predictions,train_results) if r],uq=True,dif = 0.0666)
+ax[0,1].bar(x,hi_height,width = 0.0333,color = 'w',edgecolor = 'b',align = 'edge')
+ax[0,1].bar(x,low_height,width = 0.0333,color = 'b',align = 'edge')
 
-plt.legend()
+ax[0,1].set(title = 'Outcome = 1',xlabel = '$\pi$',ylabel = 'Density',xticks = np.linspace(0,1,11),xticklabels = [0,'',.2,'',.4,'',.6,'',.8,'',1])
+ax[0,1].yaxis.set_label_position("right")
+ax[0,1].yaxis.tick_right()
 
-plt.savefig('figs/whitewine_ROC.png',dpi = 600)
-plt.savefig('../paper/figs/whitewine_ROC.png',dpi = 600)
-# plt.clf()
+ax[1,1].bar(*histogram([p for p,r in zip(predictions,train_results) if not r]),width = 0.0333,color = 'k',align = 'edge')
+ax[1,1].bar(*histogram([p for p,r in zip(nuq_predictions,train_results) if not r],dif = 0.0333),width = 0.0333,color = 'm',align = 'edge')
+x,low_height, hi_height = histogram([p for p,r in zip(uq_predictions,train_results) if not r],uq=True,dif = 0.0666)
+ax[1,1].bar(x,hi_height,width = 0.0333,color = 'w',edgecolor = 'b',align = 'edge')
+ax[1,1].bar(x,low_height,width = 0.0333,color = 'b',align = 'edge')
+
+ax[1,1].set(title = 'Outcome = 0',xlabel = '$\pi$',ylabel = 'Density',xticks = np.linspace(0,1,11),xticklabels = [0,'',.2,'',.4,'',.6,'',.8,'',1])
+ax[1,1].yaxis.set_label_position("right")
+ax[1,1].yaxis.tick_right()
+
+rocfig.tight_layout()
+rocfig.savefig('figs/whitewine_ROC.png',dpi = 600)
+rocfig.savefig('../paper/figs/whitewine_ROC.png',dpi = 600)
 
 # for i,j in zip(fpr_i,s_i):
 #     plt.plot([i.Left,i.Right],[j.Left,j.Right])
