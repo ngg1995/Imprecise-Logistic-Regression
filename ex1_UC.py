@@ -262,8 +262,8 @@ ax.set_xlabel('$fpr$')
 ax.set_ylabel('$s$')
 # ax.set_zlabel('$1-\sigma,1-\\tau$')
 ax.plot(fpr_t,s_t,'#4169E1',alpha = 0.5)
-ax.plot3D(fpr,s,Sigma,'#FF8C00',label = '$\\sigma$')
-ax.plot3D(fpr,s,Tau,'#008000',label = '$\\tau$')
+ax.plot3D(fpr_t,s_t,Sigma,'#FF8C00',label = '$\\sigma$')
+ax.plot3D(fpr_t,s_t,Tau,'#008000',label = '$\\tau$')
 # ax.plot3D(fpr,s,Nu,'k',label = '$1-\\nu$')
 
 ax.legend()
@@ -274,9 +274,10 @@ plt.clf()
 
 plt.xlabel('$fpr$/$s$')
 plt.ylabel('$\\sigma$/$\\tau$')
-plt.plot(s,Sigma,'#FF8C00',label = '$\\sigma$ v $s$')
-plt.plot(fpr,Tau,'#008000',label = '$\\tau$ v $fpr$')
+plt.plot(s_t,Sigma,'#FF8C00',label = '$\\sigma$ v $s$')
+plt.plot(fpr_t,Tau,'#008000',label = '$\\tau$ v $fpr$')
 plt.legend()
+
 
 plt.savefig('figs/ex1_UC_ST.png',dpi = 600)
 plt.savefig('../paper/figs/ex1_UC_ST.png',dpi = 600)

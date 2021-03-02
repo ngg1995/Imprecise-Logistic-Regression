@@ -10,38 +10,6 @@ import random
 
 from LRF import *
 
-def histogram(probs, dif = 0.05, uq = False, bars = 10):
-    x = np.arange(bars)/bars
-    if uq: 
-        low_height = bars*[0]
-        hi_height = bars*[0]
-    else:
-        height = bars*[0]
-    for p in probs:
-        if uq:
-            for i,j in reversed(list(enumerate(x))):
-                if p[0] > j:
-                    low_height[i] += 1/len(probs)
-                    break
-            for i,j in reversed(list(enumerate(x))):
-                if p[1] > j:
-                    hi_height[i] += 1/len(probs)
-                    break         
-        else:       
-            for i,j in reversed(list(enumerate(x))):
-
-                if p > j:
-                    height[i] += 1/len(probs)
-                    break
-            
-    if dif != 0:
-        x = [i+dif for i in x]    
-    
-    if uq:
-        return x,low_height, hi_height
-    return x, height
-
-
 def intervalise(val,eps,method,b=0.5,bounds = None):
     
     if method == 'u':
@@ -59,7 +27,6 @@ def intervalise(val,eps,method,b=0.5,bounds = None):
             return pba.I(m-eps,bounds[1])
         
     return pba.I(m-eps,m+eps)
-
 
 def midpoints(data):
     n_data = data.copy()
@@ -281,15 +248,14 @@ with open('runinfo/ex1_int_auc.out','w') as f:
     # print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
     
 
-
 fig = plt.figure()
 ax = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
 ax.set_xlabel('$fpr$')
 ax.set_ylabel('$s$')
 # ax.set_zlabel('$1-\sigma,1-\\tau$')
 ax.plot(fpr_t,s_t,'#4169E1',alpha = 0.5)
-ax.plot3D(fpr,s,Sigma,'#FF8C00',label = '$\\sigma$')
-ax.plot3D(fpr,s,Tau,'#008000',label = '$\\tau$')
+ax.plot3D(fpr_t,s_t,Sigma,'#FF8C00',label = '$\\sigma$')
+ax.plot3D(fpr_t,s_t,Tau,'#008000',label = '$\\tau$')
 # ax.plot3D(fpr,s,Nu,'k',label = '$1-\\nu$')
 
 ax.legend()
@@ -300,8 +266,8 @@ plt.clf()
 
 plt.xlabel('$fpr$/$s$')
 plt.ylabel('$\\sigma$/$\\tau$')
-plt.plot(s,Sigma,'#FF8C00',label = '$\\sigma$ v $s$')
-plt.plot(fpr,Tau,'#008000',label = '$\\tau$ v $fpr$')
+plt.plot(s_t,Sigma,'#FF8C00',label = '$\\sigma$ v $s$')
+plt.plot(fpr_t,Tau,'#008000',label = '$\\tau$ v $fpr$')
 plt.legend()
 
 plt.savefig('figs/ex1_int_ST.png',dpi = 600)

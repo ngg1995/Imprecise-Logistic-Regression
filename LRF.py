@@ -76,11 +76,10 @@ def uc_logistic_regression(data,result,uncertain):
         
     return models
    
-def find_thresholds(B0,B,UQdata,uq_cols):
+def find_thresholds(B0,B,UQdata,uq_cols,binary_cols = []):
 
     def F(B0,B,X):
         f = float(B0)
-
         for b,x in zip(B,X):
             f += float(b*x)
         return f
@@ -89,6 +88,7 @@ def find_thresholds(B0,B,UQdata,uq_cols):
         for x,Bx in zip(X,Bx):
             Cx += float(b*x)
         return abs(Cx)
+    
     def max_F(X,Bx,Cx):
         for x,Bx in zip(X,Bx):
             Cx += float(b*x)
@@ -106,29 +106,39 @@ def find_thresholds(B0,B,UQdata,uq_cols):
     for j in UQdata.index:
 
         X = UQdata.loc[j].copy()
+        Xmin = X.copy()
+        Xmax = X.copy()
             
         Cx = float(B0)
         Bx = []
         X0 = []
+        uncertain_cols = []
+        
         for i,b in zip(X.index,B):
-            if i in uq_cols:
+
+            if i in uq_cols and X[i].__class__.__name__ == 'Interval':
                 Bx.append(b)
                 X0.append(X[i].midpoint())
+                uncertain_cols.append(i)
             else:
-                Cx += float(X[i]*b)
-        
-        bounds = [(X[i].Left,X[i].Right) for i in uq_cols]
-        Rmin = so.minimize(min_F,X0,args = (Bx,Cx),method = 'L-BFGS-B',bounds = bounds)
-        Rmax = so.minimize(max_F,X0,args = (Bx,Cx),method = 'L-BFGS-B',bounds = bounds)
-        
-        
-        Xmin = X.copy()
-        Xmax = X.copy()
+                Cx += float(float(X[i])*b)
 
-        for i,xmin,xmax in zip(uq_cols,Rmin.x,Rmax.x):
-            Xmin[i] = xmax
-            Xmax[i] = xmin
-            
+        
+        if len(uncertain_cols) != 0:
+
+            bounds = [(X[i].Left,X[i].Right) for i in uq_cols if X[i].__class__.__name__ == 'Interval']
+
+            Rmin = so.minimize(min_F,X0,args = (Bx,Cx),method = 'L-BFGS-B',bounds = bounds)
+            Rmax = so.minimize(max_F,X0,args = (Bx,Cx),method = 'L-BFGS-B',bounds = bounds)
+
+            for i,xmin,xmax in zip(uncertain_cols,Rmin.x,Rmax.x):
+                if i in binary_cols:
+                    if xmin not in (0,1):
+                        xmin = round(xmin)
+                        
+                Xmin[i] = xmax
+                Xmax[i] = xmin
+
 
         dataMin.loc[j] = Xmin
         dataMax.loc[j] = Xmax
@@ -137,15 +147,19 @@ def find_thresholds(B0,B,UQdata,uq_cols):
     return dataMin, dataMax
 
 
-def int_logistic_regression(UQdata,results):
+def int_logistic_regression(UQdata,results,binary_cols = []):
 
     left = lambda x: x.Left
     right = lambda x: x.Right
     
-    uq_col = []
+    uq_col = binary_cols.copy()
     
     for c in UQdata.columns:
-        # check which columns have interval data
+        
+        if c in binary_cols:
+            continue
+        
+        # check which columns have interval data       
         for i in UQdata[c]:
             if i.__class__.__name__ == 'Interval':
                 uq_col.append(c)
@@ -155,7 +169,7 @@ def int_logistic_regression(UQdata,results):
     data = {''.join(k):pd.DataFrame({
                 **{c:[F(i) if i.__class__.__name__ == 'Interval' else i for i in UQdata[c]] for c,F in zip(uq_col,func)},
                 **{c:UQdata[c] for c in UQdata.columns if c not in uq_col}
-                }, index = UQdata.index)
+                }, index = UQdata.index).reindex(columns = UQdata.columns)
              for k, func in tqdm(zip(it.product('lr',repeat = len(uq_col)),it.product((left,right),repeat = len(uq_col))),desc='Getting Bounds (1)',total = 2**len(uq_col))
             }
     models = {k:LogisticRegression(max_iter = 1000).fit(d,results) for k,d in tqdm(data.items(),desc ='Fitting Models (1)')}
@@ -165,15 +179,14 @@ def int_logistic_regression(UQdata,results):
         B0 = m.intercept_
         B = m.coef_[0]
 
-        nMin, nMax = find_thresholds(B0,B,UQdata,uq_col)
+        nMin, nMax = find_thresholds(B0,B,UQdata,uq_col,binary_cols = binary_cols)
 
-        n_data[k+'min'] = nMin
-        n_data[k+'max'] = nMax
+        n_data[k+'min'] = nMin.reindex(columns = UQdata.columns)
+        n_data[k+'max'] = nMax.reindex(columns = UQdata.columns)
 
 
     n_models = {k:LogisticRegression(max_iter = 1000).fit(d,results) for k,d in tqdm(n_data.items(),desc ='Fitting Models (2)')}
 
-    
     return {**models,**n_models}
 
 def ROC(model = None, predictions = None, data = None, results = None, uq = False, drop = True):
