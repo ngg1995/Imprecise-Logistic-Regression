@@ -13,26 +13,26 @@ from LRF import *
 wine_data = pd.read_csv('winequality-red.csv',index_col = None,usecols = ['volatile acidity','citric acid','chlorides','pH','sulphates','alcohol','quality'])
 
 # Split the data into test/train factors and result and generate uncertain points
-random.seed(1111) # for reproducability
+random.seed(760) # for reproducability best 587 760
+goodwine = 7 # with with quality >= goodwine is considered high quality
+results = wine_data['quality'] >= goodwine
 
-uq_data_index = random.sample([i for i in wine_data.index if wine_data.loc[i,'quality'] == 6 or wine_data.loc[i,'quality'] == 7], k = 10)
-nuq_data_index = random.sample([i for i in wine_data[wine_data['quality'] <= 6].index if i not in uq_data_index], k = 100) + random.sample([i for i in wine_data[wine_data['quality'] >= 7].index if i not in uq_data_index], k = 100)
-test_data_index = [i for i in wine_data.index if i not in uq_data_index and i not in nuq_data_index]
+train_data_index = random.sample([i for i in wine_data.index if results.loc[i]], k = 75) +  random.sample([i for i in wine_data.index if not results.loc[i]], k = 125)
+train_data = wine_data.loc[train_data_index,[c for c in wine_data.columns if c != 'quality']]
+train_results = results.loc[train_data_index]
 
-uq_data = wine_data.loc[uq_data_index,[c for c in wine_data.columns if c != 'quality']]
-nuq_data = wine_data.loc[nuq_data_index,[c for c in wine_data.columns if c != 'quality']]
-test_data = wine_data.loc[test_data_index,[c for c in wine_data.columns if c != 'quality']]
+uq_data_index = random.sample([i for i in train_data.index if wine_data.loc[i,'quality'] == goodwine], k = 5) + random.sample([i for i in train_data.index if wine_data.loc[i,'quality'] == goodwine-1], k = 5)
+nuq_data_index = [i for i in train_data_index if i not in uq_data_index]
 
-train_data = wine_data.loc[uq_data_index+nuq_data_index,[c for c in wine_data.columns if c != 'quality']]
+uq_data = train_data.loc[uq_data_index]
+nuq_data = train_data.loc[nuq_data_index]
+nuq_results = train_results.loc[nuq_data_index]
 
-nuq_results = wine_data.loc[nuq_data_index,'quality'] >= 7
-train_results = wine_data.loc[train_data.index,'quality'] >= 7
-test_results = wine_data.loc[test_data_index,'quality'] >= 7
 
 ### Fit logistic regression model on full dataset
 base = LogisticRegression(max_iter=1000)
 base.fit(train_data.to_numpy(),train_results.to_numpy())
-print(*zip(train_data.columns,*base.coef_))
+# print(*zip(train_data.columns,*base.coef_))
 ### Fit UQ models
 uq_models = uc_logistic_regression(train_data,train_results,uq_data)
 
@@ -41,25 +41,25 @@ nuq = LogisticRegression(max_iter=1000)
 nuq.fit(nuq_data.to_numpy(),nuq_results.to_numpy())
 
 ### Get confusion matrix
-# Classify test data
-base_predict = base.predict(test_data)
+# Classify train data
+base_predict = base.predict(train_data)
 
 # CLASSIFY NO_UQ MODEL DATA 
-nuq_predict = nuq.predict(test_data)
+nuq_predict = nuq.predict(train_data)
 
 # CLASSIFY UQ MODEL 
-test_predict = pd.DataFrame(columns = uq_models.keys())
+train_predict = pd.DataFrame(columns = uq_models.keys())
 
 for key, model in uq_models.items():
-    test_predict[key] = model.predict(test_data)
+    train_predict[key] = model.predict(train_data)
     
 predictions = []
-for i in test_predict.index:
-    predictions.append([min(test_predict.loc[i]),max(test_predict.loc[i])])
+for i in train_predict.index:
+    predictions.append([min(train_predict.loc[i]),max(train_predict.loc[i])])
 
 with open('runinfo/redwine_cm.out','w') as f:
     print('TRUE MODEL',file = f)
-    a,b,c,d = generate_confusion_matrix(test_results,base_predict)
+    a,b,c,d = generate_confusion_matrix(train_results,base_predict)
     print('TP=%i\tFP=%i\nFN=%i\tTN=%i' %(a,b,c,d),file = f)
 
     # Calculate sensitivity and specificity
@@ -67,7 +67,7 @@ with open('runinfo/redwine_cm.out','w') as f:
     print('Specificity = %.3f' %(d/(b+d)),file = f)
 
     print('DISCARDED DATA MODEL',file = f)
-    aa,bb,cc,dd = generate_confusion_matrix(test_results,nuq_predict)
+    aa,bb,cc,dd = generate_confusion_matrix(train_results,nuq_predict)
     try:
         ss = 1/(1+cc/aa)
     except:
@@ -84,7 +84,7 @@ with open('runinfo/redwine_cm.out','w') as f:
 
     print('UQ MODEL',file = f)
     
-    aaai,bbbi,ccci,dddi = generate_confusion_matrix(test_results,predictions,throw = False)
+    aaai,bbbi,ccci,dddi = generate_confusion_matrix(train_results,predictions,throw = False)
     try:
         sssi = 1/(1+ccci/aaai)
     except:
@@ -98,7 +98,7 @@ with open('runinfo/redwine_cm.out','w') as f:
 
     # Calculate sensitivity and specificity
     print('Sensitivity = [%.3f,%.3f]\nSpecificity = [%.3f,%.3f]' %(*sssi,*ttti),file = f)
-    aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(test_results,predictions,throw = True)
+    aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(train_results,predictions,throw = True)
     try:
         sss = 1/(1+ccc/aaa)
     except:
@@ -137,7 +137,7 @@ for i,(p,u,nuqp,r) in enumerate(zip(predictions,uq_predictions,nuq_predictions,t
         axdens[1].scatter([u[0],u[1]],[yd,yd],color = '#4169E1',marker = '|')
         
         
-axdens[0].set(ylabel = 'Outcome = 1',yticks = [])
+axdens[0].set(ylabel = 'Outcome = 1',yticks = [],xlim=[0,1],xticks = [0,0.25,0.50,0.75,1])
 axdens[1].set(xlabel = '$\pi$',ylabel = 'Outcome = 0',yticks = [])
 densfig.tight_layout()
 

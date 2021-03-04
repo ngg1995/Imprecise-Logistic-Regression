@@ -48,7 +48,7 @@ random.seed(25) # for reproducability
 
 ## Select some data to be intervalised
 binary_cols = ['RACE','FLAME']
-binary_uq ={c: random.sample([i for i in data.index], k = n) for c,n in zip(binary_cols,(50,100))}
+binary_uq ={c: random.sample([i for i in data.index], k = n) for c,n in zip(binary_cols,(50,50))}
 binary_index = {i for i in it.chain(*binary_uq.values())}
 eps = {
     #    "AGE":(1,'u',0,(0,np.inf)),
@@ -93,64 +93,64 @@ predictions = []
 for i in train_predict.index:
     predictions.append([min(train_predict.loc[i]),max(train_predict.loc[i])])
 
-# with open('runinfo/burn1000_cm.out','w') as f:
-#     print('TRUE MODEL',file = f)
-#     a,b,c,d = generate_confusion_matrix(results,base_predict)
-#     print('TP=%i\tFP=%i\nFN=%i\tTN=%i' %(a,b,c,d),file = f)
+with open('runinfo/burn1000_cm.out','w') as f:
+    print('TRUE MODEL',file = f)
+    a,b,c,d = generate_confusion_matrix(results,base_predict)
+    print('TP=%i\tFP=%i\nFN=%i\tTN=%i' %(a,b,c,d),file = f)
 
-#     # Calculate sensitivity and specificity
-#     print('Sensitivity = %.3f' %(a/(a+c)),file = f)
-#     print('Specificity = %.3f' %(d/(b+d)),file = f)
+    # Calculate sensitivity and specificity
+    print('Sensitivity = %.3f' %(a/(a+c)),file = f)
+    print('Specificity = %.3f' %(d/(b+d)),file = f)
 
-#     print('DISCARDED DATA MODEL',file = f)
-#     aa,bb,cc,dd = generate_confusion_matrix(results,nuq_predict)
-#     try:
-#         ss = 1/(1+cc/aa)
-#     except:
-#         ss = None
-#     try:    
-#         tt = 1/(1+bb/dd)
-#     except:
-#         tt = None
-#     print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aa,bb,cc,dd),file = f)
+    print('DISCARDED DATA MODEL',file = f)
+    aa,bb,cc,dd = generate_confusion_matrix(results,nuq_predict)
+    try:
+        ss = 1/(1+cc/aa)
+    except:
+        ss = None
+    try:    
+        tt = 1/(1+bb/dd)
+    except:
+        tt = None
+    print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aa,bb,cc,dd),file = f)
 
-#     # Calculate sensitivity and specificity
-#     print('Sensitivity = %.3f' %(ss),file = f)
-#     print('Specificity = %.3f' %(tt),file = f)
+    # Calculate sensitivity and specificity
+    print('Sensitivity = %.3f' %(ss),file = f)
+    print('Specificity = %.3f' %(tt),file = f)
     
-#     print('UQ MODEL',file = f)
+    print('UQ MODEL',file = f)
     
-#     aaai,bbbi,ccci,dddi = generate_confusion_matrix(results,predictions,throw = False)
-#     print(aaai,bbbi,ccci,dddi)
-#     try:
-#         sssi = 1/(1+ccci/aaai)
-#     except:
-#         sssi = None
-#     try:    
-#         ttti = 1/(1+bbbi/dddi)
-#     except:
-#         ttti = None
+    aaai,bbbi,ccci,dddi = generate_confusion_matrix(results,predictions,throw = False)
+    print(aaai,bbbi,ccci,dddi)
+    try:
+        sssi = 1/(1+ccci/aaai)
+    except:
+        sssi = None
+    try:    
+        ttti = 1/(1+bbbi/dddi)
+    except:
+        ttti = None
         
-#     print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aaai,bbbi,ccci,dddi),file = f)
+    print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aaai,bbbi,ccci,dddi),file = f)
 
-#     # Calculate sensitivity and specificity
-#     print('Sensitivity = [%.3f,%.3f]\nSpecificity = [%.3f,%.3f]' %(*sssi,*ttti),file = f)
+    # Calculate sensitivity and specificity
+    print('Sensitivity = [%.3f,%.3f]\nSpecificity = [%.3f,%.3f]' %(*sssi,*ttti),file = f)
 
-#     aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(results,predictions,throw = True)
-#     try:
-#         sss = 1/(1+ccc/aaa)
-#     except:
-#         sss = None
-#     try:    
-#         ttt = 1/(1+bbb/ddd)
-#     except:
-#         ttt = None
+    aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(results,predictions,throw = True)
+    try:
+        sss = 1/(1+ccc/aaa)
+    except:
+        sss = None
+    try:    
+        ttt = 1/(1+bbb/ddd)
+    except:
+        ttt = None
         
-#     print('TP=%i\tFP=%i\nFN=%i\tTN=%i\nNP(+)=%i\tNP(-)=%i' %(aaa,bbb,ccc,ddd,eee,fff),file = f)
+    print('TP=%i\tFP=%i\nFN=%i\tTN=%i\nNP(+)=%i\tNP(-)=%i' %(aaa,bbb,ccc,ddd,eee,fff),file = f)
 
-#     # Calculate sensitivity and specificity
-#     print('Sensitivity = %.3f' %(sss),file = f)
-#     print('Specificity = %.3f' %(ttt),file = f)
+    # Calculate sensitivity and specificity
+    print('Sensitivity = %.3f' %(sss),file = f)
+    print('Specificity = %.3f' %(ttt),file = f)
 
 ### Descriminatory Performance Plots
 s,fpr,predictions = ROC(model = base, data = train_data, results = results)
