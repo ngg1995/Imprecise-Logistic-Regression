@@ -10,24 +10,22 @@ import random
 
 from LRF import *
 
-def intervalise(val,eps,method,b=0.5,bounds = None):
-    
+def intervalise(val,eps,method,bias=0,bounds = None):
+   
     if method == 'u':
         m = np.random.uniform(val-eps,val+eps)
     elif method == 'b':
-        m = val - eps + 2*b*eps
+        m = val - eps + (1-bias)*eps
     elif method == 't':
-
-        m = np.random.triangular(val-eps,val+b*eps,val+eps)
-    
+        m = np.random.triangular(val-eps, val - eps + 2*bias*eps,val+eps)
+   
     if bounds is not None:
         if m-eps < bounds[0]:
             return pba.I(bounds[0],m+eps)
         elif m+eps >bounds[1]:
             return pba.I(m-eps,bounds[1])
-        
+       
     return pba.I(m-eps,m+eps)
-
 def midpoints(data):
     n_data = data.copy()
     for c in data.columns:
@@ -75,13 +73,13 @@ eps = 0.25
 
 UQdatasets = [
     pd.DataFrame({
-    0:[intervalise(train_data.iloc[i,0],eps,'b',0,(0,10)) if train_data.iloc[i,0]>5 else intervalise(train_data.iloc[i,0],eps,'b',1,(0,10)) for i in train_data.index]
-    }, dtype = 'O'),
-    pd.DataFrame({
-    0:[intervalise(train_data.iloc[i,0],eps,'b',0,(0,10)) for i in train_data.index]
+    0:[intervalise(train_data.iloc[i,0],eps,'b',-1,(0,10)) for i in train_data.index]
     }, dtype = 'O'),
     pd.DataFrame({
     0:[intervalise(train_data.iloc[i,0],eps,'b',1,(0,10)) for i in train_data.index]
+    }, dtype = 'O'),
+    pd.DataFrame({
+    0:[intervalise(train_data.iloc[i,0],eps,'b',-1,(0,10)) if train_data.iloc[i,0] > 5 else intervalise(train_data.iloc[i,0],eps,'b',1,(0,10)) for i in train_data.index]
     }, dtype = 'O')
     ]
 
