@@ -225,7 +225,8 @@ for i,(p,u,nuqp,r) in enumerate(zip(predictions,uq_predictions,nuq_predictions,t
         
         
 axdens[0].set(ylabel = 'Outcome = 1',yticks = [])
-axdens[1].set(xlabel = '$\pi$',ylabel = 'Outcome = 0',yticks = [])
+axdens[1].set(xlabel = '$\pi$',ylabel = 'Outcome = 0',yticks = [],xlim  = (0, 1))
+
 densfig.tight_layout()
 
 rocfig,axroc = plt.subplots(1,1)

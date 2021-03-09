@@ -72,7 +72,7 @@ s,fpr, predictions = ROC(model = base, data = test_data, results = test_results)
 rocfig,axroc = plt.subplots(1)
 densfig,axdens = plt.subplots(1)
 axdens.scatter(predictions,test_results+np.random.uniform(-0.05,0.05,len(predictions)),marker = 'o',color='k',alpha = 0.5)
-axdens.set(xlabel = '$\pi$',ylabel = 'Outcome')
+axdens.set(xlabel = '$\pi$',ylabel = 'Outcome = 0',yticks = [0,1],xlim  = (0, 1))
 
 
 axroc.plot([0,1],[0,1],'k:',label = 'Random Classifier')

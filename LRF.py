@@ -62,19 +62,42 @@ def generate_confusion_matrix(results,predictions,throw = False):
     else:
         return a,b,c,d
 
-def uc_logistic_regression(data,result,uncertain):
-
+def uc_logistic_regression(data,result,uncertain,nested = False):
+    
     models = {}
-
-    for N,i in tqdm(enumerate(it.product([0,1],repeat=len(uncertain))),total=2**len(uncertain),desc='UC Logistic Regression'):
-
+    
+    intercepts = [np.inf,-np.inf]
+    coefs = [[np.inf,-np.inf]*len(data.columns)]
+    
+    
+    for N,i in tqdm(enumerate(it.product([0,1],repeat=len(uncertain))),total=2**len(uncertain),desc='UC Logistic Regression',leave=(not nested)):
+        keep = False
         new_data = pd.concat((data,uncertain), ignore_index = True)
         new_result = pd.concat((result, pd.Series(i)), ignore_index = True)
 
         model = LogisticRegression(max_iter=1000)       
-        models[str(i)] = model.fit(new_data.to_numpy(),new_result.to_numpy())
+        model.fit(new_data.to_numpy(),new_result.to_numpy())
+
+        if model.intercept_[0] < intercepts[0]:
+            intercepts[0] = model.intercept_
+            keep = True
+        if model.intercept_[0] > intercepts[1]:
+            intercepts[1] = model.intercept_    
+            keep = True   
+            
+        for ii, (c,c_) in enumerate(zip(coefs,model.coef_[0])):
+            if c_ < c[0]:
+                coefs[ii][0] = c_
+                keep = True
+            if c_ > c[1]:
+                coefs[ii][1] = c_
+                keep = True
+                   
+        if keep:  
+            models[str(i)] = model.fit(new_data.to_numpy(),new_result.to_numpy())
         
     return models
+   
    
 def find_thresholds(B0,B,UQdata,uq_cols,binary_cols = []):
 
@@ -188,6 +211,55 @@ def int_logistic_regression(UQdata,results,binary_cols = []):
     n_models = {k:LogisticRegression(max_iter = 1000).fit(d,results) for k,d in tqdm(n_data.items(),desc ='Fitting Models (2)')}
 
     return {**models,**n_models}
+
+def uc_int_logistic_regression(UQdata,results,uncertain,binary_cols = [],uc_index=[]):
+
+    left = lambda x: x.Left
+    right = lambda x: x.Right
+   
+    uq_col = binary_cols.copy()
+    
+    for c in UQdata.columns:
+        
+        if c in binary_cols:
+            continue
+        
+        # check which columns have interval data       
+        for i in UQdata[c]:
+            if i.__class__.__name__ == 'Interval':
+                uq_col.append(c)
+                break
+    
+    
+    # remove uc classification from dataset when training model
+    kc_index = [i for i in UQdata.index if i not in uc_index]
+    
+    data1 = {''.join(k):pd.DataFrame({
+                **{c:[F(i) if i.__class__.__name__ == 'Interval' else i for i in UQdata[c]] for c,F in zip(uq_col,func)},
+                **{c:UQdata[c] for c in UQdata.columns if c not in uq_col}
+                }, index = UQdata.index).reindex(columns = UQdata.columns)
+             for k, func in tqdm(zip(it.product('lr',repeat = len(uq_col)),it.product((left,right),repeat = len(uq_col))),desc='Getting Bounds (1)',total = 2**len(uq_col))
+            }
+    
+    int_models = {k:LogisticRegression(max_iter = 1000).fit(d.loc[kc_index],results.loc[kc_index]) for k,d in tqdm(data1.items(),desc ='Fitting Models (1)')}
+
+    n_data = {}
+    for k,m in tqdm(int_models.items(),desc='Getting Bounds (2)'):
+        B0 = m.intercept_
+        B = m.coef_[0]
+
+        nMin, nMax = find_thresholds(B0,B,UQdata,uq_col,binary_cols = binary_cols)
+
+        n_data[k+'min'] = nMin.reindex(columns = UQdata.columns)
+        n_data[k+'max'] = nMax.reindex(columns = UQdata.columns)
+
+    uc_models = {}
+    for ii, dataset in tqdm({**data1,**n_data}.items(),desc='datasets'):
+
+        for jj, model in uc_logistic_regression(dataset.loc[kc_index],results.loc[kc_index],dataset.loc[uc_index],nested=True).items():
+            uc_models[ii+jj] = model
+    
+    return uc_models
 
 def ROC(model = None, predictions = None, data = None, results = None, uq = False, drop = True):
 
@@ -494,6 +566,7 @@ __all__ = [
     'generate_confusion_matrix',
     'uc_logistic_regression',
     'int_logistic_regression',
+    'uc_int_logistic_regression',
     'ROC',
     'UQ_ROC',
     'auc',
