@@ -25,14 +25,14 @@ def intervalise(val,eps,method='u',b=0,bounds = None):
     return pba.I(m-eps,m+eps)
 
 
-def midpoints(data, binary_cols):
+def deintervalise(data, binary_cols):
     n_data = data.copy()
     for c in data.columns:
         if c in binary_cols:
             continue
         for i in data.index:
             if data.loc[i,c].__class__.__name__ == 'Interval':
-                n_data.loc[i,c] = data.loc[i,c].midpoint()
+                n_data.loc[i,c] = data.loc[i,c].Left + np.random.rand()*data.loc[i,c].width()
             
     return n_data
 
@@ -41,41 +41,43 @@ data = pd.read_table('burn1000.txt',index_col = 'ID')
 
 results = data['DEATH']
 train_data = data[[c for c in data.columns if c not in ['DEATH','FACILITY']]]
+
 UQdata = train_data.copy()
 
 # Split the data into test/train factors and result and generate uncertain points
-random.seed(25) # for reproducability
+random.seed(1) # for reproducability
 
 ## Select some data to be intervalised
-binary_cols = ['RACE','FLAME']
-binary_uq ={c: random.sample([i for i in data.index], k = n) for c,n in zip(binary_cols,(50,50))}
-binary_index = {i for i in it.chain(*binary_uq.values())}
-eps = {
-    #    "AGE":(1,'u',0,(0,np.inf)),
-       "TBSA":(2,'t',-1,(0,100))
-       }
+index_list = [i for i in data.index]
+
+ininj_index = random.sample(index_list, k = 20) 
+uc_index = random.sample(index_list,k=10)
+
+u_index = ininj_index
+
 UQdata = pd.DataFrame({
-    **{c: [pba.I(0,1) if i in binary_uq[c] else train_data.loc[i,c] for i in data.index] for c in binary_cols},
-    **{c:[intervalise(train_data.loc[i,c],*eps[c]) for i in train_data.index] for c, e in eps.items()},
-    **{c: train_data[c] for c in train_data.columns if c not in (*binary_cols,*eps.keys())}
+    **{
+        "INH_INJ": [pba.I(0,1) if i in ininj_index else train_data.loc[i,"INH_INJ"] for i in index_list],
+        "AGE": [pba.I(80,90) if train_data.loc[i,'AGE'] > 80 else train_data.loc[i,'AGE'] for i in index_list]
+        },
+    **{c: train_data[c] for c in train_data.columns if c not in ("INH_INJ",'AGE')},
     }, index = data.index, dtype = 'O').reindex(columns = train_data.columns)
 
-print(len(binary_index))
+UQdata.to_csv('burn_uq.csv')
+
 ### Fit logistic regression model on full dataset
 base = LogisticRegression(max_iter=1000)
 base.fit(train_data.to_numpy(),results.to_numpy())
-print(train_data.columns,base.coef_)
 
 ### Fit models with none UQ data data
-nuq_data =  midpoints(UQdata.loc[[i for i in data.index if i not in binary_index]], binary_cols)
-nuq_results = results.loc[[i for i in data.index if i not in binary_index]]
+nuq_data =  deintervalise(UQdata.loc[[i for i in data.index if i not in [*u_index,*uc_index]]],["INH_INJ"])
+nuq_results = results.loc[[i for i in data.index if i not in [*u_index,*uc_index]]]
 nuq = LogisticRegression(max_iter=1000)
 nuq.fit(nuq_data.to_numpy(),nuq_results.to_numpy())
-print(nuq_data.columns,nuq.coef_)
 
 ### Fit UQ models
-uq_models = int_logistic_regression(UQdata,results,binary_cols = binary_cols)
-
+uq_models = uc_int_logistic_regression(UQdata,results.drop(uc_index),results.loc[uc_index],binary_cols = ["INH_INJ"],uc_index=uc_index)
+print(len(uq_models.keys()))
 ### Get confusion matrix
 # Classify test data
 base_predict = base.predict(train_data)
@@ -160,36 +162,40 @@ nuq_s,nuq_fpr,nuq_predictions = ROC(model = nuq, data = train_data, results = re
 s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, train_data, results)
 
 s_i, fpr_i,uq_predictions = UQ_ROC(uq_models, train_data, results)
-
+s_min, fpr_min,_ = UQ_ROC(uq_models, train_data, results, f = min)
+s_max, fpr_max,_ = UQ_ROC(uq_models, train_data, results, f = max)
 
 densfig,axdens = plt.subplots(nrows = 2, sharex= True)
 
 for i,(p,u,nuqp,r) in enumerate(zip(predictions,uq_predictions,nuq_predictions,results.to_list())):
-    yd = np.random.uniform(-0.11,-.31)
+    yd = np.random.uniform(-0.01,-.31)
     if r:
-        axdens[0].scatter(p,np.random.uniform(-0.1,0.1),color = 'k',marker = 'o',alpha = 0.5)
-        axdens[0].scatter(nuqp,np.random.uniform(0.11,0.31),color = '#DC143C',marker = 'o',alpha = 0.5)
-      
+        # axdens[0].scatter(p,np.random.uniform(-0.1,0.1),color = 'k',marker = 'o',alpha = 0.5)
+        axdens[0].scatter(nuqp,-yd,color = '#DC143C',marker = 'o',alpha = 0.5)    
         axdens[0].plot([u[0],u[1]],[yd,yd],color = '#4169E1',alpha = 0.3)
         axdens[0].scatter([u[0],u[1]],[yd,yd],color = '#4169E1',marker = '|')
     else:
-        axdens[1].scatter(p,np.random.uniform(-.1,0.1),color = 'k',marker = 'o',alpha = 0.5)
-        axdens[1].scatter(nuqp,np.random.uniform(0.11,.31),color = '#DC143C',marker = 'o',alpha = 0.5)
+        # axdens[1].scatter(p,np.random.uniform(-.1,0.1),color = 'k',marker = 'o',alpha = 0.5)
+        axdens[1].scatter(nuqp,-yd,color = '#DC143C',marker = 'o',alpha = 0.5)
 
         axdens[1].plot([u[0],u[1]],[yd,yd],color = '#4169E1',alpha = 0.3)
         axdens[1].scatter([u[0],u[1]],[yd,yd],color = '#4169E1',marker = '|')
         
         
 axdens[0].set(ylabel = 'Outcome = 1',yticks = [])
-axdens[1].set(xlabel = '$\pi$',ylabel = 'Outcome = 0',yticks = [])
+axdens[1].set(xlabel = '$\pi$',ylabel = 'Outcome = 0',yticks = [],xlim  = (0, 1))
 densfig.tight_layout()
 
 rocfig,axroc = plt.subplots(1,1)
 axroc.plot([0,1],[0,1],'k:',label = 'Random Classifier')
 axroc.set(xlabel = '$fpr$',ylabel='$s$')
-axroc.plot(fpr,s,'k',label = 'Base')
-axroc.plot(nuq_fpr,nuq_s,color='#DC143C',linestyle='--',label='No Uncertainty')
+# axroc.plot(fpr,s,'k',label = 'Base')
+axroc.plot(nuq_fpr,nuq_s,color='#DC143C',label='No Uncertainty')
 axroc.plot(fpr_t,s_t,'#4169E1',label='Uncertain (No prediction)')
+axroc.plot(fpr_min, s_min,'#FF8C00',label='Lower Bound')
+axroc.plot(fpr_max, s_max,'#008000',label='Upper Bound')
+
+
 axroc.legend()
 rocfig.savefig('figs/burn1000_ROC.png',dpi = 600)
 rocfig.savefig('../paper/figs/burn1000_ROC.png',dpi = 600)
@@ -201,7 +207,9 @@ with open('runinfo/burn1000_auc.out','w') as f:
     print('NO UNCERTAINTY: %.3f' %auc(s,fpr), file = f)
     print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)
     print('THROW: %.3f' %auc(s_t,fpr_t), file = f)
-    # print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
+    print('eq. 13: %.3f' %auc(s_min,fpr_min), file = f)
+    print('eq. 14: %.3f' %auc(s_max,fpr_max), file = f)
+   
     
 
 
@@ -236,7 +244,7 @@ plt.clf()
 ### Hosmer-Lemeshow
 hl_b, pval_b = hosmer_lemeshow_test(base,train_data,results,g = 10)
 
-hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,results,g = 10)
+hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,nuq_data,nuq_results,g = 10)
 
 hl_uq, pval_uq = UQ_hosmer_lemeshow_test(uq_models,train_data,results,g = 10)
 

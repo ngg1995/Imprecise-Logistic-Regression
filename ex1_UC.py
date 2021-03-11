@@ -218,17 +218,17 @@ s_i, fpr_i,uq_predictions = UQ_ROC(uq_models, test_data, test_results)
 densfig,axdens = plt.subplots(nrows = 2, sharex= True)
 
 for i,(p,u,nuqp,r) in enumerate(zip(predictions,uq_predictions,nuq_predictions,test_results.to_list())):
-    yd = np.random.uniform(-0.11,-.31)
+    yd = np.random.uniform(-0.1,0.1)
     if r:
-        axdens[0].scatter(p,np.random.uniform(-0.1,0.1),color = 'k',marker = 'o',alpha = 0.5)
-        axdens[0].scatter(nuqp,np.random.uniform(0.11,0.31),color = '#DC143C',marker = 'o',alpha = 0.5)
-        axdens[0].plot([u[0],u[1]],[yd,yd],color = '#4169E1',alpha = 0.3)
-        axdens[0].scatter([u[0],u[1]],[yd,yd],color = '#4169E1',marker = '|')
+        axdens[0].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
+        axdens[0].scatter(nuqp,0.21+yd,color = '#DC143C',marker = 'o',alpha = 0.5)
+        axdens[0].plot([u[0],u[1]],[yd-0.21,yd-0.21],color = '#4169E1',alpha = 0.3)
+        axdens[0].scatter([u[0],u[1]],[yd-0.21,yd-0.21],color = '#4169E1',marker = '|')
     else:
-        axdens[1].scatter(p,np.random.uniform(-.1,0.1),color = 'k',marker = 'o',alpha = 0.5)
-        axdens[1].scatter(nuqp,np.random.uniform(0.11,.31),color = '#DC143C',marker = 'o',alpha = 0.5)
-        axdens[1].plot([u[0],u[1]],[yd,yd],color = '#4169E1',alpha = 0.3)
-        axdens[1].scatter([u[0],u[1]],[yd,yd],color = '#4169E1',marker = '|')
+        axdens[1].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
+        axdens[1].scatter(nuqp,0.21+yd,color = '#DC143C',marker = 'o',alpha = 0.5)
+        axdens[1].plot([u[0],u[1]],[yd-0.21,yd-0.21],color = '#4169E1',alpha = 0.3)
+        axdens[1].scatter([u[0],u[1]],[yd-0.21,yd-0.21]color = '#4169E1',marker = '|')
         
         
 axdens[0].set(ylabel = 'Outcome = 1',yticks = [])

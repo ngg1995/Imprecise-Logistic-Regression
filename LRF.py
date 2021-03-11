@@ -345,7 +345,7 @@ def ROC(model = None, predictions = None, data = None, results = None, uq = Fals
         
     return s, fpr, predictions
    
-def UQ_ROC(models, data, results):
+def UQ_ROC(models, data, results, f = None):
     
     s = []
     fpr = []
@@ -354,17 +354,21 @@ def UQ_ROC(models, data, results):
     
     for d in data.index:
         l = [m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1] for k,m in models.items()]
-        predictions.append((min(l),max(l)))
+        if f is not None:
+            predictions.append(f(l))
+        else:
+            predictions.append((min(l),max(l)))
     
+    if f is not None:
+        return ROC(predictions = predictions, data = data, results = results)
+    else:
+        s_i,fpr_i,_ = ROC(predictions = predictions, data = data, results = results, uq = True, drop = False)
+    
+        s_i = [pba.I(i) for i in s_i]
+        fpr_i = [pba.I(i) for i in fpr_i]
         
-    s_i,fpr_i,_ = ROC(predictions = predictions, data = data, results = results, uq = True, drop = False)
 
-    
-    s_i = [pba.I(i) for i in s_i]
-    fpr_i = [pba.I(i) for i in fpr_i]
-    
-
-    return s_i, fpr_i, predictions
+        return s_i, fpr_i, predictions
 
 
 def auc(s,fpr):
