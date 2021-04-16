@@ -69,7 +69,7 @@ plt.plot(lX,lY,color='k',zorder=10,lw=2,label = 'Truth')
 for i in uq_data_index:
 
     plt.plot([uq_data.loc[i],uq_data.loc[i]],[0,1],color='grey')
-    plt.scatter(uq_data.loc[i],results.loc[i],marker = 'd',color = 'darkgreen',zorder = 14)
+    plt.scatter(uq_data.loc[i],results.loc[i],marker = 'd',color = 'black',zorder = 14)
 
 lYmin = np.ones(steps)
 lYmax = np.zeros(steps)
@@ -100,4 +100,4 @@ with open('runinfo/biased_UC_HL.out','w') as f:
     print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
     print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
 
-    print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 
+    print('UQ\nhl = [%.5f,%.3f], p = [%.9f,%.3f]' %(*hl_uq,*pval_uq),file = f) 

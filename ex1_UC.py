@@ -109,10 +109,12 @@ plt.scatter(nuq_data,nuq_results,color='grey',zorder=10)
 plt.plot(lX,lY,color='k',zorder=10,lw=2,label = 'Truth')
 plt.plot(lX,lYn,color='#DC143C',zorder=10,lw=2,label = 'No UQ')
 
-for x in uq_data[0]:
+for i in uq_data_index:
 
-    plt.plot([x,x],[0,1],color='grey')
-
+    plt.plot([uq_data.loc[i],uq_data.loc[i]],[0,1],color='grey')
+    plt.scatter(uq_data.loc[i],train_results.loc[i],marker = 'd',color = 'black',zorder = 14)
+    
+    
 lYmin = np.ones(steps)
 lYmax = np.zeros(steps)
 
@@ -228,7 +230,7 @@ for i,(p,u,nuqp,r) in enumerate(zip(predictions,uq_predictions,nuq_predictions,t
         axdens[1].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
         axdens[1].scatter(nuqp,0.21+yd,color = '#DC143C',marker = 'o',alpha = 0.5)
         axdens[1].plot([u[0],u[1]],[yd-0.21,yd-0.21],color = '#4169E1',alpha = 0.3)
-        axdens[1].scatter([u[0],u[1]],[yd-0.21,yd-0.21]color = '#4169E1',marker = '|')
+        axdens[1].scatter([u[0],u[1]],[yd-0.21,yd-0.21],color = '#4169E1',marker = '|')
         
         
 axdens[0].set(ylabel = 'Outcome = 1',yticks = [])
