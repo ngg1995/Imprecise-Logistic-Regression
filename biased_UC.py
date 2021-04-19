@@ -61,7 +61,7 @@ lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
 lYn = nuq.predict_proba(lX.reshape(-1, 1))[:,1]
 
 plt.xlabel('$x$')
-plt.ylabel('$\pi_x$')
+plt.ylabel('$\pi(x)$')
 plt.scatter(nuq_data,nuq_results,color='grey',zorder=10)
 plt.plot(lX,lYn,color='#DC143C',zorder=10,lw=2,label = 'No UQ')
 

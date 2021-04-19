@@ -183,15 +183,15 @@ for i,(p,u,nuqp,r) in enumerate(zip(predictions,uq_predictions,nuq_predictions,r
         
         
 axdens[0].set(ylabel = 'Outcome = 1',yticks = [])
-axdens[1].set(xlabel = '$\pi$',ylabel = 'Outcome = 0',yticks = [],xlim  = (0, 1))
+axdens[1].set(xlabel = '$\pi(x)$',ylabel = 'Outcome = 0',yticks = [],xlim  = (0, 1))
 densfig.tight_layout()
 
 rocfig,axroc = plt.subplots(1,1)
 axroc.plot([0,1],[0,1],'k:',label = 'Random Classifier')
 axroc.set(xlabel = '$fpr$',ylabel='$s$')
 # axroc.plot(fpr,s,'k',label = 'Base')
-axroc.plot(nuq_fpr,nuq_s,color='#DC143C',label='No Uncertainty')
-axroc.plot(fpr_t,s_t,'#4169E1',label='Uncertain (No prediction)')
+axroc.plot(nuq_fpr,nuq_s,color='#DC143C',label='Ignored Uncertainty')
+axroc.plot(fpr_t,s_t,'#4169E1',label='Imprecise Model')
 axroc.plot(fpr_min, s_min,'#FF8C00',label='Lower Bound')
 axroc.plot(fpr_max, s_max,'#008000',label='Upper Bound')
 

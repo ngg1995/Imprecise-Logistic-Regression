@@ -104,7 +104,7 @@ lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
 lYn = nuq.predict_proba(lX.reshape(-1, 1))[:,1]
 
 plt.xlabel('$x$')
-plt.ylabel('$\pi_x$')
+plt.ylabel('$\pi(x)$')
 plt.scatter(nuq_data,nuq_results,color='grey',zorder=10)
 plt.plot(lX,lY,color='k',zorder=10,lw=2,label = 'Truth')
 plt.plot(lX,lYn,color='#DC143C',zorder=10,lw=2,label = 'No UQ')
@@ -234,7 +234,7 @@ for i,(p,u,nuqp,r) in enumerate(zip(predictions,uq_predictions,nuq_predictions,t
         
         
 axdens[0].set(ylabel = 'Outcome = 1',yticks = [])
-axdens[1].set(xlabel = '$\pi$',ylabel = 'Outcome = 0',yticks = [],xlim  = (0, 1))
+axdens[1].set(xlabel = '$\pi(x)$',ylabel = 'Outcome = 0',yticks = [],xlim  = (0, 1))
 
 densfig.tight_layout()
 
@@ -242,8 +242,8 @@ rocfig,axroc = plt.subplots(1,1)
 axroc.plot([0,1],[0,1],'k:',label = 'Random Classifier')
 axroc.set(xlabel = '$fpr$',ylabel='$s$')
 axroc.plot(fpr,s,'k',label = 'Base')
-axroc.plot(nuq_fpr,nuq_s,color='#DC143C',linestyle='--',label='No Uncertainty')
-axroc.plot(fpr_t,s_t,'#4169E1',label='Uncertain (No prediction)')
+axroc.plot(nuq_fpr,nuq_s,color='#DC143C',linestyle='--',label='Ignored Uncertainty')
+axroc.plot(fpr_t,s_t,'#4169E1',label='Imprecise Model')
 axroc.legend()
 rocfig.savefig('figs/ex1_UC_ROC.png',dpi = 600)
 rocfig.savefig('../paper/figs/ex1_UC_ROC.png',dpi = 600)

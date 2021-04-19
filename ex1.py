@@ -46,7 +46,7 @@ lX = np.linspace(0,10,steps)
 lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
 
 plt.xlabel('$x$')
-plt.ylabel('$\pi_x$')
+plt.ylabel('$\pi(x)$')
 plt.scatter(train_data,train_results,color='grey',zorder=10)
 # plt.scatter(test_data,test_results,color='green',zorder=10)
 plt.plot(lX,lY,color='k',zorder=10,lw=2)
@@ -72,7 +72,7 @@ s,fpr, predictions = ROC(model = base, data = test_data, results = test_results)
 rocfig,axroc = plt.subplots(1)
 densfig,axdens = plt.subplots(1)
 axdens.scatter(predictions,test_results+np.random.uniform(-0.05,0.05,len(predictions)),marker = 'o',color='k',alpha = 0.5)
-axdens.set(xlabel = '$\pi$',ylabel = 'Outcome = 0',yticks = [0,1],xlim  = (0, 1))
+axdens.set(xlabel = '$\pi(x)$',ylabel = 'Outcome',yticks = [0,1],xlim  = (0, 1))
 
 
 axroc.plot([0,1],[0,1],'k:',label = 'Random Classifier')

@@ -104,7 +104,7 @@ for jj, UQdata in zip([0,1,2],UQdatasets):
     lYn = nuq.predict_proba(lX.reshape(-1, 1))[:,1]
 
     plt.xlabel('$x$')
-    plt.ylabel('$\pi_x$')
+    plt.ylabel('$\pi(x)$')
     plt.plot(lX,lY,color='k',zorder=10,lw=2,label = 'Truth')
     plt.plot(lX,lYn,color='#DC143C',zorder=10,lw=2,label = 'No UQ')
 
@@ -123,7 +123,7 @@ for jj, UQdata in zip([0,1,2],UQdatasets):
         plt.plot(lX,lY,color = 'grey',alpha = 0.2,lw = 0.5)
 
     plt.plot(lX,lYmax,color='#4169E1',lw=2)
-    plt.plot(lX,lYmin,color='#4169E1',lw=2,label = 'Uncertainty Bounds')
+    plt.plot(lX,lYmin,color='#4169E1',lw=2,label = 'Imprecise Bounds')
 
     plt.savefig('../paper/figs/biased_int_%i.png' %jj,dpi = 600)
     plt.savefig('figs/biased_int_%i.png' %jj,dpi = 600)
