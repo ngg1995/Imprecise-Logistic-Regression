@@ -8,6 +8,11 @@ import pba
 import tikzplotlib
 import random
 
+import matplotlib
+font = {'family' : 'normal',
+        'size'   : 14}
+matplotlib.rc('font', **font)
+
 from LRF import *
 
 def intervalise(val,eps,method,b=0.5,bounds = None):
@@ -98,8 +103,8 @@ lYn = nuq.predict_proba(lX.reshape(-1, 1))[:,1]
 
 plt.xlabel('$x$')
 plt.ylabel('$\pi(x)$')
-plt.plot(lX,lY,color='k',zorder=10,lw=2,label = 'Truth')
-plt.plot(lX,lYn,color='#DC143C',zorder=10,lw=2,label = 'No UQ')
+plt.plot(lX,lY,color='k',zorder=10,lw=2,label = 'Base')
+plt.plot(lX,lYn,color='#DC143C',zorder=10,lw=2,label = 'Midpoints')
 
 for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
     yd = np.random.uniform(-0.05,0.05)
@@ -116,7 +121,7 @@ for n, model in uq_models.items():
     plt.plot(lX,lY,color = 'grey',alpha = 0.2,lw = 0.5)
 
 plt.plot(lX,lYmax,color='#4169E1',lw=2)
-plt.plot(lX,lYmin,color='#4169E1',lw=2,label = 'Uncertainty Bounds')
+plt.plot(lX,lYmin,color='#4169E1',lw=2,label = 'Imprecise')
 
 plt.savefig('../paper/figs/ex1_int.png',dpi = 600)
 plt.savefig('figs/ex1_int.png',dpi = 600)
@@ -224,8 +229,8 @@ for i,(p,u,nuqp,r) in enumerate(zip(predictions,uq_predictions,nuq_predictions,t
         axdens[1].scatter([u[0],u[1]],[yd-0.21,yd-0.21],color = '#4169E1',marker = '|')
         
         
-axdens[0].set(ylabel = 'Outcome = 1',yticks = [])
-axdens[1].set(xlabel = '$\pi(x)$',ylabel = 'Outcome = 0',yticks = [],xlim  = (0, 1))
+axdens[0].set(ylabel = '1',yticks = [])
+axdens[1].set(xlabel = '$\pi(x)$',ylabel = '0',yticks = [],xlim  = (0, 1))
 
 densfig.tight_layout()
 

@@ -9,6 +9,10 @@ import tikzplotlib
 import random
 from LRF import *
 
+import matplotlib
+font = {'size'   : 14}
+matplotlib.rc('font', **font)
+
 def generate_results(data):
     # set seed for reproducability
     np.random.seed(10)

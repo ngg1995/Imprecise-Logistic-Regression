@@ -8,6 +8,10 @@ import pba
 import tikzplotlib
 import random
 
+import matplotlib
+font = {'size'   : 14}
+matplotlib.rc('font', **font)
+
 from LRF import *
 
 def intervalise(val,eps,method,bias=0,bounds = None):

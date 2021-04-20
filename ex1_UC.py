@@ -8,6 +8,9 @@ from tqdm import tqdm
 import pba
 import random
 
+import matplotlib
+font = {'size'   : 14}
+matplotlib.rc('font', **font)
 
 from LRF import *
 

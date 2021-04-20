@@ -65,11 +65,11 @@ plt.ylabel('$\pi(x)$')
 plt.scatter(nuq_data,nuq_results,color='grey',zorder=10)
 plt.plot(lX,lYn,color='#DC143C',zorder=10,lw=2,label = 'No UQ')
 
-plt.plot(lX,lY,color='k',zorder=10,lw=2,label = 'Truth')
+# plt.plot(lX,lY,color='k',zorder=10,lw=2,label = 'Truth')
 for i in uq_data_index:
 
     plt.plot([uq_data.loc[i],uq_data.loc[i]],[0,1],color='grey')
-    plt.scatter(uq_data.loc[i],results.loc[i],marker = 'd',color = 'black',zorder = 14)
+    # plt.scatter(uq_data.loc[i],results.loc[i],marker = 'd',color = 'black',zorder = 14)
 
 lYmin = np.ones(steps)
 lYmax = np.zeros(steps)

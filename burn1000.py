@@ -7,6 +7,10 @@ import itertools as it
 from tqdm import tqdm
 import pba
 
+import matplotlib
+font = {'size'   : 14}
+matplotlib.rc('font', **font)
+
 from LRF import *
 
 def intervalise(val,eps,method='u',b=0,bounds = None):
