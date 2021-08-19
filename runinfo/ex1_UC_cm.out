@@ -9,14 +9,14 @@ FN=77	TN=248
 Sensitivity = 0.678
 Specificity = 0.950
 UQ MODEL
-TP=[184,204]	FP=[20,51]
-FN=[35,55]	TN=[210,241]
-Sensitivity = [0.770,0.854]
-Specificity = [0.805,0.923]
-TP=184	FP=20
-FN=35	TN=210
-NP(+)=20	NP(-)=31
-Sensitivity = 0.840
-Specificity = 0.913
-sigma = 0.084
-tau = 0.119
+TP=[156,199]	FP=[12,41]
+FN=[40,83]	TN=[220,249]
+Sensitivity = [0.653,0.833]
+Specificity = [0.843,0.954]
+TP=156	FP=12
+FN=40	TN=220
+NP(+)=43	NP(-)=29
+Sensitivity = 0.796
+Specificity = 0.948
+sigma = 0.180
+tau = 0.111

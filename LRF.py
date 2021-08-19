@@ -98,7 +98,6 @@ def uc_logistic_regression(data,result,uncertain,nested = False):
         
     return models
    
-   
 def find_thresholds(B0,B,UQdata,uq_cols,binary_cols = []):
 
     def F(B0,B,X):
@@ -118,7 +117,7 @@ def find_thresholds(B0,B,UQdata,uq_cols,binary_cols = []):
         return -abs(Cx)        
         
         
-    left = lambda x: x.Left
+    left = lambda x: x.left
     right = lambda x: x.Right
     
     dataMin = UQdata.copy()
@@ -149,7 +148,7 @@ def find_thresholds(B0,B,UQdata,uq_cols,binary_cols = []):
         
         if len(uncertain_cols) != 0:
 
-            bounds = [(X[i].Left,X[i].Right) for i in uq_cols if X[i].__class__.__name__ == 'Interval']
+            bounds = [(X[i].left,X[i].Right) for i in uq_cols if X[i].__class__.__name__ == 'Interval']
 
             Rmin = so.minimize(min_F,X0,args = (Bx,Cx),method = 'L-BFGS-B',bounds = bounds)
             Rmax = so.minimize(max_F,X0,args = (Bx,Cx),method = 'L-BFGS-B',bounds = bounds)
@@ -169,10 +168,9 @@ def find_thresholds(B0,B,UQdata,uq_cols,binary_cols = []):
 
     return dataMin, dataMax
 
-
 def int_logistic_regression(UQdata,results,binary_cols = []):
 
-    left = lambda x: x.Left
+    left = lambda x: x.left
     right = lambda x: x.Right
     
     uq_col = binary_cols.copy()
@@ -214,7 +212,7 @@ def int_logistic_regression(UQdata,results,binary_cols = []):
 
 def uc_int_logistic_regression(UQdata,results,uncertain,binary_cols = [],uc_index=[]):
 
-    left = lambda x: x.Left
+    left = lambda x: x.left
     right = lambda x: x.Right
    
     uq_col = binary_cols.copy()
@@ -463,7 +461,7 @@ def check_int_MC(models,UQdata,results,many,test_data):
         for j in new_data.index:
             for k in new_data.columns:
                 if new_data.loc[j,k].__class__.__name__ == 'Interval':
-                    new_data.loc[j,k] = new_data.loc[j,k].Left + random.random()*new_data.loc[j,k].width()
+                    new_data.loc[j,k] = new_data.loc[j,k].left + random.random()*new_data.loc[j,k].width()
         # print(new_data)
         new_model = LogisticRegression(max_iter = 1000)
         new_model.fit(new_data,results)
@@ -549,10 +547,10 @@ def UQ_hosmer_lemeshow_test(models, data, results, g=10):
     hl = 0
     for i in range(g):
         
-        cl = ((buckets[i]['observed_cases'].Left - buckets[i]['expected_cases'].Left)**2)/buckets[i]['expected_cases'].Left
+        cl = ((buckets[i]['observed_cases'].left - buckets[i]['expected_cases'].left)**2)/buckets[i]['expected_cases'].left
         cr = ((buckets[i]['observed_cases'].Right - buckets[i]['expected_cases'].Right)**2)/buckets[i]['expected_cases'].Right
         
-        nl = ((buckets[i]['observed_n_cases'].Left - buckets[i]['expected_n_cases'].Left)**2)/buckets[i]['expected_n_cases'].Left
+        nl = ((buckets[i]['observed_n_cases'].left - buckets[i]['expected_n_cases'].left)**2)/buckets[i]['expected_n_cases'].left
         nr = ((buckets[i]['observed_n_cases'].Right - buckets[i]['expected_n_cases'].Right)**2)/buckets[i]['expected_n_cases'].Right
             
         if pba.always(buckets[i]['observed_cases'] - buckets[i]['expected_cases'] != 0):
@@ -562,7 +560,7 @@ def UQ_hosmer_lemeshow_test(models, data, results, g=10):
             
             
 
-    pval = pba.I(1-chi2.cdf(hl.Left,g-2),1-chi2.cdf(hl.Right,g-2))
+    pval = pba.I(1-chi2.cdf(hl.left,g-2),1-chi2.cdf(hl.Right,g-2))
     
     return hl, pval
 

@@ -82,6 +82,7 @@ nuq.fit(nuq_data.to_numpy(),nuq_results.to_numpy())
 ### Fit UQ models
 uq_models = uc_int_logistic_regression(UQdata,results.drop(uc_index),results.loc[uc_index],binary_cols = ["INH_INJ"],uc_index=uc_index)
 print(len(uq_models.keys()))
+
 ### Get confusion matrix
 # Classify test data
 base_predict = base.predict(train_data)
