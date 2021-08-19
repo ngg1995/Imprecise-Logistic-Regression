@@ -3,6 +3,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from mpl_toolkits import mplot3d
 from sklearn.linear_model import LogisticRegression
+from sklearn.semi_supervised import SelfTrainingClassifier
 import itertools as it
 from tqdm import tqdm
 import pba
@@ -94,11 +95,15 @@ nuq_data = train_data.loc[[i for i in train_data.index if i not in uq_data_index
 nuq_results = train_results.loc[[i for i in train_data.index if i not in uq_data_index]]
 
 ### Fit UQ models
-uq_models = uc_logistic_regression(train_data,train_results,uq_data)
+uq_models = uc_logistic_regression(nuq_data,nuq_results,uq_data)
 
 ### Fit models with missing data
 nuq = LogisticRegression()
 nuq.fit(nuq_data.to_numpy(),nuq_results.to_numpy())
+
+### Fit SSL model
+ssl = SelfTrainingClassifier(LogisticRegression())
+
 
 ### Plot results
 steps = 300
