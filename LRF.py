@@ -30,17 +30,17 @@ def generate_confusion_matrix(results,predictions,throw = False):
     
     for result, prediction in zip(results,predictions):
   
-        if prediction.__class__.__name__ != 'list':
-            prediction = [prediction,prediction]
+        if prediction.__class__.__name__ != 'Interval':
+            prediction = pba.I(prediction,prediction)
 
-        if prediction[0] == prediction[1]:
+        if prediction.left == prediction.right:
             if result:
-                if prediction[0]:
+                if prediction.left:
                     a += 1
                 else:
                     c += 1
             else:
-                if prediction[0]:
+                if prediction.left:
                     b += 1
                 else:
                     d += 1
@@ -343,31 +343,46 @@ def ROC(model = None, predictions = None, data = None, results = None, uq = Fals
         
     return s, fpr, predictions
    
-def UQ_ROC(models, data, results, f = None):
+def UQ_ROC(model, data, results, func = (lambda x: x)):
     
     s = []
     fpr = []
+
+    total_positive = sum(results)
+    total_negative = len(results) - total_positive
     
-    predictions = []
+    probabilities = model.predict_proba(data)[:,1]
     
-    for d in data.index:
-        l = [m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1] for k,m in models.items()]
-        if f is not None:
-            predictions.append(f(l))
-        else:
-            predictions.append((min(l),max(l)))
-    
-    if f is not None:
-        return ROC(predictions = predictions, data = data, results = results)
-    else:
-        s_i,fpr_i,_ = ROC(predictions = predictions, data = data, results = results, uq = True, drop = False)
-    
-        s_i = [pba.I(i) for i in s_i]
-        fpr_i = [pba.I(i) for i in fpr_i]
+    for p in tqdm(np.linspace(0,1,1000),desc = 'ROC'):
         
-
-        return s_i, fpr_i, predictions
-
+        prediction = [func(prob >= p) for prob in probabilities]
+        
+        a = b = c = d = 0
+        
+        for i, j in zip(prediction,results):
+            if isinstance(i, pba.Logical):
+                if j:
+                    if pba.xtimes(i):
+                        a += i
+                        c += i
+                    elif i:
+                        a += 1
+                    else:
+                        b += 1
+                else:
+                    if pba.xtimes(i):
+                        b += i
+                        d += i
+                    elif i:
+                        b += 1
+                    else:
+                        d += 1
+        
+        if isinstance(a,pba.Interval):
+            s += [a/total_positive]
+            fpr += [b/total_negative]
+        
+    return s, fpr, probabilities
 
 def auc(s,fpr):
     
@@ -384,14 +399,9 @@ def UQ_ROC_alt(models, data, results):
     Tau = []
     Nu = []
     
-    
-    probabilities = []
-    for d in tqdm(data.index, desc = 'UQ ROC (1)'):
-        l = [m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1] for k,m in models.items()]
-        probabilities.append((min(l),max(l)))
-    
-    
-    for p in tqdm(np.linspace(0,1,1000),desc = 'UQ ROC (2)'):
+    probabilities = models.predict_proba(data)[:,1]
+
+    for p in tqdm(np.linspace(0,1,1000),desc = 'UQ ROC'):
         a = 0
         b = 0
         c = 0
@@ -401,37 +411,30 @@ def UQ_ROC_alt(models, data, results):
         tau = 0
         nu = 0
         
-
         for prob, result in zip(probabilities,results):
 
-            if (prob[0] >= p) and (prob[1] >= p):
-                x = 1
-            elif (prob[0] < p) and (prob[1] < p):
-                x = 0
-            else:
-                x = 0.5
-                nu += 1
-                
-            if x == 0.5:
-                if result:
-                    sigma += 1
-                else:
-                    tau += 1
-            elif x:
+            if pba.always(prob >= p):
                 if result:
                     # true positive
                     a += 1
                 else:
                     # false positive
                     b+= 1
-            else: 
+            elif pba.always(prob < p):
                 if result:
                     # false negative
                     c += 1
                 else:
                     # true negative
                     d += 1
-                    
+            else:
+                nu += 1
+
+                if result:
+                    sigma += 1
+                else:
+                    tau += 1
+              
         if a == 0:
             s.append(0)
         else:

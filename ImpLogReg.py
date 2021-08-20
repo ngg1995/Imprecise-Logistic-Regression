@@ -4,31 +4,132 @@ from sklearn.linear_model import LogisticRegression
 import itertools as it
 from tqdm import tqdm
 import pba
-import random
 import scipy.optimize as so
-from scipy.stats import chi2
-from scipy.stats import chisquare
 
 class ImpLogReg:
     
-    def __init__(self):
-        self.models = {}
-        
-    def fit(self, data, results, uncertain_classification: bool, interval_dataset: bool, uncertain_data: pd.DataFrame = None, binary_cols = [], uc_index=[]):
-        
-        assert uncertain_classification is not False and interval_dataset is not False
-        
-        if uncertain_classification and interval_dataset:
-            self.models = _uc_int(data,results,uncertain_data,binary_cols,uc_index)
-        
-        elif uncertain_classification:
-            self.models = _uc(data, results, uncertain_data)
-            
-        elif interval_dataset:
-            self.models = _int_data(data, results, binary_cols)
+    def __init__(self, uncertain_data = False, uncertain_class = False, **kwargs):
 
+        self.models = {}
+        self.uncertain_data = uncertain_data
+        self.uncertain_class = uncertain_class
+        
+        self.params = LogisticRegression(**kwargs).get_params()
     
-def _uc(data,result,uncertain,nested = False):
+    def __iter__(self):
+        for _, m in self.models.items():
+            yield m
+    
+    def __len__(self):
+        return len(self.models.keys())
+
+    def decision_function(self,X):
+        
+        decision = np.empty((len(self),len(X)))
+        
+        for i, model in enumerate(self):
+            decision[i] = model.predict(X)
+        
+        return [pba.I(i) for i in decision.T]
+    
+    def densify(self):
+        assert len(self) > 0
+        for k,m in self.models.items():
+            self.models[k] = m.densify()
+            
+    def fit(self, data, results, sample_weight=None, catagorical = []):
+        
+        if self.uncertain_class and self.uncertain_data:
+            # need to strip the unlabled data from the data set
+            unlabeled_index = []
+            labeled_index = []
+            
+            for i in results.index:
+                if i in (0,1):
+                    labeled_index.append(i)
+                else:
+                    unlabeled_index.append(i)
+                    
+            self.models = _uc_int(data, results, sample_weight, catagorical, unlabeled_index, self.params)
+        
+        elif self.uncertain_class:
+            # need to strip the unlabled data from the data set
+            unlabeled_index = []
+            labeled_index = []
+            
+            for i in results.index:
+                if results.loc[i] in (0,1):
+                    labeled_index.append(i)
+                else:
+                    unlabeled_index.append(i)
+                    
+            assert len(unlabeled_index) != 0
+
+            unlabeled_data = data.loc[unlabeled_index]
+            labeled_data = data.loc[labeled_index]
+            labeled_results = results.loc[labeled_index]
+            
+            self.models = _uncertain_class(labeled_data, labeled_results, unlabeled_data, sample_weight = sample_weight, nested = False, params = self.params)
+            
+        elif self.uncertain_data:
+            
+            self.models = _int_data(data,results,sample_weight,catagorical,self.params)
+            
+        else:
+            self.models = {0: LogisticRegression(**self.params).fit(data, results, sample_weight)}
+            
+    def get_params(self):
+        return self.params
+    
+    def predict(self, X):
+        
+        predictions = np.empty((len(self),len(X)))
+        
+        for i, model in enumerate(self):
+            predictions[i] = model.predict(X)
+        
+        return [pba.I(i) for i in predictions.T]
+    
+    def predict_proba(self, X):
+        
+        predictions0 = np.empty((len(self),len(X)))
+        predictions1 = np.empty((len(self),len(X)))
+        
+        
+        for i, model in enumerate(self):
+            predictions0[i] = model.predict_proba(X)[:,0]
+            predictions1[i] = model.predict_proba(X)[:,1]
+
+        return np.array([[pba.I(i) for i in predictions0.T],[pba.I(i) for i in predictions1.T]]).T
+    
+    def predict_log_proba(self, X):
+        
+        predictions = np.empty((len(self),len(X)))
+        
+        for i, model in enumerate(self):
+            predictions[i] = model.predict_log_proba(X)[:,0]
+        
+        return [pba.I(i) for i in predictions.T]
+    
+    def score(self,X,y, sample_weight = None):
+        
+        scores = [model.score(X,y,sample_weight) for model in self]
+        return pba.I(scores)
+    
+    def set_params(self, **kwargs):
+        for param, val in kwargs.items():
+            try:
+                self.params[param] = val
+            except:
+                print("WARNING: Parameter %s not found" %(param))
+                
+
+    def sparsify(self):
+        assert len(self) > 0
+        for k,m in self.models.items():
+            self.models[k] = m.sparsify()
+                      
+def _uncertain_class(data: pd.DataFrame, result: pd.Series, uncertain: pd.DataFrame, sample_weight = None, nested = False, params = {}) -> dict:
     
     models = {}
     
@@ -41,7 +142,7 @@ def _uc(data,result,uncertain,nested = False):
         new_data = pd.concat((data,uncertain), ignore_index = True)
         new_result = pd.concat((result, pd.Series(i)), ignore_index = True)
 
-        model = LogisticRegression(max_iter=1000)       
+        model = LogisticRegression(**params)       
         model.fit(new_data.to_numpy(),new_result.to_numpy())
 
         if model.intercept_[0] < intercepts[0]:
@@ -60,102 +161,102 @@ def _uc(data,result,uncertain,nested = False):
                 keep = True
                    
         if keep:  
-            models[str(i)] = model.fit(new_data.to_numpy(),new_result.to_numpy())
+            models[str(i)] = model.fit(new_data.to_numpy(),new_result.to_numpy(),sample_weight)
         
     return models
 
-def _int_data(UQdata,results,binary_cols = []):
+def _int_data(data,results,sample_weight,catagorical,params) -> dict:
 
-    left = lambda x: x.Left
+    left = lambda x: x.left
     right = lambda x: x.Right
     
-    uq_col = binary_cols.copy()
+    uq_col = catagorical.copy()
     
-    for c in UQdata.columns:
+    for c in data.columns:
         
-        if c in binary_cols:
+        if c in catagorical:
             continue
         
         # check which columns have interval data       
-        for i in UQdata[c]:
+        for i in data[c]:
             if i.__class__.__name__ == 'Interval':
                 uq_col.append(c)
                 break
     
     
     data = {''.join(k):pd.DataFrame({
-                **{c:[F(i) if i.__class__.__name__ == 'Interval' else i for i in UQdata[c]] for c,F in zip(uq_col,func)},
-                **{c:UQdata[c] for c in UQdata.columns if c not in uq_col}
-                }, index = UQdata.index).reindex(columns = UQdata.columns)
+                **{c:[F(i) if i.__class__.__name__ == 'Interval' else i for i in data[c]] for c,F in zip(uq_col,func)},
+                **{c:data[c] for c in data.columns if c not in uq_col}
+                }, index = data.index).reindex(columns = data.columns)
              for k, func in tqdm(zip(it.product('lr',repeat = len(uq_col)),it.product((left,right),repeat = len(uq_col))),desc='Getting Bounds (1)',total = 2**len(uq_col))
             }
-    models = {k:LogisticRegression(max_iter = 1000).fit(d,results) for k,d in tqdm(data.items(),desc ='Fitting Models (1)')}
+    models = {k:LogisticRegression(**params).fit(d,results,sample_weight) for k,d in tqdm(data.items(),desc ='Fitting Models (1)')}
 
     n_data = {}
     for k,m in tqdm(models.items(),desc='Getting Bounds (2)'):
         B0 = m.intercept_
         B = m.coef_[0]
 
-        nMin, nMax = _find_thresholds(B0,B,UQdata,uq_col,binary_cols = binary_cols)
+        nMin, nMax = _find_thresholds(B0,B,data,uq_col,catagorical = catagorical)
 
-        n_data[k+'min'] = nMin.reindex(columns = UQdata.columns)
-        n_data[k+'max'] = nMax.reindex(columns = UQdata.columns)
+        n_data[k+'min'] = nMin.reindex(columns = data.columns)
+        n_data[k+'max'] = nMax.reindex(columns = data.columns)
 
 
-    n_models = {k:LogisticRegression(max_iter = 1000).fit(d,results) for k,d in tqdm(n_data.items(),desc ='Fitting Models (2)')}
+    n_models = {k:LogisticRegression(**params).fit(d,results,sample_weight) for k,d in tqdm(n_data.items(),desc ='Fitting Models (2)')}
 
     return {**models,**n_models}
 
-def _uc_int(UQdata, results, binary_cols = [], uc_index=[]):
+def _uc_int(data, results, sample_weight, catagorical, uc_index, params) -> dict:
 
     left = lambda x: x.left
     right = lambda x: x.right
    
-    uq_col = binary_cols.copy()
+    uq_col = catagorical.copy()
     
-    for c in UQdata.columns:
+    for c in data.columns:
         
-        if c in binary_cols:
+        if c in catagorical:
             continue
         
         # check which columns have interval data       
-        for i in UQdata[c]:
+        for i in data[c]:
             if i.__class__.__name__ == 'Interval':
                 uq_col.append(c)
                 break
     
     
     # remove uc classification from dataset when training model
-    kc_index = [i for i in UQdata.index if i not in uc_index]
+    kc_index = [i for i in data.index if i not in uc_index]
     
     data1 = {''.join(k):pd.DataFrame({
-                **{c:[F(i) if i.__class__.__name__ == 'Interval' else i for i in UQdata[c]] for c,F in zip(uq_col,func)},
-                **{c:UQdata[c] for c in UQdata.columns if c not in uq_col}
-                }, index = UQdata.index).reindex(columns = UQdata.columns)
+                **{c:[F(i) if i.__class__.__name__ == 'Interval' else i for i in data[c]] for c,F in zip(uq_col,func)},
+                **{c:data[c] for c in data.columns if c not in uq_col}
+                }, index = data.index).reindex(columns = data.columns)
              for k, func in tqdm(zip(it.product('lr',repeat = len(uq_col)),it.product((left,right),repeat = len(uq_col))),desc='Getting Bounds (1)',total = 2**len(uq_col))
             }
     
-    int_models = {k:LogisticRegression(max_iter = 1000).fit(d.loc[kc_index],results.loc[kc_index]) for k,d in tqdm(data1.items(),desc ='Fitting Models (1)')}
+    int_models = {k:LogisticRegression(**params).fit(d.loc[kc_index],results.loc[kc_index]) for k,d in tqdm(data1.items(),desc ='Fitting Models (1)')}
 
     n_data = {}
     for k,m in tqdm(int_models.items(),desc='Getting Bounds (2)'):
         B0 = m.intercept_
         B = m.coef_[0]
 
-        nMin, nMax = _find_thresholds(B0,B,UQdata,uq_col,binary_cols = binary_cols)
+        nMin, nMax = _find_thresholds(B0,B,data,uq_col,catagorical = catagorical)
 
-        n_data[k+'min'] = nMin.reindex(columns = UQdata.columns)
-        n_data[k+'max'] = nMax.reindex(columns = UQdata.columns)
+        n_data[k+'min'] = nMin.reindex(columns = data.columns)
+        n_data[k+'max'] = nMax.reindex(columns = data.columns)
 
     uc_models = {}
     for ii, dataset in tqdm({**data1,**n_data}.items(),desc='datasets'):
 
-        for jj, model in uc(dataset.loc[kc_index],results.loc[kc_index],dataset.loc[uc_index],nested=True).items():
+        for jj, model in _uncertain_class(dataset.loc[kc_index],results.loc[kc_index],dataset.loc[uc_index],sample_weight,nested=True,**params).items():
             uc_models[ii+jj] = model
     
     return uc_models
 
-def _find_thresholds(B0,B,UQdata,uq_cols,binary_cols = []):
+def _find_thresholds(B0,B,data,uq_cols,catagorical):
 
     def F(B0,B,X):
         f = float(B0)
@@ -174,17 +275,17 @@ def _find_thresholds(B0,B,UQdata,uq_cols,binary_cols = []):
         return -abs(Cx)        
         
         
-    left = lambda x: x.Left
+    left = lambda x: x.left
     right = lambda x: x.Right
     
-    dataMin = UQdata.copy()
-    dataMax = UQdata.copy()
+    dataMin = data.copy()
+    dataMax = data.copy()
     
     # need to find the min/max spread around these points
 
-    for j in UQdata.index:
+    for j in data.index:
 
-        X = UQdata.loc[j].copy()
+        X = data.loc[j].copy()
         Xmin = X.copy()
         Xmax = X.copy()
             
@@ -205,13 +306,13 @@ def _find_thresholds(B0,B,UQdata,uq_cols,binary_cols = []):
         
         if len(uncertain_cols) != 0:
 
-            bounds = [(X[i].Left,X[i].Right) for i in uq_cols if X[i].__class__.__name__ == 'Interval']
+            bounds = [(X[i].left,X[i].Right) for i in uq_cols if X[i].__class__.__name__ == 'Interval']
 
             Rmin = so.minimize(min_F,X0,args = (Bx,Cx),method = 'L-BFGS-B',bounds = bounds)
             Rmax = so.minimize(max_F,X0,args = (Bx,Cx),method = 'L-BFGS-B',bounds = bounds)
 
             for i,xmin,xmax in zip(uncertain_cols,Rmin.x,Rmax.x):
-                if i in binary_cols:
+                if i in catagorical:
                     if xmin not in (0,1):
                         xmin = round(xmin)
                         

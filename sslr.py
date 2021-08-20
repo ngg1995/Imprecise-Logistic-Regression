@@ -91,7 +91,6 @@ uq_data_index = random.sample([i for i in train_data.index if abs(train_data.loc
 
 # uq_data = train_data.loc[uq_data_index]
 uq_results = pd.Series([int(train_results.loc[i]) if i not in uq_data_index else -1 for i in train_results.index], index = train_results.index)
-print(uq_results)
 nuq_data = train_data.loc[[i for i in train_data.index if i not in uq_data_index]]
 nuq_results = train_results.loc[[i for i in train_data.index if i not in uq_data_index]]
 

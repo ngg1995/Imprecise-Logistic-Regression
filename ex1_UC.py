@@ -1,3 +1,4 @@
+from ImpLogReg import ImpLogReg
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -91,18 +92,21 @@ random.seed(5) # for reproducability
 uq_data_index = random.sample([i for i in train_data.index if abs(train_data.loc[i,0]-5) <= 1.5], k = few) # clustered around center
 
 uq_data = train_data.loc[uq_data_index]
+uq_results = pd.Series([int(train_results.loc[i]) if i not in uq_data_index else -1 for i in train_results.index], index = train_results.index)
 nuq_data = train_data.loc[[i for i in train_data.index if i not in uq_data_index]]
 nuq_results = train_results.loc[[i for i in train_data.index if i not in uq_data_index]]
 
 ### Fit UQ models
-uq_models = uc_logistic_regression(nuq_data,nuq_results,uq_data)
+ilr = ImpLogReg(uncertain_class=True, max_iter = 1000)
+ilr.fit(train_data,uq_results)
+
 
 ### Fit models with missing data
 nuq = LogisticRegression()
 nuq.fit(nuq_data.to_numpy(),nuq_results.to_numpy())
 
-### Fit SSL model
-ssl = SelfTrainingClassifier(LogisticRegression())
+# # ### Fit SSL model
+# # ssl = SelfTrainingClassifier(LogisticRegression())
 
 
 ### Plot results
@@ -110,6 +114,7 @@ steps = 300
 lX = np.linspace(0,10,steps)
 lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
 lYn = nuq.predict_proba(lX.reshape(-1, 1))[:,1]
+lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
 
 plt.xlabel('$x$')
 plt.ylabel('$\pi(x)$')
@@ -122,23 +127,13 @@ for i in uq_data_index:
     plt.plot([uq_data.loc[i],uq_data.loc[i]],[0,1],color='grey')
     plt.scatter(uq_data.loc[i],train_results.loc[i],marker = 'd',color = 'black',zorder = 14)
     
-    
-lYmin = np.ones(steps)
-lYmax = np.zeros(steps)
+plt.plot(lX,[i.left for i in lYu],color='#4169E1',lw=2)
+plt.plot(lX,[i.right for i in lYu],color='#4169E1',lw=2,label = 'Uncertainty Bounds')
 
-for n, model in uq_models.items():
-    lY = model.predict_proba(np.linspace(0,10,steps).reshape(-1, 1))[:,1]
-    lYmin = [min(i,j) for i,j in zip(lY,lYmin)]
-    lYmax = [max(i,j) for i,j in zip(lY,lYmax)]
-    # plt.plot(lX,lY,color = 'grey',alpha = 0.2,lw = 0.5) 
+# plt.savefig('../paper/figs/ex1_UC.png',dpi = 600)
+# plt.savefig('figs/ex1_UC.png',dpi = 600)
 
-plt.plot(lX,lYmax,color='#4169E1',lw=2)
-plt.plot(lX,lYmin,color='#4169E1',lw=2,label = 'Uncertainty Bounds')
-
-plt.savefig('../paper/figs/ex1_UC.png',dpi = 600)
-plt.savefig('figs/ex1_UC.png',dpi = 600)
-
-plt.clf()
+# plt.clf()
 
 ### Get confusion matrix
 # Classify test data
@@ -148,14 +143,7 @@ base_predict = base.predict(test_data)
 nuq_predict = nuq.predict(test_data)
 
 # CLASSIFY UQ MODEL 
-test_predict = pd.DataFrame(columns = uq_models.keys())
-
-for key, model in uq_models.items():
-    test_predict[key] = model.predict(test_data)
-    
-predictions = []
-for i in test_predict.index:
-    predictions.append([min(test_predict.loc[i]),max(test_predict.loc[i])])
+ilr_predict = ilr.predict(test_data)
 
 with open('runinfo/ex1_UC_cm.out','w') as f:
     print('TRUE MODEL',file = f)
@@ -184,7 +172,7 @@ with open('runinfo/ex1_UC_cm.out','w') as f:
     
     print('UQ MODEL',file = f)
     
-    aaai,bbbi,ccci,dddi = generate_confusion_matrix(test_results,predictions,throw = False)
+    aaai,bbbi,ccci,dddi = generate_confusion_matrix(test_results,ilr_predict,throw = False)
     try:
         sssi = 1/(1+ccci/aaai)
     except:
@@ -200,7 +188,7 @@ with open('runinfo/ex1_UC_cm.out','w') as f:
     print('Sensitivity = [%.3f,%.3f]\nSpecificity = [%.3f,%.3f]' %(*sssi,*ttti),file = f)
 
     
-    aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(test_results,predictions,throw = True)
+    aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(test_results,ilr_predict,throw = True)
     try:
         sss = 1/(1+ccc/aaa)
     except:
@@ -218,27 +206,28 @@ with open('runinfo/ex1_UC_cm.out','w') as f:
     print('sigma = %.3f' %(eee/(aaa+ccc+eee)),file = f)
     print('tau = %.3f' %(fff/(bbb+ddd+fff)),file = f)
    
+
 ### Descriminatory Performance Plots
 s,fpr,predictions = ROC(model = base, data = test_data, results = test_results)
 nuq_s,nuq_fpr,nuq_predictions = ROC(model = nuq, data = test_data, results = test_results)
-s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, test_data, test_results)
+s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(ilr, test_data, test_results)
 
-s_i, fpr_i,uq_predictions = UQ_ROC(uq_models, test_data, test_results)
+s_i, fpr_i,ilr_predictions = UQ_ROC(ilr, test_data, test_results)
 
 densfig,axdens = plt.subplots(nrows = 2, sharex= True)
 
-for i,(p,u,nuqp,r) in enumerate(zip(predictions,uq_predictions,nuq_predictions,test_results.to_list())):
+for i,(p,u,nuqp,r) in enumerate(zip(predictions,ilr_predictions,nuq_predictions,test_results.to_list())):
     yd = np.random.uniform(-0.1,0.1)
     if r:
         axdens[0].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
         axdens[0].scatter(nuqp,0.21+yd,color = '#DC143C',marker = 'o',alpha = 0.5)
-        axdens[0].plot([u[0],u[1]],[yd-0.21,yd-0.21],color = '#4169E1',alpha = 0.3)
-        axdens[0].scatter([u[0],u[1]],[yd-0.21,yd-0.21],color = '#4169E1',marker = '|')
+        axdens[0].plot([*u],[yd-0.21,yd-0.21],color = '#4169E1',alpha = 0.3)
+        axdens[0].scatter([*u],[yd-0.21,yd-0.21],color = '#4169E1',marker = '|')
     else:
         axdens[1].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
         axdens[1].scatter(nuqp,0.21+yd,color = '#DC143C',marker = 'o',alpha = 0.5)
-        axdens[1].plot([u[0],u[1]],[yd-0.21,yd-0.21],color = '#4169E1',alpha = 0.3)
-        axdens[1].scatter([u[0],u[1]],[yd-0.21,yd-0.21],color = '#4169E1',marker = '|')
+        axdens[1].plot([*u],[yd-0.21,yd-0.21],color = '#4169E1',alpha = 0.3)
+        axdens[1].scatter([*u],[yd-0.21,yd-0.21],color = '#4169E1',marker = '|')
         
         
 axdens[0].set(ylabel = 'Outcome = 1',yticks = [])
@@ -296,15 +285,15 @@ plt.savefig('../paper/figs/ex1_UC_ST.png',dpi = 600)
 plt.clf()
 
 
-### Hosmer-Lemeshow
-hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,g = 10)
+# ### Hosmer-Lemeshow
+# hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,g = 10)
 
-hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,g = 10)
+# hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,g = 10)
    
-hl_uq, pval_uq = UQ_hosmer_lemeshow_test(uq_models,train_data,train_results,g = 10)
+# hl_uq, pval_uq = UQ_hosmer_lemeshow_test(uq_models,train_data,train_results,g = 10)
 
-with open('runinfo/ex1_UC_HL.out','w') as f:
-    print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
-    print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
+# with open('runinfo/ex1_UC_HL.out','w') as f:
+#     print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
+#     print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
 
-    print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 
+#     print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 
