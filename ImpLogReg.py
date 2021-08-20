@@ -88,7 +88,7 @@ class ImpLogReg:
         for i, model in enumerate(self):
             predictions[i] = model.predict(X)
         
-        return [pba.I(i) for i in predictions.T]
+        return [pba.I(i).to_logical() for i in predictions.T]
     
     def predict_proba(self, X):
         

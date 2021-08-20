@@ -174,14 +174,14 @@ with open('runinfo/ex1_UC_cm.out','w') as f:
     
     aaai,bbbi,ccci,dddi = generate_confusion_matrix(test_results,ilr_predict,throw = False)
     try:
-        sssi = 1/(1+ccci/aaai)
+        sssi = aaai/(a+c)
     except:
         sssi = None
     try:    
-        ttti = 1/(1+bbbi/dddi)
+        ttti = dddi/(b+d)
     except:
         ttti = None
-        
+    print(aaai)
     print('TP=[%i,%i]\tFP=[%i,%i]\nFN=[%i,%i]\tTN=[%i,%i]' %(*aaai,*bbbi,*ccci,*dddi),file = f)
 
     # Calculate sensitivity and specificity
