@@ -13,8 +13,11 @@ def midpoints(data):
             
     return n_data
 
-def generate_confusion_matrix(results,predictions,throw = False):
-
+def generate_confusion_matrix(results,predictions,throw = False,func = None):
+    
+    if func is not None:
+        predictions = [func(p) for p in predictions]
+        
     a = 0
     b = 0
     c = 0
@@ -40,98 +43,21 @@ def generate_confusion_matrix(results,predictions,throw = False):
                 d += 1
 
     if throw:
+        
+        if a.__class__.__name__ != 'Interval':
+            a = pba.I(a)
+            c = pba.I(c)
+        if b.__class__.__name__ != 'Interval':
+            b = pba.I(b)     
+            d = pba.I(d)
+                   
         e = a.width()
         f = b.width()
         
         return a.left,b.left,c.left,d.left,e,f
     else:
         return a,b,c,d    
-    
-
-def ROC(model = None, predictions = None, data = None, results = None, uq = False, drop = True):
-
-    s = []
-    fpr = []
-    
-    if predictions is None:
-        predictions = model.predict_proba(data)[:,1]
-    
-    for p in tqdm(np.linspace(0,1,1000),desc='ROC calcualtion'):
-        a = 0
-        b = 0
-        c = 0
-        d = 0
-
-        for prob, result in zip(predictions,results):
-            if uq and not drop:
-                if (prob[0] >= p) and (prob[1] >= p):
-                    x = 1
-                elif (prob[0] < p) and (prob[1] < p):
-                    x = 0
-                else:
-                    x = 0.5
-                    
-                if x == 0.5:
-                    if result:
-                        a += pba.I(0,1)
-                        b += pba.I(0,1)
-                    else:
-                        c += pba.I(0,1)
-                        d += pba.I(0,1)
-                elif x:
-                    if result:
-                        # true positive
-                        a += 1
-                    else:
-                        # false positive
-                        b+= 1
-                else: 
-                    if result:
-                        # false negative
-                        c += 1
-                    else:
-                        # true negative
-                        d += 1
-                
-                        
-            else:
-                if uq and drop:
-                    if (prob[0] >= p) and (prob[1] >= p):
-                        x = 1
-                    elif (prob[0] < p) and (prob[1] < p):
-                        x = 0
-                    else:
-                        continue                 
-                else:
-                    x = prob >= p
-                    
-                if x:
-                    if result:
-                        # true positive
-                        a += 1
-                    else:
-                        # false positive
-                        b+= 1
-                else: 
-                    if result:
-                        # false negative
-                        c += 1
-                    else:
-                        # true negative
-                        d += 1
-                    
-        if a == 0:
-            s.append(0)
-        else:
-            s.append(1/(1+(c/a)))
-        
-        if b == 0:
-            fpr.append(0)
-        else:
-            fpr.append(1/(1+(d/b)))
-        
-    return s, fpr, predictions
-   
+      
 def ROC(model, data, results, func = (lambda x: x)):
     
     s = []
@@ -159,69 +85,35 @@ def auc(s,fpr):
         
     return np.trapz(s,fpr)
 
-def UQ_ROC_alt(models, data, results):
+def incert_ROC(models, data, results):
    
     s = []
     fpr = []
     
     Sigma = []
     Tau = []
+
+    total_positive = sum(results)
+    total_negative = len(results) - total_positive
     
     probabilities = models.predict_proba(data)[:,1]
-
-    for p in tqdm(np.linspace(0,1,1000),desc = 'UQ ROC'):
-        a = 0
-        b = 0
-        c = 0
-        d = 0
+    
+    for p in tqdm(np.linspace(0,1,1000),desc = 'ROC'):
         
-        sigma = 0
-        tau = 0
-        nu = 0
+        predictions = [prob >= p for prob in probabilities]
         
-        for prob, result in zip(probabilities,results):
-
-            if pba.always(prob >= p):
-                if result:
-                    # true positive
-                    a += 1
-                else:
-                    # false positive
-                    b+= 1
-            elif pba.always(prob < p):
-                if result:
-                    # false negative
-                    c += 1
-                else:
-                    # true negative
-                    d += 1
-            else:
-                nu += 1
-
-                if result:
-                    sigma += 1
-                else:
-                    tau += 1
-              
-        if a == 0:
-            s.append(0)
-        else:
-            s.append(1/(1+(c/a)))
+        a,b,c,d,e,f = generate_confusion_matrix(predictions,results, throw = True)
         
-        if b == 0:
-            fpr.append(0)
-        else:
-            fpr.append(1/(1+(d/b)))
-            
-        Sigma.append(sigma/sum(results))
-        Tau.append(tau/(len(results) - sum(results)))
-            
+        s.append(a/(total_positive-e))
+        fpr.append(b/(total_negative-f))
+        
+        Sigma.append(e/total_positive)
+        Tau.append(f/total_negative)
         
     return s, fpr, Sigma, Tau
 
 def hosmer_lemeshow_test(model, data ,results,g = 10):
     
-
     probs = pd.DataFrame(model.predict_proba(data),index = data.index)
     probs.sort_values(by = 1,inplace = True)
  
@@ -244,6 +136,7 @@ def hosmer_lemeshow_test(model, data ,results,g = 10):
         }
         
     buckets = pd.DataFrame(buckets).transpose()
+    buckets.to_csv('b.csv')
     hl = sum(((buckets['observed_cases']-buckets['expected_cases'])**2)/(buckets['expected_cases'])) + sum(((buckets['observed_n_cases']-buckets['expected_n_cases'])**2)/(buckets['expected_n_cases']))
 
     pval = 1-chi2.cdf(hl,g-2)
@@ -251,13 +144,13 @@ def hosmer_lemeshow_test(model, data ,results,g = 10):
     return hl, pval
   
 def UQ_hosmer_lemeshow_test(models, data, results, g=10):
-    
+
     probabs_0 = []
     probabs_1 = []
     probabs_mp = []
     
     for d in tqdm(data.index, desc = 'UQ HL Test'):
-        p = [(m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,0],m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1]) for k,m in models.items()]
+        p = [(m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,0],m.predict_proba(data.loc[d].to_numpy().reshape(1, -1))[:,1]) for m in models]
         
         p = list(zip(*p))
         
@@ -286,32 +179,31 @@ def UQ_hosmer_lemeshow_test(models, data, results, g=10):
             'observed_n_cases': pba.I(len(idx) - sum(results.loc[idx])),
             'expected_n_cases': sum(probs.loc[idx,0])
         }
-        
+    
+    pd.DataFrame().from_dict(buckets, orient='index').to_csv('a.csv')
     hl = 0
     for i in range(g):
         
         cl = ((buckets[i]['observed_cases'].left - buckets[i]['expected_cases'].left)**2)/buckets[i]['expected_cases'].left
-        cr = ((buckets[i]['observed_cases'].Right - buckets[i]['expected_cases'].Right)**2)/buckets[i]['expected_cases'].Right
+        cr = ((buckets[i]['observed_cases'].right - buckets[i]['expected_cases'].right)**2)/buckets[i]['expected_cases'].right
         
         nl = ((buckets[i]['observed_n_cases'].left - buckets[i]['expected_n_cases'].left)**2)/buckets[i]['expected_n_cases'].left
-        nr = ((buckets[i]['observed_n_cases'].Right - buckets[i]['expected_n_cases'].Right)**2)/buckets[i]['expected_n_cases'].Right
+        nr = ((buckets[i]['observed_n_cases'].right - buckets[i]['expected_n_cases'].right)**2)/buckets[i]['expected_n_cases'].right
             
-        if pba.always(buckets[i]['observed_cases'] - buckets[i]['expected_cases'] != 0):
-            hl += pba.I(cl+nr,cr+nl)
+        if (buckets[i]['observed_cases'] - buckets[i]['expected_cases']).straddles_zero(endpoints = True):
+            hl += pba.I(0, pba.I(cl + nr, cr + nl))
         else:
-            hl += pba.I(0,pba.I(cl+nr,cr+nl))
-            
-            
+            hl += pba.I(cl + nr, cr + nl)
 
-    pval = pba.I(1-chi2.cdf(hl.left,g-2),1-chi2.cdf(hl.Right,g-2))
+    pval = pba.I(1-chi2.cdf(hl.left,g-2),1-chi2.cdf(hl.right,g-2))
     
     return hl, pval
 
 __all__ = [
     'generate_confusion_matrix',
     'ROC',
+    'incert_ROC',
     'auc',
-    'UQ_ROC_alt',
     'hosmer_lemeshow_test',
     'UQ_hosmer_lemeshow_test'
     

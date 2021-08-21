@@ -69,8 +69,9 @@ def generate_results(data):
 
 ### Generate Data
 # set seed for reproducability
-np.random.seed(1)
-random.seed(2)
+s = 1234
+np.random.seed(s)
+random.seed(s)
 
 # Params
 some = 50 # training datapoints
@@ -120,7 +121,7 @@ plt.xlabel('$x$')
 plt.ylabel('$\pi(x)$')
 plt.scatter(nuq_data,nuq_results,color='grey',zorder=10)
 plt.plot(lX,lY,color='k',zorder=10,lw=2,label = 'Truth')
-plt.plot(lX,lYn,color='#DC143C',zorder=10,lw=2,label = 'No UQ')
+# plt.plot(lX,lYn,color='#DC143C',zorder=10,lw=2,label = 'No UQ')
 
 for i in uq_data_index:
 
@@ -130,10 +131,10 @@ for i in uq_data_index:
 plt.plot(lX,[i.left for i in lYu],color='#4169E1',lw=2)
 plt.plot(lX,[i.right for i in lYu],color='#4169E1',lw=2,label = 'Uncertainty Bounds')
 
-# plt.savefig('../paper/figs/ex1_UC.png',dpi = 600)
-# plt.savefig('figs/ex1_UC.png',dpi = 600)
+plt.savefig('../paper/figs/ex1_UC.png',dpi = 600)
+plt.savefig('figs/ex1_UC.png',dpi = 600)
 
-# plt.clf()
+plt.clf()
 
 ### Get confusion matrix
 # Classify test data
@@ -181,7 +182,7 @@ with open('runinfo/ex1_UC_cm.out','w') as f:
         ttti = dddi/(b+d)
     except:
         ttti = None
-    print(aaai)
+
     print('TP=[%i,%i]\tFP=[%i,%i]\nFN=[%i,%i]\tTN=[%i,%i]' %(*aaai,*bbbi,*ccci,*dddi),file = f)
 
     # Calculate sensitivity and specificity
@@ -208,15 +209,15 @@ with open('runinfo/ex1_UC_cm.out','w') as f:
    
 
 ### Descriminatory Performance Plots
-s,fpr,predictions = ROC(model = base, data = test_data, results = test_results)
-nuq_s,nuq_fpr,nuq_predictions = ROC(model = nuq, data = test_data, results = test_results)
-s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(ilr, test_data, test_results)
+s,fpr,probabilities = ROC(model = base, data = test_data, results = test_results)
+nuq_s,nuq_fpr,nuq_probabilities = ROC(model = nuq, data = test_data, results = test_results)
+s_t, fpr_t, Sigma, Tau = incert_ROC(ilr, test_data, test_results)
 
-s_i, fpr_i,ilr_predictions = UQ_ROC(ilr, test_data, test_results)
+s_i, fpr_i,ilr_probabilities = ROC(ilr, test_data, test_results)
 
 densfig,axdens = plt.subplots(nrows = 2, sharex= True)
 
-for i,(p,u,nuqp,r) in enumerate(zip(predictions,ilr_predictions,nuq_predictions,test_results.to_list())):
+for i,(p,u,nuqp,r) in enumerate(zip(probabilities,ilr_probabilities,nuq_probabilities,test_results.to_list())):
     yd = np.random.uniform(-0.1,0.1)
     if r:
         axdens[0].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
@@ -285,15 +286,15 @@ plt.savefig('../paper/figs/ex1_UC_ST.png',dpi = 600)
 plt.clf()
 
 
-# ### Hosmer-Lemeshow
-# hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,g = 10)
+### Hosmer-Lemeshow
+hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,g = 10)
 
-# hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,g = 10)
-   
-# hl_uq, pval_uq = UQ_hosmer_lemeshow_test(uq_models,train_data,train_results,g = 10)
+hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,g = 10)
+#
+hl_uq, pval_uq = UQ_hosmer_lemeshow_test(ilr,train_data,train_results,g = 10)
 
-# with open('runinfo/ex1_UC_HL.out','w') as f:
-#     print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
-#     print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
+with open('runinfo/ex1_UC_HL.out','w') as f:
+    print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
+    print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
 
-#     print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 
+    print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 
