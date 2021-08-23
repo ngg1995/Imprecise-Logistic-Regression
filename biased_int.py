@@ -13,6 +13,7 @@ font = {'size'   : 14}
 matplotlib.rc('font', **font)
 
 from LRF import *
+from ImpLogReg import *
 
 def intervalise(val,eps,method,bias=0,bounds = None):
    
@@ -88,6 +89,13 @@ UQdatasets = [
     ]
 
 for jj, UQdata in zip([0,1,2],UQdatasets):
+
+    ### Fit logistic regression model
+    base = LogisticRegression()
+    base.fit(train_data.to_numpy(),train_results.to_numpy())
+
+    # Intervalise data
+    eps = 0.25
     ### Fit logistic regression model on full dataset
     base = LogisticRegression(max_iter=1000)
     base.fit(train_data.to_numpy(),train_results.to_numpy())
@@ -99,38 +107,32 @@ for jj, UQdata in zip([0,1,2],UQdatasets):
     nuq.fit(nuq_data.to_numpy(),train_results.to_numpy())
 
     ### Fit UQ models
-    uq_models = int_logistic_regression(UQdata,train_results)
+    ilr = ImpLogReg(uncertain_data=True, max_iter = 1000)
+    ilr.fit(UQdata,train_results)
 
     ### Plot results
     steps = 300
     lX = np.linspace(0,10,steps)
     lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
     lYn = nuq.predict_proba(lX.reshape(-1, 1))[:,1]
+    lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
 
     plt.xlabel('$x$')
     plt.ylabel('$\pi(x)$')
+    plt.scatter(nuq_data,train_results,color='grey',zorder=10)
     plt.plot(lX,lY,color='k',zorder=10,lw=2,label = 'Truth')
     plt.plot(lX,lYn,color='#DC143C',zorder=10,lw=2,label = 'No UQ')
 
     for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
         yd = np.random.uniform(-0.05,0.05)
         # plt.plot(m,r+yd,color = 'b',marker = 'x')
-        plt.plot([u.Left,u.Right],[r+yd,r+yd],color = 'grey', marker='|')
+        plt.plot([u.left,u.right],[r+yd,r+yd],color = 'grey', marker='|')
+        
+    plt.plot(lX,[i.left for i in lYu],color='#4169E1',lw=2)
+    plt.plot(lX,[i.right for i in lYu],color='#4169E1',lw=2,label = 'Uncertainty Bounds')
 
-    lYmin = np.ones(steps)
-    lYmax = np.zeros(steps)
-
-    for n, model in uq_models.items():
-        lY = model.predict_proba(np.linspace(0,10,steps).reshape(-1, 1))[:,1]
-        lYmin = [min(i,j) for i,j in zip(lY,lYmin)]
-        lYmax = [max(i,j) for i,j in zip(lY,lYmax)]
-        plt.plot(lX,lY,color = 'grey',alpha = 0.2,lw = 0.5)
-
-    plt.plot(lX,lYmax,color='#4169E1',lw=2)
-    plt.plot(lX,lYmin,color='#4169E1',lw=2,label = 'Imprecise Bounds')
-
-    plt.savefig('../paper/figs/biased_int_%i.png' %jj,dpi = 600)
-    plt.savefig('figs/biased_int_%i.png' %jj,dpi = 600)
+    plt.savefig('../paper/figs/biased_int_%i.png'%jj,dpi = 600)
+    plt.savefig('figs/biased_int_%i.png'%jj,dpi = 600)
 
     plt.clf()
 
@@ -139,11 +141,11 @@ for jj, UQdata in zip([0,1,2],UQdatasets):
     hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,g = 10)
 
     hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,g = 10)
+    #
+    hl_uq, pval_uq = UQ_hosmer_lemeshow_test(ilr,train_data,train_results,g = 10)
 
-    hl_uq, pval_uq = UQ_hosmer_lemeshow_test(uq_models,train_data,train_results,g = 10)
-
-
-    with open('runinfo/biased_int_HL_%i.out' %jj,'w') as f:
+    with open('runinfo/biased_int_HL_%i.out'%jj,'w') as f:
         print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
-        print('Midpoints\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
+        print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
+
         print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 

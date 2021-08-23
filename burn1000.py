@@ -1,3 +1,4 @@
+from ImpLogReg import ImpLogReg
 import pandas as pd
 import numpy as np
 import random
@@ -36,7 +37,7 @@ def deintervalise(data, binary_cols):
             continue
         for i in data.index:
             if data.loc[i,c].__class__.__name__ == 'Interval':
-                n_data.loc[i,c] = data.loc[i,c].Left + np.random.rand()*data.loc[i,c].width()
+                n_data.loc[i,c] = data.loc[i,c].left + np.random.rand()*data.loc[i,c].width()
             
     return n_data
 
@@ -55,7 +56,7 @@ random.seed(1) # for reproducability
 index_list = [i for i in data.index]
 
 ininj_index = random.sample(index_list, k = 20) 
-uc_index = random.sample(index_list,k=10)
+uq_data_index = random.sample(index_list,k = 10)
 
 u_index = ininj_index
 
@@ -66,22 +67,23 @@ UQdata = pd.DataFrame({
         },
     **{c: train_data[c] for c in train_data.columns if c not in ("INH_INJ",'AGE')},
     }, index = data.index, dtype = 'O').reindex(columns = train_data.columns)
-
 UQdata.to_csv('burn_uq.csv')
+uq_results = pd.Series([int(results.loc[i]) if i not in uq_data_index else pba.I(0,1) for i in results.index], index = results.index, dtype='O')
 
 ### Fit logistic regression model on full dataset
 base = LogisticRegression(max_iter=1000)
 base.fit(train_data.to_numpy(),results.to_numpy())
 
 ### Fit models with none UQ data data
-nuq_data =  deintervalise(UQdata.loc[[i for i in data.index if i not in [*u_index,*uc_index]]],["INH_INJ"])
-nuq_results = results.loc[[i for i in data.index if i not in [*u_index,*uc_index]]]
+nuq_data =  deintervalise(UQdata.loc[[i for i in data.index if i not in [*u_index,*uq_data_index]]],["INH_INJ"])
+nuq_results = results.loc[[i for i in data.index if i not in [*u_index,*uq_data_index]]]
 nuq = LogisticRegression(max_iter=1000)
 nuq.fit(nuq_data.to_numpy(),nuq_results.to_numpy())
 
 ### Fit UQ models
-uq_models = uc_int_logistic_regression(UQdata,results.drop(uc_index),results.loc[uc_index],binary_cols = ["INH_INJ"],uc_index=uc_index)
-print(len(uq_models.keys()))
+# uq_models = uc_int_logistic_regression(UQdata,results.drop(uq_data_index),results.loc[uq_data_index],binary_cols = ["INH_INJ"],uq_data_index=uq_data_index)
+ilr = ImpLogReg(max_iter = 1000, uncertain_class=True, uncertain_data=True)
+ilr.fit(UQdata, uq_results, catagorical=["INH_INJ"])
 
 ### Get confusion matrix
 # Classify test data
@@ -91,14 +93,7 @@ base_predict = base.predict(train_data)
 nuq_predict = nuq.predict(train_data)
 
 # CLASSIFY UQ MODEL 
-train_predict = pd.DataFrame(columns = uq_models.keys())
-
-for key, model in uq_models.items():
-    train_predict[key] = model.predict(train_data)
-    
-predictions = []
-for i in train_predict.index:
-    predictions.append([min(train_predict.loc[i]),max(train_predict.loc[i])])
+ilr_predict = ilr.predict(train_data)
 
 with open('runinfo/burn1000_cm.out','w') as f:
     print('TRUE MODEL',file = f)
@@ -127,23 +122,23 @@ with open('runinfo/burn1000_cm.out','w') as f:
     
     print('UQ MODEL',file = f)
     
-    aaai,bbbi,ccci,dddi = generate_confusion_matrix(results,predictions,throw = False)
-    print(aaai,bbbi,ccci,dddi)
+    aaai,bbbi,ccci,dddi = generate_confusion_matrix(results,ilr_predict,throw = False)
     try:
-        sssi = 1/(1+ccci/aaai)
+        sssi = aaai/(a+c)
     except:
         sssi = None
     try:    
-        ttti = 1/(1+bbbi/dddi)
+        ttti = dddi/(b+d)
     except:
         ttti = None
-        
-    print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aaai,bbbi,ccci,dddi),file = f)
+
+    print('TP=[%i,%i]\tFP=[%i,%i]\nFN=[%i,%i]\tTN=[%i,%i]' %(*aaai,*bbbi,*ccci,*dddi),file = f)
 
     # Calculate sensitivity and specificity
     print('Sensitivity = [%.3f,%.3f]\nSpecificity = [%.3f,%.3f]' %(*sssi,*ttti),file = f)
 
-    aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(results,predictions,throw = True)
+    
+    aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(results,ilr_predict,throw = True)
     try:
         sss = 1/(1+ccc/aaa)
     except:
@@ -158,49 +153,45 @@ with open('runinfo/burn1000_cm.out','w') as f:
     # Calculate sensitivity and specificity
     print('Sensitivity = %.3f' %(sss),file = f)
     print('Specificity = %.3f' %(ttt),file = f)
+    print('sigma = %.3f' %(eee/(aaa+ccc+eee)),file = f)
+    print('tau = %.3f' %(fff/(bbb+ddd+fff)),file = f)
+   
 
 ### Descriminatory Performance Plots
-s,fpr,predictions = ROC(model = base, data = train_data, results = results)
+s,fpr,probabilities = ROC(model = base, data = train_data, results = results)
 
+nuq_s,nuq_fpr,nuq_probabilities = ROC(model = nuq, data = train_data, results = results)
+s_t, fpr_t, Sigma, Tau = incert_ROC(ilr, train_data, results)
 
-nuq_s,nuq_fpr,nuq_predictions = ROC(model = nuq, data = train_data, results = results)
-s_t, fpr_t, Sigma, Tau, Nu = UQ_ROC_alt(uq_models, train_data, results)
-
-s_i, fpr_i,uq_predictions = UQ_ROC(uq_models, train_data, results)
-s_min, fpr_min,_ = UQ_ROC(uq_models, train_data, results, f = min)
-s_max, fpr_max,_ = UQ_ROC(uq_models, train_data, results, f = max)
+s_i, fpr_i,ilr_probabilities = ROC(ilr, train_data, results)
 
 densfig,axdens = plt.subplots(nrows = 2, sharex= True)
 
-for i,(p,u,nuqp,r) in enumerate(zip(predictions,uq_predictions,nuq_predictions,results.to_list())):
-    yd = np.random.uniform(-0.01,-.31)
+for i,(p,u,nuqp,r) in enumerate(zip(probabilities,ilr_probabilities,nuq_probabilities,results.to_list())):
+    yd = np.random.uniform(-0.1,0.1)
     if r:
-        # axdens[0].scatter(p,np.random.uniform(-0.1,0.1),color = 'k',marker = 'o',alpha = 0.5)
-        axdens[0].scatter(nuqp,-yd,color = '#DC143C',marker = 'o',alpha = 0.5)    
-        axdens[0].plot([u[0],u[1]],[yd,yd],color = '#4169E1',alpha = 0.3)
-        axdens[0].scatter([u[0],u[1]],[yd,yd],color = '#4169E1',marker = '|')
+        axdens[0].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
+        axdens[0].scatter(nuqp,0.21+yd,color = '#DC143C',marker = 'o',alpha = 0.5)
+        axdens[0].plot([*u],[yd-0.21,yd-0.21],color = '#4169E1',alpha = 0.3)
+        axdens[0].scatter([*u],[yd-0.21,yd-0.21],color = '#4169E1',marker = '|')
     else:
-        # axdens[1].scatter(p,np.random.uniform(-.1,0.1),color = 'k',marker = 'o',alpha = 0.5)
-        axdens[1].scatter(nuqp,-yd,color = '#DC143C',marker = 'o',alpha = 0.5)
-
-        axdens[1].plot([u[0],u[1]],[yd,yd],color = '#4169E1',alpha = 0.3)
-        axdens[1].scatter([u[0],u[1]],[yd,yd],color = '#4169E1',marker = '|')
+        axdens[1].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
+        axdens[1].scatter(nuqp,0.21+yd,color = '#DC143C',marker = 'o',alpha = 0.5)
+        axdens[1].plot([*u],[yd-0.21,yd-0.21],color = '#4169E1',alpha = 0.3)
+        axdens[1].scatter([*u],[yd-0.21,yd-0.21],color = '#4169E1',marker = '|')
         
         
 axdens[0].set(ylabel = 'Outcome = 1',yticks = [])
 axdens[1].set(xlabel = '$\pi(x)$',ylabel = 'Outcome = 0',yticks = [],xlim  = (0, 1))
+
 densfig.tight_layout()
 
 rocfig,axroc = plt.subplots(1,1)
 axroc.plot([0,1],[0,1],'k:',label = 'Random Classifier')
 axroc.set(xlabel = '$fpr$',ylabel='$s$')
-# axroc.plot(fpr,s,'k',label = 'Base')
-axroc.plot(nuq_fpr,nuq_s,color='#DC143C',label='Ignored Uncertainty')
+axroc.plot(fpr,s,'k',label = 'Base')
+axroc.plot(nuq_fpr,nuq_s,color='#DC143C',linestyle='--',label='Ignored Uncertainty')
 axroc.plot(fpr_t,s_t,'#4169E1',label='Imprecise Model')
-axroc.plot(fpr_min, s_min,'#FF8C00',label='Lower Bound')
-axroc.plot(fpr_max, s_max,'#008000',label='Upper Bound')
-
-
 axroc.legend()
 rocfig.savefig('figs/burn1000_ROC.png',dpi = 600)
 rocfig.savefig('../paper/figs/burn1000_ROC.png',dpi = 600)
@@ -212,9 +203,7 @@ with open('runinfo/burn1000_auc.out','w') as f:
     print('NO UNCERTAINTY: %.3f' %auc(s,fpr), file = f)
     print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)
     print('THROW: %.3f' %auc(s_t,fpr_t), file = f)
-    print('eq. 13: %.3f' %auc(s_min,fpr_min), file = f)
-    print('eq. 14: %.3f' %auc(s_max,fpr_max), file = f)
-   
+    # print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
     
 
 
@@ -240,6 +229,7 @@ plt.plot(s_t,Sigma,'#FF8C00',label = '$\\sigma$ v $s$')
 plt.plot(fpr_t,Tau,'#008000',label = '$\\tau$ v $fpr$')
 plt.legend()
 
+
 plt.savefig('figs/burn1000_ST.png',dpi = 600)
 plt.savefig('../paper/figs/burn1000_ST.png',dpi = 600)
 
@@ -249,13 +239,12 @@ plt.clf()
 ### Hosmer-Lemeshow
 hl_b, pval_b = hosmer_lemeshow_test(base,train_data,results,g = 10)
 
-hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,nuq_data,nuq_results,g = 10)
+hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,results,g = 10)
+#
+hl_uq, pval_uq = UQ_hosmer_lemeshow_test(ilr,train_data,results,g = 10)
 
-hl_uq, pval_uq = UQ_hosmer_lemeshow_test(uq_models,train_data,results,g = 10)
-
-    
-    
 with open('runinfo/burn1000_HL.out','w') as f:
-    print('base\nhl = %.3f, p = %.5f' %(hl_b,pval_b),file = f)
-    print('no UQ\nhl = %.3f, p = %.5f' %(hl_nuq,pval_nuq),file = f) 
+    print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
+    print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
+
     print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 

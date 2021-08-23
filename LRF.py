@@ -71,8 +71,8 @@ def ROC(model, data, results, func = (lambda x: x)):
     for p in tqdm(np.linspace(0,1,1000),desc = 'ROC'):
         
         predictions = [func(prob >= p) for prob in probabilities]
-        
-        a,b,c,d = generate_confusion_matrix(predictions,results)
+
+        a,b,c,d = generate_confusion_matrix(results,predictions)
         
         s.append(a/total_positive)
         fpr.append(b/total_negative)
@@ -102,7 +102,7 @@ def incert_ROC(models, data, results):
         
         predictions = [prob >= p for prob in probabilities]
         
-        a,b,c,d,e,f = generate_confusion_matrix(predictions,results, throw = True)
+        a,b,c,d,e,f = generate_confusion_matrix(results, predictions, throw = True)
         
         s.append(a/(total_positive-e))
         fpr.append(b/(total_negative-f))
@@ -136,7 +136,7 @@ def hosmer_lemeshow_test(model, data ,results,g = 10):
         }
         
     buckets = pd.DataFrame(buckets).transpose()
-    buckets.to_csv('b.csv')
+
     hl = sum(((buckets['observed_cases']-buckets['expected_cases'])**2)/(buckets['expected_cases'])) + sum(((buckets['observed_n_cases']-buckets['expected_n_cases'])**2)/(buckets['expected_n_cases']))
 
     pval = 1-chi2.cdf(hl,g-2)
@@ -180,7 +180,6 @@ def UQ_hosmer_lemeshow_test(models, data, results, g=10):
             'expected_n_cases': sum(probs.loc[idx,0])
         }
     
-    pd.DataFrame().from_dict(buckets, orient='index').to_csv('a.csv')
     hl = 0
     for i in range(g):
         
@@ -190,7 +189,7 @@ def UQ_hosmer_lemeshow_test(models, data, results, g=10):
         nl = ((buckets[i]['observed_n_cases'].left - buckets[i]['expected_n_cases'].left)**2)/buckets[i]['expected_n_cases'].left
         nr = ((buckets[i]['observed_n_cases'].right - buckets[i]['expected_n_cases'].right)**2)/buckets[i]['expected_n_cases'].right
             
-        if (buckets[i]['observed_cases'] - buckets[i]['expected_cases']).straddles_zero(endpoints = True):
+        if pba.sometimes(buckets[i]['observed_cases'] - buckets[i]['expected_cases'] == 0):
             hl += pba.I(0, pba.I(cl + nr, cr + nl))
         else:
             hl += pba.I(cl + nr, cr + nl)

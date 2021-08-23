@@ -10,7 +10,7 @@ import random
 from LRF import *
 
 import matplotlib
-font = {'size'   : 14}
+font = {'size'   : 14,'family' : 'Times New Roman'}
 matplotlib.rc('font', **font)
 
 def generate_results(data):
@@ -27,8 +27,9 @@ def generate_results(data):
 
 ### Generate Data
 # set seed for reproducability
-np.random.seed(1)
-random.seed(2)
+s = 1234
+np.random.seed(s)
+random.seed(s)
 
 # Params
 some = 50 # training datapoints

@@ -11,7 +11,7 @@ import pba
 import random
 
 import matplotlib
-font = {'size'   : 14}
+font = {'size'   : 14,'family' : 'Times New Roman'}
 matplotlib.rc('font', **font)
 
 from LRF import *
@@ -93,7 +93,7 @@ random.seed(5) # for reproducability
 uq_data_index = random.sample([i for i in train_data.index if abs(train_data.loc[i,0]-5) <= 1.5], k = few) # clustered around center
 
 uq_data = train_data.loc[uq_data_index]
-uq_results = pd.Series([int(train_results.loc[i]) if i not in uq_data_index else -1 for i in train_results.index], index = train_results.index)
+uq_results = pd.Series([int(train_results.loc[i]) if i not in uq_data_index else pba.I(0,1) for i in train_results.index], index = train_results.index, dtype='O')
 nuq_data = train_data.loc[[i for i in train_data.index if i not in uq_data_index]]
 nuq_results = train_results.loc[[i for i in train_data.index if i not in uq_data_index]]
 
@@ -106,10 +106,6 @@ ilr.fit(train_data,uq_results)
 nuq = LogisticRegression()
 nuq.fit(nuq_data.to_numpy(),nuq_results.to_numpy())
 
-# # ### Fit SSL model
-# # ssl = SelfTrainingClassifier(LogisticRegression())
-
-
 ### Plot results
 steps = 300
 lX = np.linspace(0,10,steps)
@@ -121,7 +117,7 @@ plt.xlabel('$x$')
 plt.ylabel('$\pi(x)$')
 plt.scatter(nuq_data,nuq_results,color='grey',zorder=10)
 plt.plot(lX,lY,color='k',zorder=10,lw=2,label = 'Truth')
-# plt.plot(lX,lYn,color='#DC143C',zorder=10,lw=2,label = 'No UQ')
+plt.plot(lX,lYn,color='#DC143C',zorder=10,lw=2,label = 'No UQ')
 
 for i in uq_data_index:
 
@@ -210,6 +206,7 @@ with open('runinfo/ex1_UC_cm.out','w') as f:
 
 ### Descriminatory Performance Plots
 s,fpr,probabilities = ROC(model = base, data = test_data, results = test_results)
+
 nuq_s,nuq_fpr,nuq_probabilities = ROC(model = nuq, data = test_data, results = test_results)
 s_t, fpr_t, Sigma, Tau = incert_ROC(ilr, test_data, test_results)
 
