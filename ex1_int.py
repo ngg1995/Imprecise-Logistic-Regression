@@ -106,7 +106,7 @@ lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
 
 plt.xlabel('$x$')
 plt.ylabel('$\pi(x)$')
-plt.scatter(nuq_data,train_results,color='grey',zorder=10)
+# plt.scatter(nuq_data,train_results,color='grey',zorder=10)
 plt.plot(lX,lY,color='k',zorder=10,lw=2,label = 'Truth')
 plt.plot(lX,lYn,color='#DC143C',zorder=10,lw=2,label = 'No UQ')
 

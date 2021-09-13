@@ -206,10 +206,8 @@ with open('runinfo/ex1_UC_cm.out','w') as f:
 
 ### Descriminatory Performance Plots
 s,fpr,probabilities = ROC(model = base, data = test_data, results = test_results)
-
 nuq_s,nuq_fpr,nuq_probabilities = ROC(model = nuq, data = test_data, results = test_results)
 s_t, fpr_t, Sigma, Tau = incert_ROC(ilr, test_data, test_results)
-
 s_i, fpr_i,ilr_probabilities = ROC(ilr, test_data, test_results)
 
 densfig,axdens = plt.subplots(nrows = 2, sharex= True)
