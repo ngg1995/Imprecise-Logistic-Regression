@@ -19,7 +19,7 @@ The usage is identical to scikit-learn
 Documentation
 =============
 
-*class* ``ImpLogReg(uncertain_data = False, uncertain_class = False, \*\*kwargs)``
+*class* ``ImpLogReg(uncertain_data = False, uncertain_class = False, **kwargs)``
 
 Parameters
 __________
@@ -27,7 +27,7 @@ __________
         Whether the imprecise model has interval datapoints.
     **uncertain_class**: *bool, default = False*
         Whether the imprecise model has uncertain results.
-    **\*\*kwargs**
+    ****kwargs**
         kwargs passed to sklearn.linear_model.LogisticRegression() function.
 
 Attributes
@@ -62,7 +62,7 @@ __________
 +--------------------------------------------+-------------------------------------------------------------+
 | `score(X, y , sample_weight)`_             | Return the mean accuracy on the given test data and labels. |
 +--------------------------------------------+-------------------------------------------------------------+
-| `set_params(\*\*params)`_                  | Set the parameters of this estimator.                       |
+| `set_params(**params)`_                    | Set the parameters of this estimator.                       |
 +--------------------------------------------+-------------------------------------------------------------+
 | `sparsify()`_                              | Convert coefficient matrix to sparse format.                |
 +--------------------------------------------+-------------------------------------------------------------+
@@ -230,10 +230,10 @@ Returns
 
 See `scikit-learn.linear_model.LogisticRegression().score()`_
 
-``set_params(\*\*params)``
+``set_params(**params)``
 --------------------------
 
-.. _`set_params(\*\*params)`:
+.. _`set_params(**params)`:
 
 Parameters
 
@@ -247,10 +247,10 @@ Returns
 
 See `scikit-learn.linear_model.LogisticRegression().set_params()`_
 
-``sparcify()``
+``sparsify()``
 --------------
 
-.. _`sparcify()`:
+.. _`sparsify()`:
 
 Convert coefficient matrix to sparse format for each model
 
