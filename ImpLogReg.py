@@ -7,8 +7,11 @@ import pba
 import scipy.optimize as so
 
 class ImpLogReg:
-
-    def __init__(self, uncertain_data = False, uncertain_class = False, **kwargs):
+    
+    def __init__(self, 
+                 uncertain_data: bool = False, 
+                 uncertain_class: bool = False, 
+                 **kwargs):
 
         self.models = {}
         self.uncertain_data = uncertain_data
