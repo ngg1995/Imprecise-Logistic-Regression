@@ -119,7 +119,7 @@ for jj, UQdata in zip([0,1,2],UQdatasets):
 
     plt.xlabel('$x$')
     plt.ylabel('$\pi(x)$')
-    plt.scatter(nuq_data,train_results,color='grey',zorder=10)
+
     plt.plot(lX,lY,color='k',zorder=10,lw=2,label = 'Truth')
     plt.plot(lX,lYn,color='#DC143C',zorder=10,lw=2,label = 'No UQ')
 

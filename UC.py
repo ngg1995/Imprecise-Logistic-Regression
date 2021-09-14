@@ -1,48 +1,20 @@
+from ImpLogReg import ImpLogReg
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+from mpl_toolkits import mplot3d
 from sklearn.linear_model import LogisticRegression
 import itertools as it
 from tqdm import tqdm
 import pba
-import tikzplotlib
 import random
 
 import matplotlib
 font = {'size'   : 14,'family' : 'Times New Roman'}
 matplotlib.rc('font', **font)
 
-from ImpLogReg import *
 from LRF import *
 
-def intervalise(val,eps,method,b=0.5,bounds = None):
-    
-    if method == 'u':
-        m = np.random.uniform(val-eps,val+eps)
-    elif method == 'b':
-        m = val - eps + 2*b*eps
-    elif method == 't':
-
-        m = np.random.triangular(val-eps,val+b*eps,val+eps)
-    
-    if bounds is not None:
-        if m-eps < bounds[0]:
-            return pba.I(bounds[0],m+eps)
-        elif m+eps >bounds[1]:
-            return pba.I(m-eps,bounds[1])
-        
-    return pba.I(m-eps,m+eps)
-
-def midpoints(data):
-    n_data = data.copy()
-    for c in data.columns:
-        for i in data.index:
-            if data.loc[i,c].__class__.__name__ == 'Interval':
-
-                n_data.loc[i,c] = data.loc[i,c].midpoint()
-
-            
-    return n_data
 
 def generate_results(data):
     # set seed for reproducability
@@ -60,7 +32,6 @@ def generate_results(data):
 # set seed for reproducability
 s = 1234
 np.random.seed(s)
-random.seed(s)
 
 # Params
 some = 50 # training datapoints
@@ -72,30 +43,28 @@ train_results = generate_results(train_data)
 test_data = pd.DataFrame(10*np.random.rand(many,1))
 test_results = generate_results(test_data)
 
-### Fit logistic regression model
+### Fit logistic regression model on full dataset
 base = LogisticRegression()
 base.fit(train_data.to_numpy(),train_results.to_numpy())
 
-# Intervalise data
-eps = 0.25
+### Remove uncertain datapoints from the training data
+few = 5 #uncertain points
+random.seed(12345) # for reproducability
+uq_data_index = random.sample([i for i in train_data.index if abs(train_data.loc[i,0]-5) <= 1.5], k = few) # clustered around center
 
-UQdata = pd.DataFrame({
-    0:[intervalise(train_data.iloc[i,0],eps,'t',0.6,(0,10)) for i in train_data.index]
-    }, dtype = 'O')
-
-### Fit logistic regression model on full dataset
-base = LogisticRegression(max_iter=1000)
-base.fit(train_data.to_numpy(),train_results.to_numpy())
-
-
-### Fit models with midpoint data
-nuq_data = midpoints(UQdata)
-nuq = LogisticRegression(max_iter=1000)
-nuq.fit(nuq_data.to_numpy(),train_results.to_numpy())
+uq_data = train_data.loc[uq_data_index]
+uq_results = pd.Series([int(train_results.loc[i]) if i not in uq_data_index else pba.I(0,1) for i in train_results.index], index = train_results.index, dtype='O')
+nuq_data = train_data.loc[[i for i in train_data.index if i not in uq_data_index]]
+nuq_results = train_results.loc[[i for i in train_data.index if i not in uq_data_index]]
 
 ### Fit UQ models
-ilr = ImpLogReg(uncertain_data=True, max_iter = 1000)
-ilr.fit(UQdata,train_results)
+ilr = ImpLogReg(uncertain_class=True, max_iter = 1000)
+ilr.fit(train_data,uq_results)
+
+
+### Fit models with missing data
+nuq = LogisticRegression()
+nuq.fit(nuq_data.to_numpy(),nuq_results.to_numpy())
 
 ### Plot results
 steps = 300
@@ -106,20 +75,20 @@ lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
 
 plt.xlabel('$x$')
 plt.ylabel('$\pi(x)$')
-# plt.scatter(nuq_data,train_results,color='grey',zorder=10)
+plt.scatter(nuq_data,nuq_results,color='grey',zorder=10)
 plt.plot(lX,lY,color='k',zorder=10,lw=2,label = 'Truth')
 plt.plot(lX,lYn,color='#DC143C',zorder=10,lw=2,label = 'No UQ')
 
-for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
-    yd = np.random.uniform(-0.05,0.05)
-    # plt.plot(m,r+yd,color = 'b',marker = 'x')
-    plt.plot([u.left,u.right],[r+yd,r+yd],color = 'grey', marker='|')
+for i in uq_data_index:
+
+    plt.plot([uq_data.loc[i],uq_data.loc[i]],[0,1],color='grey')
+    plt.scatter(uq_data.loc[i],train_results.loc[i],marker = 'd',color = 'black',zorder = 14)
     
 plt.plot(lX,[i.left for i in lYu],color='#4169E1',lw=2)
 plt.plot(lX,[i.right for i in lYu],color='#4169E1',lw=2,label = 'Uncertainty Bounds')
 
-plt.savefig('../paper/figs/ex1_int.png',dpi = 600)
-plt.savefig('figs/ex1_int.png',dpi = 600)
+plt.savefig('../paper/figs/UC.png',dpi = 600)
+plt.savefig('figs/UC.png',dpi = 600)
 
 plt.clf()
 
@@ -133,7 +102,7 @@ nuq_predict = nuq.predict(test_data)
 # CLASSIFY UQ MODEL 
 ilr_predict = ilr.predict(test_data)
 
-with open('runinfo/ex1_int_cm.out','w') as f:
+with open('runinfo/UC_cm.out','w') as f:
     print('TRUE MODEL',file = f)
     a,b,c,d = generate_confusion_matrix(test_results,base_predict)
     print('TP=%i\tFP=%i\nFN=%i\tTN=%i' %(a,b,c,d),file = f)
@@ -199,7 +168,6 @@ with open('runinfo/ex1_int_cm.out','w') as f:
 s,fpr,probabilities = ROC(model = base, data = test_data, results = test_results)
 nuq_s,nuq_fpr,nuq_probabilities = ROC(model = nuq, data = test_data, results = test_results)
 s_t, fpr_t, Sigma, Tau = incert_ROC(ilr, test_data, test_results)
-
 s_i, fpr_i,ilr_probabilities = ROC(ilr, test_data, test_results)
 
 densfig,axdens = plt.subplots(nrows = 2, sharex= True)
@@ -230,16 +198,16 @@ axroc.plot(fpr,s,'k',label = 'Base')
 axroc.plot(nuq_fpr,nuq_s,color='#DC143C',linestyle='--',label='Ignored Uncertainty')
 axroc.plot(fpr_t,s_t,'#4169E1',label='Imprecise Model')
 axroc.legend()
-rocfig.savefig('figs/ex1_int_ROC.png',dpi = 600)
-rocfig.savefig('../paper/figs/ex1_int_ROC.png',dpi = 600)
-densfig.savefig('figs/ex1_int_dens.png',dpi =600)
-densfig.savefig('../paper/figs/ex1_int_dens.png',dpi =600)
+rocfig.savefig('figs/UC_ROC.png',dpi = 600)
+rocfig.savefig('../paper/figs/UC_ROC.png',dpi = 600)
+densfig.savefig('figs/UC_dens.png',dpi =600)
+densfig.savefig('../paper/figs/UC_dens.png',dpi =600)
 
 
-with open('runinfo/ex1_int_auc.out','w') as f:
-    print('NO UNCERTAINTY: %.3f' %auc(s,fpr), file = f)
-    print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)
-    print('THROW: %.3f' %auc(s_t,fpr_t), file = f)
+with open('runinfo/UC_auc.out','w') as f:
+    print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
+    print('MIDPOINTS: %.4f' %auc(nuq_s,nuq_fpr),file = f)
+    print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
     # print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
     
 
@@ -256,8 +224,8 @@ ax.plot3D(fpr_t,s_t,Tau,'#008000',label = '$\\tau$')
 
 ax.legend()
 
-plt.savefig('figs/ex1_int_ROC3D.png',dpi = 600)
-plt.savefig('../paper/figs/ex1_int_ROC3D.png',dpi = 600)
+plt.savefig('figs/UC_ROC3D.png',dpi = 600)
+plt.savefig('../paper/figs/UC_ROC3D.png',dpi = 600)
 plt.clf()
 
 plt.xlabel('$fpr$/$s$')
@@ -267,8 +235,8 @@ plt.plot(fpr_t,Tau,'#008000',label = '$\\tau$ v $fpr$')
 plt.legend()
 
 
-plt.savefig('figs/ex1_int_ST.png',dpi = 600)
-plt.savefig('../paper/figs/ex1_int_ST.png',dpi = 600)
+plt.savefig('figs/UC_ST.png',dpi = 600)
+plt.savefig('../paper/figs/UC_ST.png',dpi = 600)
 
 plt.clf()
 
@@ -280,7 +248,7 @@ hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,g = 10)
 #
 hl_uq, pval_uq = UQ_hosmer_lemeshow_test(ilr,train_data,train_results,g = 10)
 
-with open('runinfo/ex1_int_HL.out','w') as f:
+with open('runinfo/UC_HL.out','w') as f:
     print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
     print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
 

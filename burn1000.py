@@ -158,24 +158,27 @@ with open('runinfo/burn1000_cm.out','w') as f:
    
 
 ### Descriminatory Performance Plots
-s,fpr,probabilities = ROC(model = base, data = train_data, results = results)
+# s,fpr,probabilities = ROC(model = base, data = train_data, results = results)
 
 nuq_s,nuq_fpr,nuq_probabilities = ROC(model = nuq, data = train_data, results = results)
 s_t, fpr_t, Sigma, Tau = incert_ROC(ilr, train_data, results)
 
 s_i, fpr_i,ilr_probabilities = ROC(ilr, train_data, results)
+s_l, fpr_l,ilr_l_probabilities = ROC(ilr, train_data, results, func = lambda x: x.left)
+s_r, fpr_r,ilr_r_probabilities = ROC(ilr, train_data, results, func = lambda x: x.right)
+
 
 densfig,axdens = plt.subplots(nrows = 2, sharex= True)
 
-for i,(p,u,nuqp,r) in enumerate(zip(probabilities,ilr_probabilities,nuq_probabilities,results.to_list())):
+for i,(u,nuqp,r) in enumerate(zip(ilr_probabilities,nuq_probabilities,results.to_list())):
     yd = np.random.uniform(-0.1,0.1)
     if r:
-        axdens[0].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
+
         axdens[0].scatter(nuqp,0.21+yd,color = '#DC143C',marker = 'o',alpha = 0.5)
         axdens[0].plot([*u],[yd-0.21,yd-0.21],color = '#4169E1',alpha = 0.3)
         axdens[0].scatter([*u],[yd-0.21,yd-0.21],color = '#4169E1',marker = '|')
     else:
-        axdens[1].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
+
         axdens[1].scatter(nuqp,0.21+yd,color = '#DC143C',marker = 'o',alpha = 0.5)
         axdens[1].plot([*u],[yd-0.21,yd-0.21],color = '#4169E1',alpha = 0.3)
         axdens[1].scatter([*u],[yd-0.21,yd-0.21],color = '#4169E1',marker = '|')
@@ -187,11 +190,14 @@ axdens[1].set(xlabel = '$\pi(x)$',ylabel = 'Outcome = 0',yticks = [],xlim  = (0,
 densfig.tight_layout()
 
 rocfig,axroc = plt.subplots(1,1)
-axroc.plot([0,1],[0,1],'k:',label = 'Random Classifier')
+axroc.plot([0,1],[0,1],'k:')
 axroc.set(xlabel = '$fpr$',ylabel='$s$')
-axroc.plot(fpr,s,'k',label = 'Base')
-axroc.plot(nuq_fpr,nuq_s,color='#DC143C',linestyle='--',label='Ignored Uncertainty')
-axroc.plot(fpr_t,s_t,'#4169E1',label='Imprecise Model')
+# axroc.plot(fpr,s,'k',label = 'Base')
+axroc.plot(nuq_fpr,nuq_s,color='#DC143C',label='Ignored Uncertainty')
+axroc.plot(fpr_t,s_t,'#4169E1',label='Imprecise (No Predict.)')
+axroc.plot(fpr_l,s_l,'#FF8827',label='Lower Bound')
+axroc.plot(fpr_r,s_r,'#007e00',label='Upper Bound')
+
 axroc.legend()
 rocfig.savefig('figs/burn1000_ROC.png',dpi = 600)
 rocfig.savefig('../paper/figs/burn1000_ROC.png',dpi = 600)
@@ -200,9 +206,11 @@ densfig.savefig('../paper/figs/burn1000_dens.png',dpi =600)
 
 
 with open('runinfo/burn1000_auc.out','w') as f:
-    print('NO UNCERTAINTY: %.3f' %auc(s,fpr), file = f)
     print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)
-    print('THROW: %.3f' %auc(s_t,fpr_t), file = f)
+    print('NP: %.3f' %auc(s_t,fpr_t), file = f)
+    print('LB: %.3f' %auc(s_l,fpr_l), file = f)
+    print('UB: %.3f' %auc(s_r,fpr_r), file = f)
+
     # print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
     
 
