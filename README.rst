@@ -42,8 +42,8 @@ __________
         Actual number of interations for all LR models in the set 
 
 
-**Methods**
-
+Methods
+_______
 
 +--------------------------------------------+-------------------------------------------------------------+
 | `decision_function(X)`_                    | Predict confidence scores for samples.                      |
@@ -103,7 +103,7 @@ Returns
 See `scikit-learn.linear_model.LogisticRegression().densify()`_
 
 ``fit(X, y, sample_weight = None, catagorical = [])``
-_____________________________________________________
+------------------------------------------------------
 
 .. _fit(X, y, sample_weight, catagorical):
 
@@ -203,7 +203,7 @@ Returns
 See `scikit-learn.linear_model.LogisticRegression().predict_proba()`_
 
 ``score(X, y , sample_weight)``
-_______________________________
+-------------------------------
 
 .. _`score(X, y , sample_weight)`:
 
