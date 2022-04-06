@@ -159,7 +159,7 @@ def _int_data(data,results,sample_weight,catagorical,params, nested = False) -> 
     uq = [(i,c) for i in data.index for c in data.columns if data.loc[i,c].__class__.__name__ == 'Interval']
                     
     
-    def get_vals_from_intervals(r,data,uq,cat):
+    def get_vals_from_intervals(r,data,uq,cat=[]):
 
         ndata = data.copy()
         
@@ -172,51 +172,42 @@ def _int_data(data,results,sample_weight,catagorical,params, nested = False) -> 
         return ndata
 
 
-    def find_bounds(r, data, results, uq, params, ci, mm, n = 0, cat = None) -> float:
+    def find_bounds(r, data, results, uq, params,ci, mm, n = 0, cat = []) -> float:
         lr = LogisticRegression(**params).fit(get_vals_from_intervals(r,data, uq,cat),results)
 
         if ci == 'intercept':
             if mm == 'min':
-                print(f'{lr.intercept_[0]:.4f}',end='\r')
-                return lr.intercept_[0]
+                return  lr.intercept_[0]
             else:
-                print(f'{lr.intercept_[0]:.4f}',end='\r')
-                return -lr.intercept_[0]
+                return  -lr.intercept_[0]
         else:
             if mm == 'min':
-                print(f'{lr.coef_[:,n]}',end='\r')
-                return lr.coef_[:,n]
+                return  lr.coef_[:,n]
             else:
-                print(f'{lr.coef_[:,n]}',end='\r')
-                return -lr.coef_[n]
-            
-            
-    
+                return  -lr.coef_[:,n]
+          
+    def find_xlr_model(data, results, uq, params,s,b ,ci, mm, n = 0, cat = []):
+        method = 'Nelder-Mead'
+        bounds = so.minimize(find_bounds, np.ones(s), args = (data,results, uq,params, ci, mm),bounds = b, method=method)
+        return LogisticRegression(**params).fit(get_vals_from_intervals(bounds.x,data, uq),results)
+        
     s = len(uq)
     b = s*[(0,1)]
-    
     t = tqdm(total = 2+2*len(data.columns))
-    # r_min_intercept = so.minimize(find_bounds, np.zeros(s), args = (data,results, uq,params, 'intercept', 'min'),bounds = b, method='L-BFGS-B')
-    t.update()
-    # r_max_intercept = so.minimize(find_bounds, np.ones(s), args = (data,results, uq,params, 'intercept', 'max'),bounds = b, method='L-BFGS-B')
-    t.update()
-    r_min_coef = {'r_min_coef_{i}': so.minimize(find_bounds, np.ones(s), args = (data,results, uq,params,'coef','min',i,catagorical),bounds = b, method='L-BFGS-B') for i,c in enumerate(data.columns)}
-    t.update()
-    r_max_coef = {'r_max_coef_{i}': so.minimize(find_bounds, np.zeros(s), args = (data,results, uq,params,'coef','max',i,catagorical),bounds = b, method='L-BFGS-B') for i,c in enumerate(data.columns)}
-    t.update()
-    
-    
+    t.update(2)
+
     models = {
-        **{
         'leftmost': LogisticRegression(**params).fit(get_vals_from_intervals([0]*s,data,uq),results),
         'rightmost': LogisticRegression(**params).fit(get_vals_from_intervals([1]*s,data,uq),results),
-        'r_max_intercept': LogisticRegression(**params).fit(get_vals_from_intervals(r_max_intercept.x,data, uq),results), 
-        'r_min_intercept': LogisticRegression(**params).fit(get_vals_from_intervals(r_min_intercept.x,data, uq),results)       
-        },
-        **{k: LogisticRegression(**params).fit(get_vals_from_intervals(v.x,data, uq),results) for k,v in r_min_coef.items()},
-        **{k: LogisticRegression(**params).fit(get_vals_from_intervals(v.x,data, uq),results) for k,v in r_max_coef.items()}
-        }
+    }
     
+    for mm in ['min','max']:
+        models[f'r_{mm}_intercept'] = find_xlr_model(data, results, uq, params,s,b, 'intercept', mm)
+        t.update()
+        for i,c in enumerate(data.columns):
+            models[f'r_{mm}_coef_{i}'] = find_xlr_model(data, results, uq, params,s,b, 'coef',mm,i,catagorical)
+            t.update()
+        
     return models
 
 def _uc_int(data, results, uncertain, sample_weight, catagorical, params) -> dict:
