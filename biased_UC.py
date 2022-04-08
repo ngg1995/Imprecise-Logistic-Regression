@@ -75,10 +75,10 @@ for i in uq_data_index:
 plt.plot(lX,[i.left for i in lYu],color='#4169E1',lw=2)
 plt.plot(lX,[i.right for i in lYu],color='#4169E1',lw=2,label = 'Uncertainty Bounds')
 
-plt.savefig('../paper/figs/biased_UC.png',dpi = 600)
-plt.savefig('figs/biased_UC.png',dpi = 600)
-
-plt.clf()
+# plt.savefig('../paper/figs/biased_UC.png',dpi = 600)
+# plt.savefig('figs/biased_UC.png',dpi = 600)
+plt.show()
+# plt.clf()
 
 
 
