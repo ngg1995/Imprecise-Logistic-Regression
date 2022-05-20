@@ -5,7 +5,6 @@ from sklearn.linear_model import LogisticRegression
 import itertools as it
 from tqdm import tqdm
 import pba
-import tikzplotlib
 import random
 
 import matplotlib
@@ -131,7 +130,7 @@ for jj, UQdata in zip([0,1,2],UQdatasets):
     plt.plot(lX,[i.left for i in lYu],color='#4169E1',lw=2)
     plt.plot(lX,[i.right for i in lYu],color='#4169E1',lw=2,label = 'Uncertainty Bounds')
 
-    plt.savefig('../paper/figs/biased_int_%i.png'%jj,dpi = 600)
+    plt.savefig('../LR-paper/figs/biased_int_%i.png'%jj,dpi = 600)
     plt.savefig('figs/biased_int_%i.png'%jj,dpi = 600)
 
     plt.clf()

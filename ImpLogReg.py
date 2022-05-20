@@ -45,7 +45,7 @@ class ImpLogReg:
         for k,m in self.models.items():
             self.models[k] = m.densify()
             
-    def fit(self, data, results ,sample_weight=None, catagorical = [],old = False):
+    def fit(self, data, results ,sample_weight=None, catagorical = []):
         
         self.params.update({k:v for k,v in self.__dict__.items() if k in self.params.keys()})
         
@@ -68,11 +68,7 @@ class ImpLogReg:
             if self.uncertain_data:
                 self.models = _uc_int(labeled_data, labeled_results, unlabeled_data, sample_weight, catagorical, self.params)
             else:
-                if old:
-                    
-                    self.models = _uncertain_class_old(labeled_data, labeled_results, unlabeled_data, sample_weight = sample_weight, nested = False, params = self.params)
-                else:
-                    self.models = _uncertain_class(labeled_data, labeled_results, unlabeled_data, sample_weight = sample_weight, nested = False, params = self.params)
+                self.models = _uncertain_class(labeled_data, labeled_results, unlabeled_data, sample_weight = sample_weight, nested = False, params = self.params)
             
         elif self.uncertain_data:
             self.models = _int_data(data,results,sample_weight,catagorical,self.params)
@@ -161,7 +157,7 @@ def _uncertain_class(data: pd.DataFrame, result: pd.Series, uncertain: pd.DataFr
           
     def find_xlr_model(data, results,  params,s,b ,ci, mm, n = 0):
         method = 'TNC'
-        bounds = so.minimize(find_bounds, np.ones(s), args = (data,results, params, ci, mm, n),bounds = b, method=method)
+        bounds = so.minimize(find_bounds, 0.5*np.ones(s), args = (data,results, params, ci, mm, n),bounds = b, method=method)
         new_results = pd.concat((results, pd.Series(np.round(bounds.x))), ignore_index = True).convert_dtypes(bool)
         return LogisticRegression(**params).fit(data.to_numpy(),new_results.to_numpy(dtype=bool))
         
@@ -223,18 +219,24 @@ def _int_data(data,results,sample_weight,catagorical,params, nested = False) -> 
           
     def find_xlr_model(data, results, uq, params,s,b ,ci, mm, n = 0, cat = []):
         method = 'Nelder-Mead'
-        bounds = so.minimize(find_bounds, np.ones(s), args = (data,results, uq,params, ci, mm),bounds = b, method=method)
+        bounds = so.minimize(find_bounds, 0.5*np.ones(s), args = (data,results, uq,params, ci, mm),bounds = b, method=method)
         return LogisticRegression(**params).fit(get_vals_from_intervals(bounds.x,data, uq),results)
         
     s = len(uq)
+    n = len(data.columns)
+    m = len({c for _,c in uq})
     b = s*[(0,1)]
-    t = tqdm(total = 2+2*len(data.columns))
-    t.update(2)
+    t = tqdm(total = 2**m+2*n+2)
+    # t.update(2)
 
-    models = {
-        'leftmost': LogisticRegression(**params).fit(get_vals_from_intervals([0]*s,data,uq),results),
-        'rightmost': LogisticRegression(**params).fit(get_vals_from_intervals([1]*s,data,uq),results),
-    }
+    models = {}
+    
+    for i in it.product([0,1],repeat=1):
+        x = {c:v for c,v in zip(data.columns,i)}
+        r = [x[c] for _,c in uq]
+        models[str(i)] = LogisticRegression(**params).fit(get_vals_from_intervals(r,data,uq),results)
+        t.update()
+
     
     for mm in ['min','max']:
         models[f'r_{mm}_intercept'] = find_xlr_model(data, results, uq, params,s,b, 'intercept', mm)
@@ -266,11 +268,11 @@ def _uc_int(data, results, uncertain, sample_weight, catagorical, params) -> dic
                 ndata.loc[i,c] = ndata.loc[i,c].left + v*ndata.loc[i,c].width()
         
         nresults = pd.concat((results, pd.Series(np.round(j))), ignore_index = True).convert_dtypes()
-        
-        return ndata, nresults
+
+        return ndata.to_numpy(), nresults.to_numpy(dtype = bool)
 
     def find_bounds(r, data, results, uq, params,ci, mm, n = 0, cat = []) -> float:
-        lr = LogisticRegression(**params).fit(get_vals_from_intervals(r,data, uq,cat),results)
+        lr = LogisticRegression(**params).fit(*get_vals_from_intervals(r,data, results, uq, cat))
 
         if ci == 'intercept':
             if mm == 'min':
@@ -283,18 +285,22 @@ def _uc_int(data, results, uncertain, sample_weight, catagorical, params) -> dic
             else:
                 return  -lr.coef_[:,n]
           
-    def find_xlr_model(data, results, uq, params,s,b ,ci, mm, n = 0, cat = []):
+    def find_xlr_model(init, data, results, uq, params,s,b ,ci, mm, n = 0, cat = []):
         method = 'Nelder-Mead'
-        bounds = so.minimize(find_bounds, np.ones(s), args = (data,results, uq,params, ci, mm),bounds = b, method=method)
-        return LogisticRegression(**params).fit(get_vals_from_intervals(bounds.x,data, uq),results)
+        bounds = so.minimize(find_bounds, init, args = (data,results, uq,params, ci, mm),bounds = b, method=method)
+        return LogisticRegression(**params).fit(*get_vals_from_intervals(bounds.x,data, results, uq, cat))
     
     models = {}
-    
-    for mm in ['min','max']:
-        models[f'r_{mm}_intercept'] = find_xlr_model(data, results, uq, params,s,b, 'intercept', mm)
-        t.update()
-        for i,c in enumerate(data.columns):
-            models[f'r_{mm}_coef_{i}'] = find_xlr_model(data, results, uq, params,s,b, 'coef',mm,i,catagorical)
+    s = len(uq) + len(uncertain)
+    b = s*[(0,1)]
+    t = tqdm(total = 3*2*2*len(data.columns))
+    for j in [0,.5,1]:
+        init = j*np.ones(s)
+        for mm in ['min','max']:
+            models[f'r_{mm}_intercept({j})'] = find_xlr_model(init, new_data, results, uq, params,s,b, 'intercept', mm)
             t.update()
+            for i,c in enumerate(data.columns):
+                models[f'r_{mm}_coef_{i}({j})'] = find_xlr_model(init, new_data, results, uq, params,s,b, 'coef',mm,i,catagorical)
+                t.update()
         
     return models

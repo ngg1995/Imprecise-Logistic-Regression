@@ -68,13 +68,13 @@ UQdata = pd.DataFrame({
     **{c: train_data[c] for c in train_data.columns if c not in ("INH_INJ",'AGE')},
     }, index = data.index, dtype = 'O').reindex(columns = train_data.columns)
 UQdata.to_csv('burn_uq.csv')
-# uq_results = pd.Series([int(results.loc[i]) if i not in uq_data_index else pba.I(0,1) for i in results.index], index = results.index, dtype='O')
+uq_results = pd.Series([int(results.loc[i]) if i not in uq_data_index else pba.I(0,1) for i in results.index], index = results.index, dtype='O')
 
 ### Fit logistic regression model on full dataset
 base = LogisticRegression(max_iter=1000)
 base.fit(train_data.to_numpy(),results.to_numpy())
 
-### Fit models with none UQ data data
+### Fit models with none UQ data
 nuq_data =  deintervalise(UQdata.loc[[i for i in data.index if i not in [*u_index,*uq_data_index]]],["INH_INJ"])
 nuq_results = results.loc[[i for i in data.index if i not in [*u_index,*uq_data_index]]]
 nuq = LogisticRegression(max_iter=1000)
@@ -82,8 +82,8 @@ nuq.fit(nuq_data.to_numpy(),nuq_results.to_numpy())
 
 ### Fit UQ models
 # uq_models = uc_int_logistic_regression(UQdata,results.drop(uq_data_index),results.loc[uq_data_index],binary_cols = ["INH_INJ"],uq_data_index=uq_data_index)
-ilr = ImpLogReg(max_iter = 1000, uncertain_class=0, uncertain_data=True)
-ilr.fit(UQdata, results, catagorical=["INH_INJ"])
+ilr = ImpLogReg(max_iter = 1000, uncertain_class=True, uncertain_data=True)
+ilr.fit(UQdata, uq_results, catagorical=["INH_INJ"])
 
 ### Get confusion matrix
 # Classify test data
@@ -200,9 +200,9 @@ axroc.plot(fpr_r,s_r,'#007e00',label='Upper Bound')
 
 axroc.legend()
 rocfig.savefig('figs/burn1000_ROC.png',dpi = 600)
-# rocfig.savefig('../paper/figs/burn1000_ROC.png',dpi = 600)
+rocfig.savefig('../LR-paper/figs/burn1000_ROC.png',dpi = 600)
 densfig.savefig('figs/burn1000_dens.png',dpi =600)
-# densfig.savefig('../paper/figs/burn1000_dens.png',dpi =600)
+densfig.savefig('../LR-paper/figs/burn1000_dens.png',dpi =600)
 
 
 with open('runinfo/burn1000_auc.out','w') as f:
@@ -227,8 +227,8 @@ ax.plot3D(fpr_t,s_t,Tau,'#008000',label = '$\\tau$')
 
 ax.legend()
 
-# plt.savefig('figs/burn1000_ROC3D.png',dpi = 600)
-# plt.savefig('../paper/figs/burn1000_ROC3D.png',dpi = 600)
+plt.savefig('figs/burn1000_ROC3D.png',dpi = 600)
+plt.savefig('../LR-paper/figs/burn1000_ROC3D.png',dpi = 600)
 plt.clf()
 
 plt.xlabel('$fpr$/$s$')
@@ -238,8 +238,8 @@ plt.plot(fpr_t,Tau,'#008000',label = '$\\tau$ v $fpr$')
 plt.legend()
 
 
-# plt.savefig('figs/burn1000_ST.png',dpi = 600)
-# plt.savefig('../paper/figs/burn1000_ST.png',dpi = 600)
+plt.savefig('figs/burn1000_ST.png',dpi = 600)
+plt.savefig('../LR-paper/figs/burn1000_ST.png',dpi = 600)
 
 plt.clf()
 
