@@ -18,8 +18,11 @@ from LRF import *
 
 # colors
 col_precise = 'black'
-col_points = 'grey'
+col_points = '#A69888'
 col_ilr = '#4169E1'
+col_ilr2 = '#5d2e46'
+col_ilr3 = '#F7AEF8'
+col_ilr4 = '#132E32'
 col_mid = '#DC143C'
 
 def intervalise(val,eps,method,b=0.5,bounds = None):
@@ -73,7 +76,7 @@ random.seed(s)
 
 # Params
 some = 50 # training datapoints
-many = 500 # many test samples
+many = 100 # many test samples
 
 train_data = pd.DataFrame(10*np.random.rand(some,1))
 train_results = generate_results(train_data)
@@ -90,7 +93,7 @@ base.fit(train_data.to_numpy(),train_results.to_numpy())
 eps = 0.375
 
 UQdata = pd.DataFrame({
-    0:[intervalise(train_data.iloc[i,0],eps,'u',0.8,(0,10)) for i in train_data.index]
+    0:[intervalise(train_data.iloc[i,0],eps,'t',0.8,bounds = (0,10)) for i in train_data.index]
     }, dtype = 'O')
 
 #%%
@@ -122,8 +125,8 @@ lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
 plt.xlabel('$x$')
 plt.ylabel('$\pi(x)$')
 # plt.scatter(nuq_data,train_results,color='grey',zorder=10)
-plt.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = 'Truth')
-plt.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = 'No UQ')
+plt.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = '$\mathcal{LR}(D)$')
+plt.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = '$\mathcal{LR}(E_m)$')
 
 for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
     yd = np.random.uniform(-0.05,0.05)
@@ -135,12 +138,11 @@ for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
 #     plt.plot(lX, lYi,color='#00F',lw=1,linestyle='dotted')
     
 plt.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
-plt.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = 'Uncertainty Bounds')
-
+plt.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = '$\mathcal{ILR}(E)$')
 plt.savefig('../LR-paper/figs/features.png',dpi = 600)
 plt.savefig('figs/features.png',dpi = 600)
 
-# plt.clf()
+plt.clf()
 
 
 
@@ -216,12 +218,7 @@ with open('runinfo/features_cm.out','w') as f:
     print('sigma = %.3f' %(eee/(aaa+ccc+eee)),file = f)
     print('tau = %.3f' %(fff/(bbb+ddd+fff)),file = f)
    
-
-
-
 # %% [markdown]
-### Descriminatory Performance Plots
-
 s,fpr,probabilities = ROC(model = base, data = test_data, results = test_results)
 nuq_s,nuq_fpr,nuq_probabilities = ROC(model = nuq, data = test_data, results = test_results)
 s_t, fpr_t, Sigma, Tau = incert_ROC(ilr, test_data, test_results)
@@ -234,27 +231,47 @@ for i,(p,u,nuqp,r) in enumerate(zip(probabilities,ilr_probabilities,nuq_probabil
     yd = np.random.uniform(-0.1,0.1)
     if r:
         axdens[0].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
-        axdens[0].scatter(nuqp,0.21+yd,color = '#DC143C',marker = 'o',alpha = 0.5)
-        axdens[0].plot([*u],[yd-0.21,yd-0.21],color = '#4169E1',alpha = 0.3)
-        axdens[0].scatter([*u],[yd-0.21,yd-0.21],color = '#4169E1',marker = '|')
+        axdens[0].scatter(nuqp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
+        axdens[0].plot([*u],[yd-0.21,yd-0.21],color = col_ilr, alpha = 0.3)
+        axdens[0].scatter([*u],[yd-0.21,yd-0.21],color = col_ilr, marker = '|')
     else:
         axdens[1].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
-        axdens[1].scatter(nuqp,0.21+yd,color = '#DC143C',marker = 'o',alpha = 0.5)
-        axdens[1].plot([*u],[yd-0.21,yd-0.21],color = '#4169E1',alpha = 0.3)
-        axdens[1].scatter([*u],[yd-0.21,yd-0.21],color = '#4169E1',marker = '|')
+        axdens[1].scatter(nuqp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
+        axdens[1].plot([*u],[yd-0.21,yd-0.21],color = col_ilr, alpha = 0.3)
+        axdens[1].scatter([*u],[yd-0.21,yd-0.21],color = col_ilr, marker = '|')
         
         
-axdens[0].set(ylabel = 'Outcome = 1',yticks = [])
-axdens[1].set(xlabel = '$\pi(x)$',ylabel = 'Outcome = 0',yticks = [],xlim  = (0, 1))
+axdens[0].set(ylabel = '1',yticks = [])
+axdens[1].set(xlabel = '$\pi(x)$',ylabel = '0',yticks = [],xlim  = (0, 1))
 
 densfig.tight_layout()
 
 rocfig,axroc = plt.subplots(1,1)
-axroc.plot([0,1],[0,1],'k:',label = 'Random Classifier')
+
+xl = []
+xu = []
+yl = []
+yu = []
+for i,j in zip(fpr_i,s_i):
+    
+    if not isinstance(i,pba.Interval):
+        i = pba.I(i)
+    if not isinstance(j,pba.Interval):
+        j = pba.I(j)
+      
+    xl.append(i.left  )
+    xu.append(i.right  )
+    
+    yl.append(j.left)
+    yu.append(j.right)
+    
+axroc.plot(xl,yu, col_ilr,label = '$\mathcal{ILR}(E)$')
+axroc.plot(xu,yl, col_ilr )
+axroc.plot([0,1],[0,1],linestyle = ':',color=col_points)
 axroc.set(xlabel = '$fpr$',ylabel='$s$')
-axroc.plot(fpr,s,'k',label = 'Base')
-axroc.plot(nuq_fpr,nuq_s,color='#DC143C',linestyle='--',label='Ignored Uncertainty')
-axroc.plot(fpr_t,s_t,'#4169E1',label='Imprecise Model')
+axroc.plot(fpr,s,color=col_precise,label = '$\mathcal{LR}(D)$')
+axroc.plot(nuq_fpr,nuq_s,color=col_mid,label='$\mathcal{LR}(E_m)$')
+axroc.plot(fpr_t,s_t,col_ilr2,label='$\mathcal{ILR}(E)$ (Predictive)')
 axroc.legend()
 rocfig.savefig('figs/features_ROC.png',dpi = 600)
 rocfig.savefig('../LR-paper/figs/features_ROC.png',dpi = 600)
@@ -275,9 +292,9 @@ ax = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
 ax.set_xlabel('$fpr$')
 ax.set_ylabel('$s$')
 # ax.set_zlabel('$1-\sigma,1-\\tau$')
-ax.plot(fpr_t,s_t,'#4169E1',alpha = 0.5)
-ax.plot3D(fpr_t,s_t,Sigma,'#FF8C00',label = '$\\sigma$')
-ax.plot3D(fpr_t,s_t,Tau,'#008000',label = '$\\tau$')
+ax.plot(fpr_t,s_t,col_ilr2,alpha = 0.5)
+ax.plot3D(fpr_t,s_t,Sigma,col_ilr3,label = '$\\sigma$')
+ax.plot3D(fpr_t,s_t,Tau,col_ilr4,label = '$\\tau$')
 # ax.plot3D(fpr,s,Nu,'k',label = '$1-\\nu$')
 
 ax.legend()
@@ -288,8 +305,8 @@ plt.clf()
 
 plt.xlabel('$fpr$/$s$')
 plt.ylabel('$\\sigma$/$\\tau$')
-plt.plot(s_t,Sigma,'#FF8C00',label = '$\\sigma$ v $s$')
-plt.plot(fpr_t,Tau,'#008000',label = '$\\tau$ v $fpr$')
+plt.plot(s_t,Sigma,col_ilr3,label = '$\\sigma$ v $s$')
+plt.plot(fpr_t,Tau,col_ilr4,label = '$\\tau$ v $fpr$')
 plt.legend()
 
 
@@ -299,19 +316,19 @@ plt.savefig('../LR-paper/figs/features_ST.png',dpi = 600)
 plt.clf()
 
 
+# # %% [markdown]
+# ### Hosmer-Lemeshow
 
+# hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,g = 10)
 
-# %% [markdown]
-### Hosmer-Lemeshow
+# hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,g = 10)
+# #
+# hl_uq, pval_uq = UQ_hosmer_lemeshow_test(ilr,train_data,train_results,g = 10)
 
-hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,g = 10)
+# with open('runinfo/features_HL.out','w') as f:
+#     print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
+#     print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
 
-hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,g = 10)
-#
-hl_uq, pval_uq = UQ_hosmer_lemeshow_test(ilr,train_data,train_results,g = 10)
+#     print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 
 
-with open('runinfo/features_HL.out','w') as f:
-    print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
-    print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
-
-    print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 
+# %%

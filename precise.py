@@ -8,13 +8,17 @@ import pba
 import random
 from LRF import *
 
-import matplotlib
-font = {'size'   : 14,'family' : 'Times New Roman'}
-matplotlib.rc('font', **font)
+# import matplotlib
+# font = {'size'   : 14,'family' : 'Times New Roman'}
+# matplotlib.rc('font', **font)
 
+# colors
 col_precise = 'black'
-col_points = 'grey'
+col_points = '#A69888'
 col_ilr = '#4169E1'
+col_ilr2 = '#5d2e46'
+col_ilr3 = '#F7AEF8'
+col_ilr4 = '#132E32'
 col_mid = '#DC143C'
 
 def generate_results(data):
@@ -37,7 +41,7 @@ random.seed(s)
 
 # Params
 some = 50 # training datapoints
-many = 500 # many test samples
+many = 100 # many test samples
 
 train_data = pd.DataFrame(10*np.random.rand(some,1))
 train_results = generate_results(train_data)
@@ -56,9 +60,9 @@ lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
 
 plt.xlabel('$x$')
 plt.ylabel('$\pi(x)$')
-plt.scatter(train_data,train_results,color='grey',zorder=10)
+plt.scatter(train_data,train_results,color=col_points,zorder=10)
 # plt.scatter(test_data,test_results,color='green',zorder=10)
-plt.plot(lX,lY,color='k',zorder=10,lw=2)
+plt.plot(lX,lY,color=col_precise,zorder=10,lw=2)
 plt.savefig('figs/precise.png',dpi = 600)
 plt.savefig('../LR-paper/figs/precise.png',dpi = 600)
 plt.clf()
@@ -84,10 +88,10 @@ axdens.scatter(predictions,test_results+np.random.uniform(-0.05,0.05,len(predict
 axdens.set(xlabel = '$\pi(x)$',ylabel = 'Outcome',yticks = [0,1],xlim  = (0, 1))
 
 
-axroc.plot([0,1],[0,1],'k:',label = 'Random Classifier')
+axroc.plot([0,1],[0,1],linestyle = ':',color=col_points,label = 'Random Classifier')
 axroc.set(xlabel = '$fpr$',ylabel='$s$')
-axroc.plot(fpr,s,'k')
-
+axroc.plot(fpr,s,color = col_precise, label = '$\mathcal{LR}(D)$')
+axroc.legend()
 rocfig.savefig('figs/precise_ROC.png',dpi = 600)
 rocfig.savefig('../LR-paper/figs/precise_ROC.png',dpi = 600)
 densfig.savefig('figs/precise_dens.png',dpi = 600)
@@ -97,7 +101,7 @@ with open('runinfo/precise_auc.out','w') as f:
     print('AUC: %.4f' %auc(s,fpr), file = f)
 
 
-### Hosmer-Lemeshow
-hl, pval = hosmer_lemeshow_test(base,train_data,train_results,g = 10)
-with open('runinfo/precise_HL.out','w') as f:
-    print('hl = %.3f, p = %.5f' %(hl,pval),file = f) 
+# ### Hosmer-Lemeshow
+# hl, pval = hosmer_lemeshow_test(base,train_data,train_results,g = 10)
+# with open('runinfo/precise_HL.out','w') as f:
+#     print('hl = %.3f, p = %.5f' %(hl,pval),file = f) 
