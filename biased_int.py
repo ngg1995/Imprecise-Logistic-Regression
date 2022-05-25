@@ -8,8 +8,14 @@ import pba
 import random
 
 import matplotlib
-font = {'size'   : 14}
-matplotlib.rc('font', **font)
+
+col_precise = 'black'
+col_points = '#A69888'
+col_ilr = '#4169E1'
+col_ilr2 = '#5d2e46'
+col_ilr3 = '#FF8C00'
+col_ilr4 = '#008000'
+col_mid = '#DC143C'
 
 from LRF import *
 from ImpLogReg import *
@@ -119,16 +125,16 @@ for jj, UQdata in zip([0,1,2],UQdatasets):
     plt.xlabel('$x$')
     plt.ylabel('$\pi(x)$')
 
-    plt.plot(lX,lY,color='k',zorder=10,lw=2,label = 'Truth')
-    plt.plot(lX,lYn,color='#DC143C',zorder=10,lw=2,label = 'No UQ')
+    plt.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = 'Truth')
+    plt.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = 'No UQ')
 
     for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
         yd = np.random.uniform(-0.05,0.05)
         # plt.plot(m,r+yd,color = 'b',marker = 'x')
-        plt.plot([u.left,u.right],[r+yd,r+yd],color = 'grey', marker='|')
+        plt.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
         
-    plt.plot(lX,[i.left for i in lYu],color='#4169E1',lw=2)
-    plt.plot(lX,[i.right for i in lYu],color='#4169E1',lw=2,label = 'Uncertainty Bounds')
+    plt.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
+    plt.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = 'Uncertainty Bounds')
 
     plt.savefig('../LR-paper/figs/biased_int_%i.png'%jj,dpi = 600)
     plt.savefig('figs/biased_int_%i.png'%jj,dpi = 600)
@@ -136,15 +142,15 @@ for jj, UQdata in zip([0,1,2],UQdatasets):
     plt.clf()
 
 
-    ### Hosmer-Lemeshow
-    hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,g = 10)
+    # ### Hosmer-Lemeshow
+    # hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,g = 10)
 
-    hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,g = 10)
-    #
-    hl_uq, pval_uq = UQ_hosmer_lemeshow_test(ilr,train_data,train_results,g = 10)
+    # hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,g = 10)
+    # #
+    # hl_uq, pval_uq = UQ_hosmer_lemeshow_test(ilr,train_data,train_results,g = 10)
 
-    with open('runinfo/biased_int_HL_%i.out'%jj,'w') as f:
-        print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
-        print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
+    # with open('runinfo/biased_int_HL_%i.out'%jj,'w') as f:
+    #     print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
+    #     print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
 
-        print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 
+    #     print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 

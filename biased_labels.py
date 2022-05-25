@@ -8,6 +8,13 @@ import random
 from ImpLogReg import *
 from LRF import *
 
+col_precise = 'black'
+col_points = '#A69888'
+col_ilr = '#4169E1'
+col_ilr2 = '#5d2e46'
+col_ilr3 = '#FF8C00'
+col_ilr4 = '#008000'
+col_mid = '#DC143C'
 
 def generate_results(data):
     # set seed for reproducability
@@ -61,37 +68,34 @@ lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
 lYn = nuq.predict_proba(lX.reshape(-1, 1))[:,1]
 lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
 
+
 plt.xlabel('$x$')
 plt.ylabel('$\pi(x)$')
-plt.scatter(nuq_data,nuq_results,color='grey',zorder=10)
-# plt.plot(lX,lY,color='k',zorder=10,lw=2,label = 'Truth')
-plt.plot(lX,lYn,color='#DC143C',zorder=10,lw=2,label = 'No UQ')
-
+plt.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = '$\mathcal{LR}(D)$') 
+plt.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = '$\mathcal{LR}(F_\\times)$') 
+plt.scatter(nuq_data,nuq_results,color=col_points,zorder=10)
 for i in uq_data_index:
 
     plt.plot([uq_data.loc[i],uq_data.loc[i]],[0,1],color='grey')
-    plt.scatter(uq_data.loc[i],results.loc[i],marker = 'd',color = 'black',zorder = 14)
-    
-plt.plot(lX,[i.left for i in lYu],color='#4169E1',lw=2)
-plt.plot(lX,[i.right for i in lYu],color='#4169E1',lw=2,label = 'Uncertainty Bounds')
+    # plt.scatter(uq_data.loc[i],train_results.loc[i],marker = 'd',color = 'grey',zorder = 14)
+
+plt.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
+plt.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = '$\mathcal{ILR}(F)$')
 
 plt.savefig('../LR-paper/figs/biased_labels.png',dpi = 600)
 plt.savefig('figs/biased_labels.png',dpi = 600)
 # plt.show()
 # plt.clf()
 
+# ### Hosmer-Lemeshow
+# hl_b, pval_b = hosmer_lemeshow_test(base,data,results,g = 10)
 
+# hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,data,results,g = 10)
+# #
+# hl_uq, pval_uq = UQ_hosmer_lemeshow_test(ilr,data,results,g = 10)
 
+# with open('runinfo/biased_UC_HL.out','w') as f:
+#     print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
+#     print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
 
-### Hosmer-Lemeshow
-hl_b, pval_b = hosmer_lemeshow_test(base,data,results,g = 10)
-
-hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,data,results,g = 10)
-#
-hl_uq, pval_uq = UQ_hosmer_lemeshow_test(ilr,data,results,g = 10)
-
-with open('runinfo/biased_UC_HL.out','w') as f:
-    print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
-    print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
-
-    print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 
+#     print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 

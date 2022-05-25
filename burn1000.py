@@ -1,3 +1,4 @@
+# %%
 from ImpLogReg import ImpLogReg
 import pandas as pd
 import numpy as np
@@ -9,8 +10,14 @@ from tqdm import tqdm
 import pba
 
 import matplotlib
-font = {'size'   : 14}
-matplotlib.rc('font', **font)
+
+col_precise = 'black'
+col_points = '#A69888'
+col_ilr = '#4169E1'
+col_ilr2 = '#5d2e46'
+col_ilr3 = '#FF8C00'
+col_ilr4 = '#008000'
+col_mid = '#DC143C'
 
 from LRF import *
 
@@ -80,11 +87,13 @@ nuq_results = results.loc[[i for i in data.index if i not in [*u_index,*uq_data_
 nuq = LogisticRegression(max_iter=1000)
 nuq.fit(nuq_data.to_numpy(),nuq_results.to_numpy())
 
+#%%
 ### Fit UQ models
 # uq_models = uc_int_logistic_regression(UQdata,results.drop(uq_data_index),results.loc[uq_data_index],binary_cols = ["INH_INJ"],uq_data_index=uq_data_index)
 ilr = ImpLogReg(max_iter = 1000, uncertain_class=True, uncertain_data=True)
 ilr.fit(UQdata, uq_results, catagorical=["INH_INJ"])
 
+#%%
 ### Get confusion matrix
 # Classify test data
 base_predict = base.predict(train_data)
@@ -156,7 +165,7 @@ with open('runinfo/burn1000_cm.out','w') as f:
     print('sigma = %.3f' %(eee/(aaa+ccc+eee)),file = f)
     print('tau = %.3f' %(fff/(bbb+ddd+fff)),file = f)
    
-
+#%%
 ### Descriminatory Performance Plots
 # s,fpr,probabilities = ROC(model = base, data = train_data, results = results)
 
@@ -167,19 +176,19 @@ s_i, fpr_i,ilr_probabilities = ROC(ilr, train_data, results)
 s_l, fpr_l,ilr_l_probabilities = ROC(ilr, train_data, results, func = lambda x: x.left)
 s_r, fpr_r,ilr_r_probabilities = ROC(ilr, train_data, results, func = lambda x: x.right)
 
-
+#%%
 densfig,axdens = plt.subplots(nrows = 2, sharex= True)
 
 for i,(u,nuqp,r) in enumerate(zip(ilr_probabilities,nuq_probabilities,results.to_list())):
     yd = np.random.uniform(-0.1,0.1)
     if r:
 
-        axdens[0].scatter(nuqp,0.21+yd,color = '#DC143C',marker = 'o',alpha = 0.5)
-        axdens[0].plot([*u],[yd-0.21,yd-0.21],color = '#4169E1',alpha = 0.3)
-        axdens[0].scatter([*u],[yd-0.21,yd-0.21],color = '#4169E1',marker = '|')
+        axdens[0].scatter(nuqp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
+        axdens[0].plot([*u],[yd-0.21,yd-0.21],color = col_ilr,alpha = 0.3)
+        axdens[0].scatter([*u],[yd-0.21,yd-0.21],color = col_ilr,marker = '|')
     else:
 
-        axdens[1].scatter(nuqp,0.21+yd,color = '#DC143C',marker = 'o',alpha = 0.5)
+        axdens[1].scatter(nuqp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
         axdens[1].plot([*u],[yd-0.21,yd-0.21],color = '#4169E1',alpha = 0.3)
         axdens[1].scatter([*u],[yd-0.21,yd-0.21],color = '#4169E1',marker = '|')
         
@@ -190,14 +199,35 @@ axdens[1].set(xlabel = '$\pi(x)$',ylabel = 'Outcome = 0',yticks = [],xlim  = (0,
 densfig.tight_layout()
 
 rocfig,axroc = plt.subplots(1,1)
-axroc.plot([0,1],[0,1],'k:')
+axroc.plot([0,1],[0,1],linestyle = ':',color=col_points)
+
 axroc.set(xlabel = '$fpr$',ylabel='$s$')
 # axroc.plot(fpr,s,'k',label = 'Base')
-axroc.plot(nuq_fpr,nuq_s,color='#DC143C',label='Ignored Uncertainty')
-axroc.plot(fpr_t,s_t,'#4169E1',label='Imprecise (No Predict.)')
-axroc.plot(fpr_l,s_l,'#FF8827',label='Lower Bound')
-axroc.plot(fpr_r,s_r,'#007e00',label='Upper Bound')
+axroc.plot(nuq_fpr,nuq_s,color=col_mid,label='Ignored Uncertainty')
+axroc.plot(fpr_t,s_t,color=col_ilr2,label='Imprecise (No Predict.)')
 
+
+xl = []
+xu = []
+yl = []
+yu = []
+for i,j in zip(fpr_i,s_i):
+    
+    if not isinstance(i,pba.Interval):
+        i = pba.I(i)
+    if not isinstance(j,pba.Interval):
+        j = pba.I(j)
+      
+    xl.append(i.left  )
+    xu.append(i.right  )
+    
+    yl.append(j.left)
+    yu.append(j.right)
+
+# axroc.plot(fpr_l,s_l,color=col_ilr2,label='Lower Bound')
+# axroc.plot(fpr_r,s_r,color=col_ilr3,label='Upper Bound')
+axroc.plot(xl,yu, col_ilr,label = '$\mathcal{ILR}$')
+axroc.plot(xu,yl, col_ilr )
 axroc.legend()
 rocfig.savefig('figs/burn1000_ROC.png',dpi = 600)
 rocfig.savefig('../LR-paper/figs/burn1000_ROC.png',dpi = 600)
@@ -244,15 +274,16 @@ plt.savefig('../LR-paper/figs/burn1000_ST.png',dpi = 600)
 plt.clf()
 
 
-### Hosmer-Lemeshow
-hl_b, pval_b = hosmer_lemeshow_test(base,train_data,results,g = 10)
+# ### Hosmer-Lemeshow
+# hl_b, pval_b = hosmer_lemeshow_test(base,train_data,results,g = 10)
 
-hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,results,g = 10)
-#
-hl_uq, pval_uq = UQ_hosmer_lemeshow_test(ilr,train_data,results,g = 10)
+# hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,results,g = 10)
+# #
+# hl_uq, pval_uq = UQ_hosmer_lemeshow_test(ilr,train_data,results,g = 10)
 
-with open('runinfo/burn1000_HL.out','w') as f:
-    print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
-    print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
+# with open('runinfo/burn1000_HL.out','w') as f:
+#     print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
+#     print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
 
-    print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 
+#     print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 
+# %%

@@ -21,8 +21,8 @@ col_precise = 'black'
 col_points = '#A69888'
 col_ilr = '#4169E1'
 col_ilr2 = '#5d2e46'
-col_ilr3 = '#F7AEF8'
-col_ilr4 = '#132E32'
+col_ilr3 = '#FF8C00'
+col_ilr4 = '#008000'
 col_mid = '#DC143C'
 
 def intervalise(val,eps,method,b=0.5,bounds = None):
@@ -259,8 +259,8 @@ for i,j in zip(fpr_i,s_i):
     if not isinstance(j,pba.Interval):
         j = pba.I(j)
       
-    xl.append(i.left  )
-    xu.append(i.right  )
+    xl.append(i.left)
+    xu.append(i.right)
     
     yl.append(j.left)
     yu.append(j.right)
@@ -270,7 +270,7 @@ axroc.plot(xu,yl, col_ilr )
 axroc.plot([0,1],[0,1],linestyle = ':',color=col_points)
 axroc.set(xlabel = '$fpr$',ylabel='$s$')
 axroc.plot(fpr,s,color=col_precise,label = '$\mathcal{LR}(D)$')
-axroc.plot(nuq_fpr,nuq_s,color=col_mid,label='$\mathcal{LR}(E_m)$')
+axroc.plot(nuq_fpr,nuq_s,color=col_mid,linestyle = '--',label='$\mathcal{LR}(E_m)$')
 axroc.plot(fpr_t,s_t,col_ilr2,label='$\mathcal{ILR}(E)$ (Predictive)')
 axroc.legend()
 rocfig.savefig('figs/features_ROC.png',dpi = 600)
@@ -278,11 +278,12 @@ rocfig.savefig('../LR-paper/figs/features_ROC.png',dpi = 600)
 densfig.savefig('figs/features_dens.png',dpi =600)
 densfig.savefig('../LR-paper/figs/features_dens.png',dpi =600)
 
-
+#%%
 with open('runinfo/features_auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
     print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)
-    print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
+    print('NO PRED: %.4f' %auc(s_t,fpr_t), file = f)
+    print('ILR: [%.3f,%.3f]'  %(auc(yl,xu),auc(yu,xl)), file = f)
     # print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
     
 

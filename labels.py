@@ -17,8 +17,8 @@ col_precise = 'black'
 col_points = '#A69888'
 col_ilr = '#4169E1'
 col_ilr2 = '#5d2e46'
-col_ilr3 = '#F7AEF8'
-col_ilr4 = '#132E32'
+col_ilr3 = '#FF8C00'
+col_ilr4 = '#008000'
 col_mid = '#DC143C'
 
 from ImpLogReg import *
@@ -114,7 +114,7 @@ nuq.fit(nuq_data.to_numpy(),nuq_results.to_numpy())
 ilr = ImpLogReg(uncertain_data=True, uncertain_class=True, max_iter = 1000)
 ilr.fit(train_data,uq_results)
 
-# %% [markdown]
+# %% 
 ### Plot results
 steps = 300
 lX = np.linspace(0,10,steps)
@@ -127,11 +127,11 @@ plt.xlabel('$x$')
 plt.ylabel('$\pi(x)$')
 plt.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = '$\mathcal{LR}(D)$') 
 plt.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = '$\mathcal{LR}(F_\\times)$') 
-plt.scatter(nuq_data,nuq_results,color='grey',zorder=10)
+plt.scatter(nuq_data,nuq_results,color=col_points,zorder=10)
 for i in uq_data_index:
 
     plt.plot([uq_data.loc[i],uq_data.loc[i]],[0,1],color='grey')
-    plt.scatter(uq_data.loc[i],train_results.loc[i],marker = 'd',color = 'grey',zorder = 14)
+    # plt.scatter(uq_data.loc[i],train_results.loc[i],marker = 'd',color = 'grey',zorder = 14)
 
 plt.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
 plt.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = '$\mathcal{ILR}(F)$')
@@ -263,10 +263,11 @@ for i,j in zip(fpr_i,s_i):
     
 axroc.plot(xl,yu, col_ilr,label = '$\mathcal{ILR}(F)$')
 axroc.plot(xu,yl, col_ilr )
-axroc.plot([0,1],[0,1],'k:')
+axroc.plot([0,1],[0,1],linestyle = ':',color=col_points)
+
 axroc.set(xlabel = '$fpr$',ylabel='$s$')
 axroc.plot(fpr,s,'k',label = '$\mathcal{LR}(D)$')
-axroc.plot(nuq_fpr,nuq_s,color=col_mid,label='$\mathcal{LR}(F_\\times)$')
+axroc.plot(nuq_fpr,nuq_s,color=col_mid,linestyle='--',label='$\mathcal{LR}(F_\\times)$')
 axroc.plot(fpr_t,s_t,col_ilr2,label='$\mathcal{ILR}(F)$ (Predictive)')
 axroc.legend()
 rocfig.savefig('figs/labels_ROC.png',dpi = 600)
@@ -279,6 +280,8 @@ with open('runinfo/labels_auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
     print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)
     print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
+    print('ILR: [%.3f,%.3f]'  %(auc(yl,xu),auc(yu,xl)), file = f)
+    
     # print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
     
 
