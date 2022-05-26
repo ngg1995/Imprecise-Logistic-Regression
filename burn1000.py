@@ -203,8 +203,8 @@ axroc.plot([0,1],[0,1],linestyle = ':',color=col_points)
 
 axroc.set(xlabel = '$fpr$',ylabel='$s$')
 # axroc.plot(fpr,s,'k',label = 'Base')
-axroc.plot(nuq_fpr,nuq_s,color=col_mid,label='Ignored Uncertainty')
-axroc.plot(fpr_t,s_t,color=col_ilr2,label='Imprecise (No Predict.)')
+axroc.plot(nuq_fpr,nuq_s,color=col_mid,label='$\mathcal{LR}(B_\\times)$')
+axroc.plot(fpr_t,s_t,color=col_ilr2,label='No Predict.')
 
 
 xl = []
@@ -226,21 +226,26 @@ for i,j in zip(fpr_i,s_i):
 
 # axroc.plot(fpr_l,s_l,color=col_ilr2,label='Lower Bound')
 # axroc.plot(fpr_r,s_r,color=col_ilr3,label='Upper Bound')
-axroc.plot(xl,yu, col_ilr,label = '$\mathcal{ILR}$')
+axroc.plot(xl,yu, col_ilr,label = '$\mathcal{ILR}(B)$')
 axroc.plot(xu,yl, col_ilr )
 axroc.legend()
 rocfig.savefig('figs/burn1000_ROC.png',dpi = 600)
 rocfig.savefig('../LR-paper/figs/burn1000_ROC.png',dpi = 600)
+
+axroc.set_xlim([0,0.3])
+axroc.set_ylim([0.6,1])
+rocfig.savefig('figs/burn1000_ROC_zoom.png',dpi = 600)
+rocfig.savefig('../LR-paper/figs/burn1000_ROC_zoom.png',dpi = 600)
+
 densfig.savefig('figs/burn1000_dens.png',dpi =600)
 densfig.savefig('../LR-paper/figs/burn1000_dens.png',dpi =600)
 
-
+#%%
 with open('runinfo/burn1000_auc.out','w') as f:
     print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)
-    print('NP: %.4f' %auc(s_t,fpr_t), file = f)
-    print('LB: %.4f' %auc(s_l,fpr_l), file = f)
-    print('UB: %.4f' %auc(s_r,fpr_r), file = f)
-
+    print('No Pred: %.4f' %auc(s_t,fpr_t), file = f)
+    print('ILR: [%.3f,%.3f]'  %(auc(yl,xu),auc(yu,xl)), file = f)
+#%%
     # print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
     
 

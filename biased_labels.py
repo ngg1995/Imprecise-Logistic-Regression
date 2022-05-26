@@ -71,7 +71,7 @@ lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
 
 plt.xlabel('$x$')
 plt.ylabel('$\pi(x)$')
-plt.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = '$\mathcal{LR}(D)$') 
+# plt.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = '$\mathcal{LR}(D)$') 
 plt.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = '$\mathcal{LR}(F_\\times)$') 
 plt.scatter(nuq_data,nuq_results,color=col_points,zorder=10)
 for i in uq_data_index:
