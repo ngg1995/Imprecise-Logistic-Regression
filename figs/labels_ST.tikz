@@ -1,0 +1,38 @@
+% This file was created with tikzplotlib v0.10.1.
+\begin{tikzpicture}
+
+\definecolor{darkgray176}{RGB}{176,176,176}
+\definecolor{darkorange}{RGB}{255,140,0}
+\definecolor{green}{RGB}{0,128,0}
+\definecolor{lightgray204}{RGB}{204,204,204}
+
+\begin{axis}[
+legend cell align={left},
+legend style={
+  fill opacity=0.8,
+  draw opacity=1,
+  text opacity=1,
+  at={(0.03,0.97)},
+  anchor=north west,
+  draw=lightgray204
+},
+tick align=outside,
+tick pos=left,
+x grid style={darkgray176},
+xlabel={\(\displaystyle fpr\)/\(\displaystyle s\)},
+xmin=-0.05, xmax=1.05,
+xtick style={color=black},
+y grid style={darkgray176},
+ylabel={\(\displaystyle \sigma\)/\(\displaystyle \tau\)},
+ymin=-0.0166666666666667, ymax=0.35,
+ytick style={color=black}
+]
+\addplot [semithick, darkorange]
+table {opts_str}{dat/labels_ST-000.dat};
+\addlegendentry{$\sigma$ v $s$}
+\addplot [semithick, green]
+table {opts_str}{dat/labels_ST-001.dat};
+\addlegendentry{$\tau$ v $fpr$}
+\end{axis}
+
+\end{tikzpicture}

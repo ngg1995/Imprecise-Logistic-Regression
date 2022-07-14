@@ -4,6 +4,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LogisticRegression
 import itertools as it
+import tikzplotlib
 from tqdm import tqdm
 import pba
 import random
@@ -42,17 +43,6 @@ def intervalise(val,eps,method,b=0.5,bounds = None):
             return pba.I(m-eps,bounds[1])
         
     return pba.I(m-eps,m+eps)
-
-def midpoints(data):
-    n_data = data.copy()
-    for c in data.columns:
-        for i in data.index:
-            if data.loc[i,c].__class__.__name__ == 'Interval':
-
-                n_data.loc[i,c] = data.loc[i,c].midpoint()
-
-            
-    return n_data
 
 def generate_results(data):
     # set seed for reproducability
@@ -96,7 +86,7 @@ uq_data_index = random.sample([i for i in train_data.index if abs(train_data.loc
 
 uq_data = train_data.loc[uq_data_index]
 uq_results = pd.Series([int(train_results.loc[i]) if i not in uq_data_index else pba.I(0,1) for i in train_results.index], index = train_data.index, dtype='O')
-nuq_data = midpoints(train_data.loc[[i for i in train_data.index if i not in uq_data_index]])
+nuq_data = train_data.loc[[i for i in train_data.index if i not in uq_data_index]]
 nuq_results = train_results.loc[[i for i in train_data.index if i not in uq_data_index]]
 
 # %% [markdown]
@@ -111,7 +101,7 @@ nuq.fit(nuq_data.to_numpy(),nuq_results.to_numpy())
 
 # %% [markdown]
 ### Fit UQ models
-ilr = ImpLogReg(uncertain_data=True, uncertain_class=True, max_iter = 1000)
+ilr = ImpLogReg(uncertain_class=True, max_iter = 1000)
 ilr.fit(train_data,uq_results)
 
 # %% 
@@ -122,25 +112,24 @@ lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
 lYn = nuq.predict_proba(lX.reshape(-1, 1))[:,1]
 lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
 
+fig1, ax1 = plt.subplots()
 
-plt.xlabel('$x$')
-plt.ylabel('$\pi(x)$')
-plt.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = '$\mathcal{LR}(D)$') 
-plt.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = '$\mathcal{LR}(F_\\times)$') 
-plt.scatter(nuq_data,nuq_results,color=col_points,zorder=10)
+ax1.set_xlabel('$x$')
+ax1.set_ylabel('$\pi(x)$')
+ax1.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = '$\mathcal{LR}(D)$') 
+ax1.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = '$\mathcal{LR}(F_\\times)$') 
+ax1.scatter(nuq_data,nuq_results,color=col_points,zorder=10)
 for i in uq_data_index:
 
-    plt.plot([uq_data.loc[i],uq_data.loc[i]],[0,1],color='grey')
+    ax1.plot([uq_data.loc[i],uq_data.loc[i]],[0,1],color='grey')
     # plt.scatter(uq_data.loc[i],train_results.loc[i],marker = 'd',color = 'grey',zorder = 14)
 
-plt.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
-plt.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = '$\mathcal{ILR}(F)$')
-plt.savefig('../LR-paper/figs/labels.png',dpi = 600)
-plt.savefig('figs/labels.png',dpi = 600)
+ax1.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
+ax1.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = '$\mathcal{ILR}(F)$')
+fig1.savefig('../LR-paper/figs/labels.png',dpi = 600)
+fig1.savefig('figs/labels.png',dpi = 600)
 
-plt.clf()
-
-
+tikzplotlib.save('figs/labels.tikz',figure = fig1,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
 
 # %% [markdown]
 ### Get confusion matrix
@@ -223,14 +212,23 @@ s_i, fpr_i,ilr_probabilities = ROC(ilr, test_data, test_results)
 
 densfig,axdens = plt.subplots(nrows = 2, sharex= True)
 
+dat1 = ['x y']
+dat2 = ['x y']
+dat3 = ['x y']
+dat4 = ['x y']
+
 for i,(p,u,nuqp,r) in enumerate(zip(probabilities,ilr_probabilities,nuq_probabilities,test_results.to_list())):
     yd = np.random.uniform(-0.1,0.1)
     if r:
+        dat1 += [f"{p} {yd}"]
+        dat2 += [f"{nuqp} {0.21+yd}"]
         axdens[0].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
         axdens[0].scatter(nuqp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
         axdens[0].plot([*u],[yd-0.21,yd-0.21],color = col_ilr, alpha = 0.3)
         axdens[0].scatter([*u],[yd-0.21,yd-0.21],color = col_ilr, marker = '|')
     else:
+        dat3 += [f"{p} {yd}"]
+        dat4 += [f"{nuqp} {0.21+yd}"]
         axdens[1].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
         axdens[1].scatter(nuqp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
         axdens[1].plot([*u],[yd-0.21,yd-0.21],color = col_ilr, alpha = 0.3)
@@ -275,6 +273,14 @@ rocfig.savefig('../LR-paper/figs/labels_ROC.png',dpi = 600)
 densfig.savefig('figs/labels_dens.png',dpi =600)
 densfig.savefig('../LR-paper/figs/labels_dens.png',dpi =600)
 
+tikzplotlib.save('figs/labels_ROC.tikz',figure = rocfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+
+# tikzplotlib.save('figs/labels_dens.tikz',figure = densfig,externalize_tables = False, override_externals = True,tex_relative_path_to_data = 'dat/')
+print(*dat1,sep='\n',file = open('figs/dat/labels_dens-000.dat','w'))
+print(*dat2,sep='\n',file = open('figs/dat/labels_dens-001.dat','w'))
+print(*dat3,sep='\n',file = open('figs/dat/labels_dens-002.dat','w'))
+print(*dat4,sep='\n',file = open('figs/dat/labels_dens-003.dat','w'))
+
 
 with open('runinfo/labels_auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
@@ -286,33 +292,35 @@ with open('runinfo/labels_auc.out','w') as f:
     
 
 
-fig = plt.figure()
-ax = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
-ax.set_xlabel('$fpr$')
-ax.set_ylabel('$s$')
-# ax.set_zlabel('$1-\sigma,1-\\tau$')
-ax.plot(fpr_t,s_t,col_ilr2,alpha = 0.5)
-ax.plot3D(fpr_t,s_t,Sigma,col_ilr3,label = '$\\sigma$')
-ax.plot3D(fpr_t,s_t,Tau,col_ilr4,label = '$\\tau$')
-# ax.plot3D(fpr,s,Nu,'k',label = '$1-\\nu$')
-
-ax.legend()
-
-plt.savefig('figs/labels_ROC3D.png',dpi = 600)
-plt.savefig('../LR-paper/figs/labels_ROC3D.png',dpi = 600)
-plt.clf()
-
-plt.xlabel('$fpr$/$s$')
-plt.ylabel('$\\sigma$/$\\tau$')
-plt.plot(s_t,Sigma,col_ilr3,label = '$\\sigma$ v $s$')
-plt.plot(fpr_t,Tau,col_ilr4,label = '$\\tau$ v $fpr$')
-plt.legend()
+fig2,ax2 = plt.subplots()
+ax2 = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
+ax2.set_xlabel('$fpr$')
+ax2.set_ylabel('$s$')
+# ax2.set_zlabel('$1-\sigma,1-\\tau$')
+ax2.plot(fpr_t,s_t,col_ilr2,alpha = 0.5)
+ax2.plot3D(fpr_t,s_t,Sigma,col_ilr3,label = '$\\sigma$')
+ax2.plot3D(fpr_t,s_t,Tau,col_ilr4,label = '$\\tau$')
 
 
-plt.savefig('figs/labels_ST.png',dpi = 600)
-plt.savefig('../LR-paper/figs/labels_ST.png',dpi = 600)
+ax2.legend()
 
-plt.clf()
+fig2.savefig('figs/labels_ROC3D.png',dpi = 600)
+fig2.savefig('../LR-paper/figs/labels_ROC3D.png',dpi = 600)
+
+tikzplotlib.save("figs/labels_ROC3D.tikz",figure = fig2,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+
+fig3, ax3 = plt.subplots()
+
+ax3.set_xlabel('$fpr$/$s$')
+ax3.set_ylabel('$\\sigma$/$\\tau$')
+ax3.plot(s_t,Sigma,col_ilr3,label = '$\\sigma$ v $s$')
+ax3.plot(fpr_t,Tau,col_ilr4,label = '$\\tau$ v $fpr$')
+ax3.legend()
+
+
+fig3.savefig('figs/labels_ST.png',dpi = 600)
+fig3.savefig('../LR-paper/figs/labels_ST.png',dpi = 600)
+tikzplotlib.save("figs/labels_ST.tikz",figure = fig3,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
 
 
 # %% [markdown]

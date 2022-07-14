@@ -7,7 +7,7 @@ from tqdm import tqdm
 import pba
 import random
 from LRF import *
-
+import tikzplotlib
 # import matplotlib
 # font = {'size'   : 14,'family' : 'Times New Roman'}
 # matplotlib.rc('font', **font)
@@ -65,7 +65,8 @@ plt.scatter(train_data,train_results,color=col_points,zorder=10)
 plt.plot(lX,lY,color=col_precise,zorder=10,lw=2)
 plt.savefig('figs/precise.png',dpi = 600)
 plt.savefig('../LR-paper/figs/precise.png',dpi = 600)
-plt.clf()
+tikzplotlib.save('figs/precise.tikz',externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+
 
 ### Get confusion matrix 
 base_predict = base.predict(test_data)
@@ -96,6 +97,10 @@ rocfig.savefig('figs/precise_ROC.png',dpi = 600)
 rocfig.savefig('../LR-paper/figs/precise_ROC.png',dpi = 600)
 densfig.savefig('figs/precise_dens.png',dpi = 600)
 densfig.savefig('../LR-paper/figs/precise_dens.png',dpi = 600)
+
+tikzplotlib.save('figs/precise_ROC.tikz',figure = rocfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+tikzplotlib.save('figs/precise_dens.tikz',figure = densfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+
 
 with open('runinfo/precise_auc.out','w') as f:
     print('AUC: %.4f' %auc(s,fpr), file = f)

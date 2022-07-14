@@ -6,7 +6,7 @@ import itertools as it
 from tqdm import tqdm
 import pba
 import random
-
+import tikzplotlib
 import matplotlib
 
 col_precise = 'black'
@@ -65,7 +65,7 @@ np.random.seed(1)
 random.seed(2)
 
 # Params
-some = 50 # training datapoints
+some = 25 # training datapoints
 many = 500 # many test samples
 
 train_data = pd.DataFrame(10*np.random.rand(some,1))
@@ -79,7 +79,7 @@ base = LogisticRegression()
 base.fit(train_data.to_numpy(),train_results.to_numpy())
 
 # Intervalise data
-eps = 0.25
+eps = 0.5
 
 UQdatasets = [
     pd.DataFrame({
@@ -93,7 +93,9 @@ UQdatasets = [
     }, dtype = 'O')
     ]
 
-for jj, UQdata in zip([0,1,2],UQdatasets):
+fig, ax = plt.subplots(1,3,sharey = True)
+
+for jj, UQdata, ax_i in zip([0,1,2],UQdatasets, ax):
 
     ### Fit logistic regression model
     base = LogisticRegression()
@@ -122,35 +124,23 @@ for jj, UQdata in zip([0,1,2],UQdatasets):
     lYn = nuq.predict_proba(lX.reshape(-1, 1))[:,1]
     lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
 
-    plt.xlabel('$x$')
-    plt.ylabel('$\pi(x)$')
+    ax_i.set_xlabel('$x$')
+    # ax_i.set_ylabel('$\pi(x)$')
 
-    plt.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = 'Truth')
-    plt.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = 'No UQ')
+    ax_i.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = 'Truth')
+    ax_i.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = 'No UQ')
 
     for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
-        yd = np.random.uniform(-0.05,0.05)
+        yd = np.random.uniform(-0.0,0.1)
+        if r == 0: yd = -yd
         # plt.plot(m,r+yd,color = 'b',marker = 'x')
         plt.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
         
-    plt.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
-    plt.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = 'Uncertainty Bounds')
+    ax_i.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
+    ax_i.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = 'Uncertainty Bounds')
 
-    plt.savefig('../LR-paper/figs/biased_int_%i.png'%jj,dpi = 600)
-    plt.savefig('figs/biased_int_%i.png'%jj,dpi = 600)
+fig.savefig('../LR-paper/figs/biased_int.png',dpi = 600)
+fig.savefig('figs/biased_int.png',dpi = 600)
 
-    plt.clf()
+tikzplotlib.save("figs/biased_int.tikz",figure = fig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
 
-
-    # ### Hosmer-Lemeshow
-    # hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,g = 10)
-
-    # hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,g = 10)
-    # #
-    # hl_uq, pval_uq = UQ_hosmer_lemeshow_test(ilr,train_data,train_results,g = 10)
-
-    # with open('runinfo/biased_int_HL_%i.out'%jj,'w') as f:
-    #     print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
-    #     print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
-
-    #     print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 

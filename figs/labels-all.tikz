@@ -1,0 +1,146 @@
+% This file was created with tikzplotlib v0.10.1.
+\begin{tikzpicture}
+
+\definecolor{crimson}{RGB}{220,20,60}
+\definecolor{darkgray176}{RGB}{176,176,176}
+\definecolor{darkorange}{RGB}{255,140,0}
+\definecolor{darkslategray934670}{RGB}{93,46,70}
+\definecolor{gray}{RGB}{128,128,128}
+\definecolor{green}{RGB}{0,128,0}
+\definecolor{lightgray204}{RGB}{204,204,204}
+\definecolor{rosybrown166152136}{RGB}{166,152,136}
+\definecolor{royalblue}{RGB}{65,105,225}
+
+\begin{axis}[
+legend cell align={left},
+legend style={
+  fill opacity=0.8,
+  draw opacity=1,
+  text opacity=1,
+  at={(0.03,0.97)},
+  anchor=north west,
+  draw=lightgray204
+},
+tick align=outside,
+tick pos=left,
+x grid style={darkgray176},
+xlabel={\(\displaystyle x\)},
+xmin=-0.5, xmax=10.5,
+xtick style={color=black},
+y grid style={darkgray176},
+ylabel={\(\displaystyle \pi(x)\)},
+ymin=-0.05, ymax=1.05,
+ytick style={color=black}
+]
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-000.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-001.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-002.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-003.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-004.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-005.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-006.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-007.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-008.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-009.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-010.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-011.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-012.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-013.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-014.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-015.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-016.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-017.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-018.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-019.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-020.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-021.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-022.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-023.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-024.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-025.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-026.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-027.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-028.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-029.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-030.dat};
+\addplot [very thin, gray, forget plot]
+table {opts_str}{dat/labels-all-031.dat};
+\addplot [semithick, rosybrown166152136, forget plot]
+table {%
+4.42140755404177 0
+4.42140755404177 1
+};
+\addplot [semithick, rosybrown166152136, forget plot]
+table {%
+6.22108771039832 0
+6.22108771039832 1
+};
+\addplot [semithick, rosybrown166152136, forget plot]
+table {%
+3.68824006001975 0
+3.68824006001975 1
+};
+\addplot [semithick, rosybrown166152136, forget plot]
+table {%
+5.02966833112618 0
+5.02966833112618 1
+};
+\addplot [semithick, rosybrown166152136, forget plot]
+table {%
+5.61196186065625 0
+5.61196186065625 1
+};
+\addplot [thick, royalblue]
+table {opts_str}{dat/labels-all-033.dat};
+\addlegendentry{$\underline{E}$}
+\addplot [thick, darkslategray934670]
+table {opts_str}{dat/labels-all-034.dat};
+\addlegendentry{$\underline{E}$}
+\addplot [thick, darkorange]
+table {opts_str}{dat/labels-all-035.dat};
+\addlegendentry{$E^\prime_{\underline{\beta_0}}$}
+\addplot [thick, green]
+table {opts_str}{dat/labels-all-036.dat};
+\addlegendentry{$E^\prime_{\underline{\beta_1}}$}
+\addplot [thick, crimson]
+table {opts_str}{dat/labels-all-037.dat};
+\addlegendentry{$E^\prime_{\overline{\beta_0}}$}
+\addplot [thick, black]
+table {opts_str}{dat/labels-all-038.dat};
+\addlegendentry{$E^\prime_{\overline{\beta_1}}$}
+\addplot [draw=rosybrown166152136, fill=rosybrown166152136, forget plot, mark=*, only marks]
+table{dat/labels-all-032.dat};
+\end{axis}
+
+\end{tikzpicture}

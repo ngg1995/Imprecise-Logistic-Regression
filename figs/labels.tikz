@@ -1,0 +1,59 @@
+% This file was created with tikzplotlib v0.10.1.
+\begin{tikzpicture}
+
+\definecolor{crimson}{RGB}{220,20,60}
+\definecolor{darkgray176}{RGB}{176,176,176}
+\definecolor{gray}{RGB}{128,128,128}
+\definecolor{rosybrown166152136}{RGB}{166,152,136}
+\definecolor{royalblue}{RGB}{65,105,225}
+
+\begin{axis}[
+tick align=outside,
+tick pos=left,
+x grid style={darkgray176},
+xlabel={\(\displaystyle x\)},
+xmin=-0.5, xmax=10.5,
+xtick style={color=black},
+y grid style={darkgray176},
+ylabel={\(\displaystyle \pi(x)\)},
+ymin=-0.05, ymax=1.05,
+ytick style={color=black}
+]
+\addplot [semithick, gray]
+table {%
+4.42140755404177 0
+4.42140755404177 1
+};
+\addplot [semithick, gray]
+table {%
+6.22108771039832 0
+6.22108771039832 1
+};
+\addplot [semithick, gray]
+table {%
+3.68824006001975 0
+3.68824006001975 1
+};
+\addplot [semithick, gray]
+table {%
+5.02966833112618 0
+5.02966833112618 1
+};
+\addplot [semithick, gray]
+table {%
+5.61196186065625 0
+5.61196186065625 1
+};
+\addplot [thick, royalblue]
+table {opts_str}{dat/labels-003.dat};
+\addplot [thick, royalblue]
+table {opts_str}{dat/labels-004.dat};
+\addplot [thick, black]
+table {opts_str}{dat/labels-000.dat};
+\addplot [thick, crimson]
+table {opts_str}{dat/labels-001.dat};
+\addplot [draw=rosybrown166152136, fill=rosybrown166152136, mark=*, only marks]
+table{dat/labels-002.dat};
+\end{axis}
+
+\end{tikzpicture}

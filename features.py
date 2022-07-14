@@ -7,7 +7,7 @@ import itertools as it
 from tqdm import tqdm
 import pba
 import random
-
+import tikzplotlib
 import matplotlib
 font = {'size'   : 14,'family' : 'Times New Roman'}
 matplotlib.rc('font', **font)
@@ -66,6 +66,22 @@ def generate_results(data):
         
     return results
 
+def get_sample(data,r = None):
+    
+    n_data = data.copy()
+    
+    for c in data.columns:
+        
+        for i in data.index:
+            
+            if data.loc[i,c].__class__.__name__ == 'Interval':
+                
+                if r is not None:
+                    n_data.loc[i,c] = data.loc[i,c].left + r*data.loc[i,c].width()
+                else:
+                    n_data.loc[i,c] = data.loc[i,c].left + np.random.random()*data.loc[i,c].width()
+            
+    return n_data
 
 # %%
 ### Generate Data
@@ -121,30 +137,67 @@ lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
 lYn = nuq.predict_proba(lX.reshape(-1, 1))[:,1]
 lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
 
+fig1, ax1 = plt.subplots()
 
-plt.xlabel('$x$')
-plt.ylabel('$\pi(x)$')
+ax1.set_xlabel('$x$')
+ax1.set_ylabel('$\pi(x)$')
 # plt.scatter(nuq_data,train_results,color='grey',zorder=10)
-plt.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = '$\mathcal{LR}(D)$')
-plt.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = '$\mathcal{LR}(E_m)$')
+ax1.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = '$\mathcal{LR}(D)$')
+ax1.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = '$\mathcal{LR}(E_m)$')
 
 for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
-    yd = np.random.uniform(-0.05,0.05)
+    yd = np.random.uniform(0.0,0.1)
+    if r == 0:
+        yd = -yd
     # plt.plot(m,r+yd,color = 'b',marker = 'x')
-    plt.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
+    ax1.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
     
 # for m in ilr:
 #     lYi = m.predict_proba(lX.reshape(-1, 1))[:,1]
 #     plt.plot(lX, lYi,color='#00F',lw=1,linestyle='dotted')
     
-plt.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
-plt.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = '$\mathcal{ILR}(E)$')
-plt.savefig('../LR-paper/figs/features.png',dpi = 600)
-plt.savefig('figs/features.png',dpi = 600)
+ax1.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
+ax1.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = '$\mathcal{ILR}(E)$')
+fig1.savefig('../LR-paper/figs/features.png',dpi = 600)
+fig1.savefig('figs/features.png',dpi = 600)
 
-plt.clf()
+tikzplotlib.save('figs/features.tikz',figure = fig1,externalize_tables = True, tex_relative_path_to_data = 'dat/',override_externals = True)
 
+#%% 
+### PLOT ALL
+fig, ax = plt.subplots()
+many = 10
+steps = 300
+lX = np.linspace(0,10,steps)
 
+for i in range(many+10):
+    if i < 10:
+        n_data = get_sample(UQdata,r = i/10)
+    else:
+        n_data = get_sample(UQdata)
+    
+    lr = LogisticRegression()
+    lr.fit(n_data, train_results)
+    
+    lY = lr.predict_proba(lX.reshape(-1, 1))[:,1]
+    
+    ax.plot(lX,lY, color='grey', linewidth = 1)
+    
+
+for m,c,l in zip(ilr,[col_ilr,col_ilr2,col_ilr3,col_ilr4,col_mid,col_precise],[r"$\underline{E}$",r"$\underline{E}$",r"$E^\prime_{\underline{\beta_0}}$",r"$E^\prime_{\underline{\beta_1}}$",r"$E^\prime_{\overline{\beta_0}}$",r"$E^\prime_{\overline{\beta_1}}$"]):
+    lY = m.predict_proba(lX.reshape(-1, 1))[:,1]
+    ax.plot(lX,lY, color=c, linewidth = 2,label = l)
+ax.legend()
+
+for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
+    yd = np.random.uniform(0,0.1)
+    # plt.plot(m,r+yd,color = 'b',marker = 'x')
+    if r == 0:
+        yd = -yd
+    ax.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
+# %%
+# fig.show()
+tikzplotlib.save('figs/features-all.tikz',figure = fig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
 
 # %% [markdown]
 ### Get confusion matrix
@@ -259,77 +312,69 @@ for i,j in zip(fpr_i,s_i):
     if not isinstance(j,pba.Interval):
         j = pba.I(j)
       
-    xl.append(i.left)
-    xu.append(i.right)
+    xl.append(i.left  )
+    xu.append(i.right  )
     
     yl.append(j.left)
     yu.append(j.right)
     
-axroc.plot(xl,yu, col_ilr,label = '$\mathcal{ILR}(E)$')
+axroc.plot(xl,yu, col_ilr,label = '$\mathcal{ILR}(F)$')
 axroc.plot(xu,yl, col_ilr )
 axroc.plot([0,1],[0,1],linestyle = ':',color=col_points)
+
 axroc.set(xlabel = '$fpr$',ylabel='$s$')
-axroc.plot(fpr,s,color=col_precise,label = '$\mathcal{LR}(D)$')
-axroc.plot(nuq_fpr,nuq_s,color=col_mid,linestyle = '--',label='$\mathcal{LR}(E_m)$')
-axroc.plot(fpr_t,s_t,col_ilr2,label='$\mathcal{ILR}(E)$ (Predictive)')
+axroc.plot(fpr,s,'k',label = '$\mathcal{LR}(D)$')
+axroc.plot(nuq_fpr,nuq_s,color=col_mid,linestyle='--',label='$\mathcal{LR}(F_\\times)$')
+axroc.plot(fpr_t,s_t,col_ilr2,label='$\mathcal{ILR}(F)$ (Predictive)')
 axroc.legend()
 rocfig.savefig('figs/features_ROC.png',dpi = 600)
 rocfig.savefig('../LR-paper/figs/features_ROC.png',dpi = 600)
 densfig.savefig('figs/features_dens.png',dpi =600)
 densfig.savefig('../LR-paper/figs/features_dens.png',dpi =600)
 
-#%%
+tikzplotlib.save('figs/features_ROC.tikz',figure = rocfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+
+tikzplotlib.save('figs/features_dens.tikz',figure = densfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+
+
 with open('runinfo/features_auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
     print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)
-    print('NO PRED: %.4f' %auc(s_t,fpr_t), file = f)
+    print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
     print('ILR: [%.3f,%.3f]'  %(auc(yl,xu),auc(yu,xl)), file = f)
+    
     # print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
     
 
 
-fig = plt.figure()
-ax = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
-ax.set_xlabel('$fpr$')
-ax.set_ylabel('$s$')
-# ax.set_zlabel('$1-\sigma,1-\\tau$')
-ax.plot(fpr_t,s_t,col_ilr2,alpha = 0.5)
-ax.plot3D(fpr_t,s_t,Sigma,col_ilr3,label = '$\\sigma$')
-ax.plot3D(fpr_t,s_t,Tau,col_ilr4,label = '$\\tau$')
-# ax.plot3D(fpr,s,Nu,'k',label = '$1-\\nu$')
-
-ax.legend()
-
-plt.savefig('figs/features_ROC3D.png',dpi = 600)
-plt.savefig('../LR-paper/figs/features_ROC3D.png',dpi = 600)
-plt.clf()
-
-plt.xlabel('$fpr$/$s$')
-plt.ylabel('$\\sigma$/$\\tau$')
-plt.plot(s_t,Sigma,col_ilr3,label = '$\\sigma$ v $s$')
-plt.plot(fpr_t,Tau,col_ilr4,label = '$\\tau$ v $fpr$')
-plt.legend()
+fig2,ax2 = plt.subplots()
+ax2 = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
+ax2.set_xlabel('$fpr$')
+ax2.set_ylabel('$s$')
+# ax2.set_zlabel('$1-\sigma,1-\\tau$')
+ax2.plot(fpr_t,s_t,col_ilr2,alpha = 0.5)
+ax2.plot3D(fpr_t,s_t,Sigma,col_ilr3,label = '$\\sigma$')
+ax2.plot3D(fpr_t,s_t,Tau,col_ilr4,label = '$\\tau$')
 
 
-plt.savefig('figs/features_ST.png',dpi = 600)
-plt.savefig('../LR-paper/figs/features_ST.png',dpi = 600)
+ax2.legend()
 
-plt.clf()
+fig2.savefig('figs/features_ROC3D.png',dpi = 600)
+fig2.savefig('../LR-paper/figs/features_ROC3D.png',dpi = 600)
+
+tikzplotlib.save("figs/features_ROC3D.tikz",figure = fig2,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+
+fig3, ax3 = plt.subplots()
+
+ax3.set_xlabel('$fpr$/$s$')
+ax3.set_ylabel('$\\sigma$/$\\tau$')
+ax3.plot(s_t,Sigma,col_ilr3,label = '$\\sigma$ v $s$')
+ax3.plot(fpr_t,Tau,col_ilr4,label = '$\\tau$ v $fpr$')
+ax3.legend()
 
 
-# # %% [markdown]
-# ### Hosmer-Lemeshow
-
-# hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,g = 10)
-
-# hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,g = 10)
-# #
-# hl_uq, pval_uq = UQ_hosmer_lemeshow_test(ilr,train_data,train_results,g = 10)
-
-# with open('runinfo/features_HL.out','w') as f:
-#     print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
-#     print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
-
-#     print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 
+fig3.savefig('figs/features_ST.png',dpi = 600)
+fig3.savefig('../LR-paper/figs/features_ST.png',dpi = 600)
+tikzplotlib.save("figs/features_ST.tikz",figure = fig3,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
 
 # %%

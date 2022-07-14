@@ -14,6 +14,7 @@ class ImpLogReg:
         self.models = {}
         self.uncertain_data = uncertain_data
         self.uncertain_class = uncertain_class
+        self.data = {}
         
         self.params = LogisticRegression(**kwargs).get_params()
         
@@ -71,7 +72,7 @@ class ImpLogReg:
                 self.models = _uncertain_class(labeled_data, labeled_results, unlabeled_data, sample_weight = sample_weight, nested = False, params = self.params)
             
         elif self.uncertain_data:
-            self.models = _int_data(data,results,sample_weight,catagorical,self.params)
+            self.models, self.data = _int_data(data,results,sample_weight,catagorical,self.params)
             
         else:
             self.models = {0: LogisticRegression(**self.params).fit(data, results, sample_weight)}
@@ -220,7 +221,7 @@ def _int_data(data,results,sample_weight,catagorical,params, nested = False) -> 
     def find_xlr_model(data, results, uq, params,s,b ,ci, mm, n = 0, cat = []):
         method = 'Nelder-Mead'
         bounds = so.minimize(find_bounds, 0.5*np.ones(s), args = (data,results, uq,params, ci, mm),bounds = b, method=method)
-        return LogisticRegression(**params).fit(get_vals_from_intervals(bounds.x,data, uq),results)
+        return LogisticRegression(**params).fit(get_vals_from_intervals(bounds.x,data, uq),results), get_vals_from_intervals(bounds.x,data, uq)
         
     s = len(uq)
     n = len(data.columns)
@@ -230,22 +231,23 @@ def _int_data(data,results,sample_weight,catagorical,params, nested = False) -> 
     # t.update(2)
 
     models = {}
-    
+    dataset = {}
     for i in it.product([0,1],repeat=1):
         x = {c:v for c,v in zip(data.columns,i)}
         r = [x[c] for _,c in uq]
         models[str(i)] = LogisticRegression(**params).fit(get_vals_from_intervals(r,data,uq),results)
+        dataset[str(i)] = get_vals_from_intervals(r,data,uq)
         t.update()
 
     
     for mm in ['min','max']:
-        models[f'r_{mm}_intercept'] = find_xlr_model(data, results, uq, params,s,b, 'intercept', mm)
+        models[f'r_{mm}_intercept'], dataset[f'r_{mm}_intercept'] = find_xlr_model(data, results, uq, params,s,b, 'intercept', mm)
         t.update()
         for i,c in enumerate(data.columns):
-            models[f'r_{mm}_coef_{i}'] = find_xlr_model(data, results, uq, params,s,b, 'coef',mm,i,catagorical)
+            models[f'r_{mm}_coef_{i}'], dataset[f'r_{mm}_coef_{i}'] = find_xlr_model(data, results, uq, params,s,b, 'coef',mm,i,catagorical)
             t.update()
         
-    return models
+    return models, dataset
 
 def _uc_int(data, results, uncertain, sample_weight, catagorical, params) -> dict:
     
