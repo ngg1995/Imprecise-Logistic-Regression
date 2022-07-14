@@ -6,7 +6,7 @@ Imprecise Logistic Regression class mimicing `scikit-learn's LogisticRegression`
 
 Usage
 =====
-The usage is identical to scikit-learn 
+The usage is identical to scikit-learn except you have to tell the class where the intervals are
 
 .. code:: 
 
