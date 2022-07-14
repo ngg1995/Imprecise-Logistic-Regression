@@ -19,7 +19,7 @@ col_mid = '#DC143C'
 
 from LRF import *
 from ImpLogReg import *
-
+from deSouza import dslr
 def intervalise(val,eps,method,bias=0,bounds = None):
    
     if method == 'u':
@@ -58,15 +58,16 @@ def generate_results(data):
         
     return results
 
-
+# %%
 ### Generate Data
 # set seed for reproducability
-np.random.seed(1)
-random.seed(2)
+s = 1234
+np.random.seed(s)
+random.seed(s)
 
 # Params
-some = 25 # training datapoints
-many = 500 # many test samples
+some = 50 # training datapoints
+many = 100 # many test samples
 
 train_data = pd.DataFrame(10*np.random.rand(some,1))
 train_results = generate_results(train_data)
@@ -74,12 +75,14 @@ train_results = generate_results(train_data)
 test_data = pd.DataFrame(10*np.random.rand(many,1))
 test_results = generate_results(test_data)
 
+#%%
 ### Fit logistic regression model
 base = LogisticRegression()
 base.fit(train_data.to_numpy(),train_results.to_numpy())
 
 # Intervalise data
-eps = 0.5
+eps = 0.375
+
 
 UQdatasets = [
     pd.DataFrame({
@@ -90,45 +93,44 @@ UQdatasets = [
     }, dtype = 'O'),
     pd.DataFrame({
     0:[intervalise(train_data.iloc[i,0],eps,'b',-1,(0,10)) if train_data.iloc[i,0] > 5 else intervalise(train_data.iloc[i,0],eps,'b',1,(0,10)) for i in train_data.index]
+    }, dtype = 'O'),
+    pd.DataFrame({
+    0:[intervalise(train_data.iloc[i,0],eps,'b',-1,(0,10)) if train_data.iloc[i,0] > 5 else intervalise(train_data.iloc[i,0],eps,'b',1,(0,10)) for i in train_data.index]
     }, dtype = 'O')
     ]
 
-fig, ax = plt.subplots(1,3,sharey = True)
+#%%
+fig, ax = plt.subplots(1,1,sharey = True)
 
-for jj, UQdata, ax_i in zip([0,1,2],UQdatasets, ax):
-
-    ### Fit logistic regression model
-    base = LogisticRegression()
-    base.fit(train_data.to_numpy(),train_results.to_numpy())
-
-    # Intervalise data
-    eps = 0.25
-    ### Fit logistic regression model on full dataset
-    base = LogisticRegression(max_iter=1000)
-    base.fit(train_data.to_numpy(),train_results.to_numpy())
-
+for jj, UQdata, ax_i in zip([0,1,2,3],UQdatasets, np.ravel(ax)):
 
     ### Fit models with midpoint data
-    nuq_data = midpoints(UQdata)
-    nuq = LogisticRegression(max_iter=1000)
-    nuq.fit(nuq_data.to_numpy(),train_results.to_numpy())
+    mid_data = midpoints(UQdata)
+    mid = LogisticRegression(max_iter=1000)
+    mid.fit(mid_data.to_numpy(),train_results.to_numpy())
 
     ### Fit UQ models
     ilr = ImpLogReg(uncertain_data=True, max_iter = 1000)
     ilr.fit(UQdata,train_results)
-
+    
+    ### Fit de Souza model
+    ds = dslr(max_iter = 1000)
+    ds.fit(mid_data,train_results)
+    
     ### Plot results
     steps = 300
     lX = np.linspace(0,10,steps)
     lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
-    lYn = nuq.predict_proba(lX.reshape(-1, 1))[:,1]
+    lYn = mid.predict_proba(lX.reshape(-1, 1))[:,1]
     lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
-
-    ax_i.set_xlabel('$x$')
+    lYds = ds.predict_proba(lX.reshape(-1,1))[:,1]
+    # ax_i.set_xlabel('$x$')
     # ax_i.set_ylabel('$\pi(x)$')
 
     ax_i.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = 'Truth')
     ax_i.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = 'No UQ')
+    ax_i.plot(lX,lYds,zorder=10,lw=2,label = 'ds')
+    
 
     for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
         yd = np.random.uniform(-0.0,0.1)
@@ -138,9 +140,10 @@ for jj, UQdata, ax_i in zip([0,1,2],UQdatasets, ax):
         
     ax_i.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
     ax_i.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = 'Uncertainty Bounds')
+fig.show()
+#%%
+# fig.savefig('../LR-paper/figs/biased_int.png',dpi = 600)
+# fig.savefig('figs/biased_int.png',dpi = 600)
 
-fig.savefig('../LR-paper/figs/biased_int.png',dpi = 600)
-fig.savefig('figs/biased_int.png',dpi = 600)
-
-tikzplotlib.save("figs/biased_int.tikz",figure = fig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+# tikzplotlib.save("figs/biased_int.tikz",figure = fig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
 
