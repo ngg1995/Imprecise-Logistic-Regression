@@ -15,6 +15,7 @@ matplotlib.rc('font', **font)
 from ImpLogReg import *
 from LRF import *
 
+from deSouza import dslr
 
 # colors
 col_precise = 'black'
@@ -119,14 +120,32 @@ base.fit(train_data.to_numpy(),train_results.to_numpy())
 
 #%%
 ### Fit models with midpoint data
-nuq_data = midpoints(UQdata)
-nuq = LogisticRegression(max_iter=1000)
-nuq.fit(nuq_data.to_numpy(),train_results.to_numpy())
+mid_data = midpoints(UQdata)
+mid = LogisticRegression(max_iter=1000)
+mid.fit(mid_data.to_numpy(),train_results.to_numpy())
 
+#%%
+### Fit de Souza model
+ds = dslr(max_iter = 1000)
+ds.fit(UQdata,train_results)
+    
 #%%
 ### Fit UQ models
 ilr = ImpLogReg(uncertain_data=True, max_iter = 1000)
 ilr.fit(UQdata,train_results,False)
+
+#%%
+### BD 
+bd = []
+for i in range(100):
+    if i < 50:
+        n_data = get_sample(UQdata,r = i/50)
+    else:
+        n_data = get_sample(UQdata)
+    
+    lr = LogisticRegression()
+    lr.fit(n_data, train_results)
+    bd.append(lr)
 
 
 # %% [markdown]
@@ -134,16 +153,26 @@ ilr.fit(UQdata,train_results,False)
 steps = 300
 lX = np.linspace(0,10,steps)
 lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
-lYn = nuq.predict_proba(lX.reshape(-1, 1))[:,1]
+lYn = mid.predict_proba(lX.reshape(-1, 1))[:,1]
 lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
+lYd = ds.predict_proba(lX.reshape(-1,1))[:,1]
+
+bd_predictions = np.empty((len(bd),len(lX)))
+for i,lr in enumerate(bd):
+    bd_predictions[i] = lr.predict_proba(lX.reshape(-1, 1))[:,1]
+lYb = bd_predictions.mean(0)
+#%%
 
 fig1, ax1 = plt.subplots()
 
 ax1.set_xlabel('$x$')
 ax1.set_ylabel('$\pi(x)$')
-# plt.scatter(nuq_data,train_results,color='grey',zorder=10)
-ax1.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = '$\mathcal{LR}(D)$')
-ax1.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = '$\mathcal{LR}(E_m)$')
+# plt.scatter(mid_data,train_results,color='grey',zorder=10)
+ax1.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = 'base')
+ax1.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = 'mid')
+ax1.plot(lX,lYd,color=col_ilr2,zorder=10,lw=3,label = 'ds',linestyle = '--')
+ax1.plot(lX,lYb,color=col_ilr3,zorder=10,lw=4,label = 'bd',linestyle = ':')
+
 
 for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
     yd = np.random.uniform(0.0,0.1)
@@ -157,47 +186,40 @@ for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
 #     plt.plot(lX, lYi,color='#00F',lw=1,linestyle='dotted')
     
 ax1.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
-ax1.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = '$\mathcal{ILR}(E)$')
+ax1.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = 'ilr')
+ax1.legend()
 fig1.savefig('../LR-paper/figs/features.png',dpi = 600)
 fig1.savefig('figs/features.png',dpi = 600)
-
 tikzplotlib.save('figs/features.tikz',figure = fig1,externalize_tables = True, tex_relative_path_to_data = 'dat/',override_externals = True)
 
 #%% 
 ### PLOT ALL
-fig, ax = plt.subplots()
-many = 10
+fig_a, ax_a = plt.subplots()
+many = 50
 steps = 300
 lX = np.linspace(0,10,steps)
 
-for i in range(many+10):
-    if i < 10:
-        n_data = get_sample(UQdata,r = i/10)
-    else:
-        n_data = get_sample(UQdata)
-    
-    lr = LogisticRegression()
-    lr.fit(n_data, train_results)
+for lr in bd:
     
     lY = lr.predict_proba(lX.reshape(-1, 1))[:,1]
-    
-    ax.plot(lX,lY, color='grey', linewidth = 1)
+
+    ax_a.plot(lX,lY, color='grey', linewidth = 1)
     
 
 for m,c,l in zip(ilr,[col_ilr,col_ilr2,col_ilr3,col_ilr4,col_mid,col_precise],[r"$\underline{E}$",r"$\underline{E}$",r"$E^\prime_{\underline{\beta_0}}$",r"$E^\prime_{\underline{\beta_1}}$",r"$E^\prime_{\overline{\beta_0}}$",r"$E^\prime_{\overline{\beta_1}}$"]):
     lY = m.predict_proba(lX.reshape(-1, 1))[:,1]
-    ax.plot(lX,lY, color=c, linewidth = 2,label = l)
-ax.legend()
+    ax_a.plot(lX,lY, color=c, linewidth = 2,label = l)
+ax_a.legend()
 
 for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
     yd = np.random.uniform(0,0.1)
     # plt.plot(m,r+yd,color = 'b',marker = 'x')
     if r == 0:
         yd = -yd
-    ax.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
-# %%
-# fig.show()
-tikzplotlib.save('figs/features-all.tikz',figure = fig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+    ax_a.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
+
+
+tikzplotlib.save('figs/features-all.tikz',figure = fig_a,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
 
 # %% [markdown]
 ### Get confusion matrix
@@ -205,7 +227,7 @@ tikzplotlib.save('figs/features-all.tikz',figure = fig,externalize_tables = True
 base_predict = base.predict(test_data)
 
 # CLASSIFY NO_UQ MODEL DATA 
-nuq_predict = nuq.predict(test_data)
+mid_predict = mid.predict(test_data)
 
 # CLASSIFY UQ MODEL 
 ilr_predict = ilr.predict(test_data)
@@ -220,7 +242,7 @@ with open('runinfo/features_cm.out','w') as f:
     print('Specificity = %.3f' %(d/(b+d)),file = f)
 
     print('DISCARDED DATA MODEL',file = f)
-    aa,bb,cc,dd = generate_confusion_matrix(test_results,nuq_predict)
+    aa,bb,cc,dd = generate_confusion_matrix(test_results,mid_predict)
     try:
         ss = 1/(1+cc/aa)
     except:
@@ -273,23 +295,23 @@ with open('runinfo/features_cm.out','w') as f:
    
 # %% [markdown]
 s,fpr,probabilities = ROC(model = base, data = test_data, results = test_results)
-nuq_s,nuq_fpr,nuq_probabilities = ROC(model = nuq, data = test_data, results = test_results)
+mid_s,mid_fpr,mid_probabilities = ROC(model = mid, data = test_data, results = test_results)
 s_t, fpr_t, Sigma, Tau = incert_ROC(ilr, test_data, test_results)
 
 s_i, fpr_i,ilr_probabilities = ROC(ilr, test_data, test_results)
 
 densfig,axdens = plt.subplots(nrows = 2, sharex= True)
 
-for i,(p,u,nuqp,r) in enumerate(zip(probabilities,ilr_probabilities,nuq_probabilities,test_results.to_list())):
+for i,(p,u,midp,r) in enumerate(zip(probabilities,ilr_probabilities,mid_probabilities,test_results.to_list())):
     yd = np.random.uniform(-0.1,0.1)
     if r:
         axdens[0].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
-        axdens[0].scatter(nuqp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
+        axdens[0].scatter(midp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
         axdens[0].plot([*u],[yd-0.21,yd-0.21],color = col_ilr, alpha = 0.3)
         axdens[0].scatter([*u],[yd-0.21,yd-0.21],color = col_ilr, marker = '|')
     else:
         axdens[1].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
-        axdens[1].scatter(nuqp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
+        axdens[1].scatter(midp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
         axdens[1].plot([*u],[yd-0.21,yd-0.21],color = col_ilr, alpha = 0.3)
         axdens[1].scatter([*u],[yd-0.21,yd-0.21],color = col_ilr, marker = '|')
         
@@ -324,7 +346,7 @@ axroc.plot([0,1],[0,1],linestyle = ':',color=col_points)
 
 axroc.set(xlabel = '$fpr$',ylabel='$s$')
 axroc.plot(fpr,s,'k',label = '$\mathcal{LR}(D)$')
-axroc.plot(nuq_fpr,nuq_s,color=col_mid,linestyle='--',label='$\mathcal{LR}(F_\\times)$')
+axroc.plot(mid_fpr,mid_s,color=col_mid,linestyle='--',label='$\mathcal{LR}(F_\\times)$')
 axroc.plot(fpr_t,s_t,col_ilr2,label='$\mathcal{ILR}(F)$ (Predictive)')
 axroc.legend()
 rocfig.savefig('figs/features_ROC.png',dpi = 600)
@@ -339,7 +361,7 @@ tikzplotlib.save('figs/features_dens.tikz',figure = densfig,externalize_tables =
 
 with open('runinfo/features_auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
-    print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)
+    print('MIDPOINTS: %.4F' %auc(mid_s,mid_fpr),file = f)
     print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
     print('ILR: [%.3f,%.3f]'  %(auc(yl,xu),auc(yu,xl)), file = f)
     
