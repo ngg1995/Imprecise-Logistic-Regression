@@ -15,7 +15,8 @@ matplotlib.rc('font', **font)
 from ImpLogReg import *
 from LRF import *
 
-from deSouza import dslr
+from deSouza import DSLR
+from billard_diday import BDLR
 
 # colors
 col_precise = 'black'
@@ -126,7 +127,7 @@ mid.fit(mid_data.to_numpy(),train_results.to_numpy())
 
 #%%
 ### Fit de Souza model
-ds = dslr(max_iter = 1000)
+ds = DSLR(max_iter = 1000)
 ds.fit(UQdata,train_results)
     
 #%%
@@ -134,18 +135,9 @@ ds.fit(UQdata,train_results)
 ilr = ImpLogReg(uncertain_data=True, max_iter = 1000)
 ilr.fit(UQdata,train_results,False)
 
-#%%
-### BD 
-bd = []
-for i in range(100):
-    if i < 50:
-        n_data = get_sample(UQdata,r = i/50)
-    else:
-        n_data = get_sample(UQdata)
-    
-    lr = LogisticRegression()
-    lr.fit(n_data, train_results)
-    bd.append(lr)
+### Fit Billard--Diday model
+bd = BDLR(max_iter = 1000)
+bd.fit(UQdata,train_results)
 
 
 # %% [markdown]
@@ -156,11 +148,7 @@ lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
 lYn = mid.predict_proba(lX.reshape(-1, 1))[:,1]
 lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
 lYd = ds.predict_proba(lX.reshape(-1,1))[:,1]
-
-bd_predictions = np.empty((len(bd),len(lX)))
-for i,lr in enumerate(bd):
-    bd_predictions[i] = lr.predict_proba(lX.reshape(-1, 1))[:,1]
-lYb = bd_predictions.mean(0)
+lYb = bd.predict_proba(lX.reshape(-1,1))[:,1]
 #%%
 
 fig1, ax1 = plt.subplots()
@@ -188,6 +176,7 @@ for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
 ax1.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
 ax1.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = 'ilr')
 ax1.legend()
+#%%
 fig1.savefig('../LR-paper/figs/features.png',dpi = 600)
 fig1.savefig('figs/features.png',dpi = 600)
 tikzplotlib.save('figs/features.tikz',figure = fig1,externalize_tables = True, tex_relative_path_to_data = 'dat/',override_externals = True)
@@ -218,7 +207,7 @@ for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
         yd = -yd
     ax_a.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
 
-
+#%%
 tikzplotlib.save('figs/features-all.tikz',figure = fig_a,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
 
 # %% [markdown]
@@ -369,7 +358,7 @@ with open('runinfo/features_auc.out','w') as f:
     
 
 
-fig2,ax2 = plt.subplots()
+fig2= plt.figure()
 ax2 = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
 ax2.set_xlabel('$fpr$')
 ax2.set_ylabel('$s$')
@@ -395,8 +384,8 @@ ax3.plot(fpr_t,Tau,col_ilr4,label = '$\\tau$ v $fpr$')
 ax3.legend()
 
 
-fig3.savefig('figs/features_ST.png',dpi = 600)
-fig3.savefig('../LR-paper/figs/features_ST.png',dpi = 600)
-tikzplotlib.save("figs/features_ST.tikz",figure = fig3,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+# fig3.savefig('figs/features_ST.png',dpi = 600)
+# fig3.savefig('../LR-paper/figs/features_ST.png',dpi = 600)
+# tikzplotlib.save("figs/features_ST.tikz",figure = fig3,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
 
 # %%

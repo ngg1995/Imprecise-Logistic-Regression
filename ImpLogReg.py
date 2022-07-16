@@ -190,6 +190,7 @@ def _int_data(data,results,sample_weight,catagorical,params, nested = False) -> 
     
     uq = [(i,c) for i in data.index for c in data.columns if data.loc[i,c].__class__.__name__ == 'Interval']
                     
+    assert len(uq) != 0
     
     def get_vals_from_intervals(r,data,uq,cat=[]):
 

@@ -84,9 +84,12 @@ with open('runinfo/precise_cm.out','w') as f:
 s,fpr, predictions = ROC(model = base, data = test_data, results = test_results)
 
 rocfig,axroc = plt.subplots(1)
-densfig,axdens = plt.subplots(1)
-axdens.scatter(predictions,test_results+np.random.uniform(-0.05,0.05,len(predictions)),marker = 'o',color='k',alpha = 0.5)
-axdens.set(xlabel = '$\pi(x)$',ylabel = 'Outcome',yticks = [0,1],xlim  = (0, 1))
+densfig,axdens = plt.subplots(2,1)
+for p in predictions:
+    if p:
+        axdens[1].scatter(predictions,test_results+np.random.uniform(-0.05,0.05,len(predictions)),marker = 'o',color='k',alpha = 0.5)
+    else:
+        axdens[0].scatter(predictions,test_results+np.random.uniform(-0.05,0.05,len(predictions)),marker = 'o',color='k',alpha = 0.5)
 
 
 axroc.plot([0,1],[0,1],linestyle = ':',color=col_points,label = 'Random Classifier')

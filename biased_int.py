@@ -1,3 +1,4 @@
+#%%
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -19,7 +20,9 @@ col_mid = '#DC143C'
 
 from LRF import *
 from ImpLogReg import *
-from deSouza import dslr
+from other_methods import *
+
+
 def intervalise(val,eps,method,bias=0,bounds = None):
    
     if method == 'u':
@@ -81,28 +84,60 @@ base = LogisticRegression()
 base.fit(train_data.to_numpy(),train_results.to_numpy())
 
 # Intervalise data
-eps = 0.375
+eps = 1
 
-
-UQdatasets = [
-    pd.DataFrame({
-    0:[intervalise(train_data.iloc[i,0],eps,'b',-1,(0,10)) for i in train_data.index]
-    }, dtype = 'O'),
-    pd.DataFrame({
-    0:[intervalise(train_data.iloc[i,0],eps,'b',1,(0,10)) for i in train_data.index]
-    }, dtype = 'O'),
-    pd.DataFrame({
-    0:[intervalise(train_data.iloc[i,0],eps,'b',-1,(0,10)) if train_data.iloc[i,0] > 5 else intervalise(train_data.iloc[i,0],eps,'b',1,(0,10)) for i in train_data.index]
-    }, dtype = 'O'),
-    pd.DataFrame({
-    0:[intervalise(train_data.iloc[i,0],eps,'b',-1,(0,10)) if train_data.iloc[i,0] > 5 else intervalise(train_data.iloc[i,0],eps,'b',1,(0,10)) for i in train_data.index]
+def low_val(data):
+    return pd.DataFrame({
+    0:[intervalise(data.iloc[i,0],eps,'b',-1,(0,10)) for i in data.index]
     }, dtype = 'O')
-    ]
+   
+def hi_val(data):
+    return pd.DataFrame({
+    0:[intervalise(data.iloc[i,0],eps,'b',1,(0,10)) for i in data.index]
+    }, dtype = 'O') 
+
+def ex3(data):
+    n_data = []
+    for i in data.index:
+        if data.iloc[i,0] < 2.5:
+            n_data.append(
+                data.iloc[i,0]
+            )
+        elif data.iloc[i,0] < 5:
+            n_data.append(
+                intervalise(data.iloc[i,0],0.25,'u',-1,(0,10))
+            )
+        elif data.iloc[i,0] < 8: 
+            n_data.append(
+                intervalise(data.iloc[i,0],1,'u',-1,(0,10))
+            )
+        else:
+            n_data.append(
+                intervalise(data.iloc[i,0],1,'b',-1,(0,10))
+            )
+    return pd.DataFrame({0:n_data}, dtype = 'O')
+       
+def ex4(data,results):
+    n_data = []
+    for i in data.index:
+        if results.loc[i,0]:
+            intervalise(data.iloc[i,0],1,'b',1,(0,10))
+        else:
+            intervalise(data.iloc[i,0],1,'b',-1,(0,10))
+    return pd.DataFrame({0:n_data}, dtype = 'O')
+        
+UQdatasets = [
+    # low_val(data),
+    # hi_val(data),
+    ex3(train_data),
+    ex4(train_data,train_results)
+]
+
 
 #%%
-fig, ax = plt.subplots(1,1,sharey = True)
+# fig, ax = plt.subplots(2,2,sharey = True)
 
-for jj, UQdata, ax_i in zip([0,1,2,3],UQdatasets, np.ravel(ax)):
+for jj, UQdata in zip([0,1,2,3],UQdatasets):
 
     ### Fit models with midpoint data
     mid_data = midpoints(UQdata)
@@ -114,8 +149,12 @@ for jj, UQdata, ax_i in zip([0,1,2,3],UQdatasets, np.ravel(ax)):
     ilr.fit(UQdata,train_results)
     
     ### Fit de Souza model
-    ds = dslr(max_iter = 1000)
+    ds = DSLR(max_iter = 1000)
     ds.fit(mid_data,train_results)
+    
+    ### Fit Billard--Diday model
+    bd = BDLR(max_iter = 1000)
+    bd.fit(UQdata,train_results)
     
     ### Plot results
     steps = 300
@@ -123,24 +162,27 @@ for jj, UQdata, ax_i in zip([0,1,2,3],UQdatasets, np.ravel(ax)):
     lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
     lYn = mid.predict_proba(lX.reshape(-1, 1))[:,1]
     lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
-    lYds = ds.predict_proba(lX.reshape(-1,1))[:,1]
-    # ax_i.set_xlabel('$x$')
-    # ax_i.set_ylabel('$\pi(x)$')
+    lYd = ds.predict_proba(lX.reshape(-1,1))[:,1]
+    lYb = bd.predict_proba(lX.reshape(-1,1))[:,1]
+    # plt.set_xlabel('$x$')
+    # plt.set_ylabel('$\pi(x)$')
 
-    ax_i.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = 'Truth')
-    ax_i.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = 'No UQ')
-    ax_i.plot(lX,lYds,zorder=10,lw=2,label = 'ds')
-    
+    plt.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = 'base')
+    plt.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = 'mid')
+    plt.plot(lX,lYd,color=col_ilr2,zorder=10,lw=3,label = 'ds',linestyle = '--')
+    plt.plot(lX,lYb,color=col_ilr3,zorder=10,lw=4,label = 'bd',linestyle = ':')
 
     for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
         yd = np.random.uniform(-0.0,0.1)
         if r == 0: yd = -yd
         # plt.plot(m,r+yd,color = 'b',marker = 'x')
+        if not isinstance(u,pba.Interval): u = pba.I(u)
         plt.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
         
-    ax_i.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
-    ax_i.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = 'Uncertainty Bounds')
-fig.show()
+    plt.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
+    plt.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = 'Uncertainty Bounds')
+    plt.show()
+
 #%%
 # fig.savefig('../LR-paper/figs/biased_int.png',dpi = 600)
 # fig.savefig('figs/biased_int.png',dpi = 600)
