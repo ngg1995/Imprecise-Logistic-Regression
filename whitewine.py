@@ -38,7 +38,7 @@ def deintervalise(data, binary_cols):
     return n_data
 
 ### Import the data
-wine_data = pd.read_csv('redwine.csv',index_col = None)
+wine_data = pd.read_csv('whittwwine.csv',index_col = None)
 
 ### Split the data into test/train factors and result and generate uncertain points
 random.seed(2) # for reproducability
