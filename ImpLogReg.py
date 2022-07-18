@@ -73,7 +73,7 @@ class ImpLogReg:
                     new_data = pd.concat((labeled_data,unlabeled_data), ignore_index = True)
                     for i in it.product([False,True],repeat=len(unlabeled_data)):
                         new_results = pd.concat((labeled_results, pd.Series(i)), ignore_index = True)
-                        self.models[i] = LogisticRegression().fit(new_data,new_results.to_numpy(dtype=bool))
+                        self.models[str(i)] = LogisticRegression().fit(new_data,new_results.to_numpy(dtype=bool))
                 else:
                     self.models = _uncertain_class(labeled_data, labeled_results, unlabeled_data, sample_weight = sample_weight, nested = False, params = self.params)
             
