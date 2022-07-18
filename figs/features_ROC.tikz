@@ -53,7 +53,7 @@ yticklabels={
 ]
 \addplot [semithick, royalblue]
 table {opts_str}{dat/features_ROC-000.dat};
-\addlegendentry{$\mathcal{ILR}(F)$}
+\addlegendentry{$\mathcal{ILR}(E)$}
 \addplot [semithick, royalblue, forget plot]
 table {opts_str}{dat/features_ROC-001.dat};
 \addplot [semithick, rosybrown166152136, dotted, forget plot]
@@ -69,7 +69,7 @@ table {opts_str}{dat/features_ROC-003.dat};
 \addlegendentry{$\mathcal{LR}(F_\times)$}
 \addplot [semithick, darkslategray934670]
 table {opts_str}{dat/features_ROC-004.dat};
-\addlegendentry{$\mathcal{ILR}(F)$ (Predictive)}
+\addlegendentry{$\mathcal{ILR}(E)$ (Predictive)}
 \end{axis}
 
 \end{tikzpicture}

@@ -9,14 +9,15 @@ import pba
 import random
 import tikzplotlib
 import matplotlib
+
 font = {'size'   : 14,'family' : 'Times New Roman'}
 matplotlib.rc('font', **font)
+plt.rcParams['text.usetex'] = True
 
 from ImpLogReg import *
 from LRF import *
 
-from deSouza import DSLR
-from billard_diday import BDLR
+from other_methods import DSLR, BDLR
 
 # colors
 col_precise = 'black'
@@ -58,8 +59,7 @@ def midpoints(data):
 
 
 def generate_results(data):
-    # set seed for reproducability
-    np.random.seed(10)
+
     results = pd.Series(index = data.index, dtype = 'bool')
     
     for i in data.index:
@@ -87,27 +87,15 @@ def get_sample(data,r = None):
 
 # %%
 ### Generate Data
-# set seed for reproducability
-s = 1234
-np.random.seed(s)
-random.seed(s)
-
-# Params
-some = 50 # training datapoints
-many = 100 # many test samples
-
-train_data = pd.DataFrame(10*np.random.rand(some,1))
-train_results = generate_results(train_data)
-
-test_data = pd.DataFrame(10*np.random.rand(many,1))
-test_results = generate_results(test_data)
-
+from dataset import train_data, train_results, test_data, test_results
 #%%
 ### Fit logistic regression model
 base = LogisticRegression()
 base.fit(train_data.to_numpy(),train_results.to_numpy())
 
 # Intervalise data
+# set seed for reproducability
+np.random.seed(10)
 eps = 0.375
 
 UQdata = pd.DataFrame({
@@ -291,14 +279,23 @@ s_i, fpr_i,ilr_probabilities = ROC(ilr, test_data, test_results)
 
 densfig,axdens = plt.subplots(nrows = 2, sharex= True)
 
+dat1 = ['x y']
+dat2 = ['x y']
+dat3 = ['x y']
+dat4 = ['x y']
+
 for i,(p,u,midp,r) in enumerate(zip(probabilities,ilr_probabilities,mid_probabilities,test_results.to_list())):
     yd = np.random.uniform(-0.1,0.1)
     if r:
+        dat1 += [f"{p} {yd}"]
+        dat2 += [f"{midp} {0.21+yd}"]
         axdens[0].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
         axdens[0].scatter(midp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
         axdens[0].plot([*u],[yd-0.21,yd-0.21],color = col_ilr, alpha = 0.3)
         axdens[0].scatter([*u],[yd-0.21,yd-0.21],color = col_ilr, marker = '|')
     else:
+        dat3 += [f"{p} {yd}"]
+        dat4 += [f"{midp} {0.21+yd}"]
         axdens[1].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
         axdens[1].scatter(midp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
         axdens[1].plot([*u],[yd-0.21,yd-0.21],color = col_ilr, alpha = 0.3)
@@ -329,14 +326,14 @@ for i,j in zip(fpr_i,s_i):
     yl.append(j.left)
     yu.append(j.right)
     
-axroc.plot(xl,yu, col_ilr,label = '$\mathcal{ILR}(F)$')
+axroc.plot(xl,yu, col_ilr,label = '$\mathcal{ILR}(E)$')
 axroc.plot(xu,yl, col_ilr )
 axroc.plot([0,1],[0,1],linestyle = ':',color=col_points)
 
 axroc.set(xlabel = '$fpr$',ylabel='$s$')
 axroc.plot(fpr,s,'k',label = '$\mathcal{LR}(D)$')
 axroc.plot(mid_fpr,mid_s,color=col_mid,linestyle='--',label='$\mathcal{LR}(F_\\times)$')
-axroc.plot(fpr_t,s_t,col_ilr2,label='$\mathcal{ILR}(F)$ (Predictive)')
+axroc.plot(fpr_t,s_t,col_ilr2,label='$\mathcal{ILR}(E)$ (Predictive)')
 axroc.legend()
 rocfig.savefig('figs/features_ROC.png',dpi = 600)
 rocfig.savefig('../LR-paper/figs/features_ROC.png',dpi = 600)
@@ -345,7 +342,11 @@ densfig.savefig('../LR-paper/figs/features_dens.png',dpi =600)
 
 tikzplotlib.save('figs/features_ROC.tikz',figure = rocfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
 
-tikzplotlib.save('figs/features_dens.tikz',figure = densfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+# tikzplotlib.save('figs/features_dens.tikz',figure = densfig,externalize_tables = False, override_externals = True,tex_relative_path_to_data = 'dat/')
+print(*dat1,sep='\n',file = open('figs/dat/features_dens-000.dat','w'))
+print(*dat2,sep='\n',file = open('figs/dat/features_dens-001.dat','w'))
+print(*dat3,sep='\n',file = open('figs/dat/features_dens-002.dat','w'))
+print(*dat4,sep='\n',file = open('figs/dat/features_dens-003.dat','w'))
 
 
 with open('runinfo/features_auc.out','w') as f:

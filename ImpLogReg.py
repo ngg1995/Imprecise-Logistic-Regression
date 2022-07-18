@@ -46,7 +46,7 @@ class ImpLogReg:
         for k,m in self.models.items():
             self.models[k] = m.densify()
             
-    def fit(self, data, results ,sample_weight=None, catagorical = []):
+    def fit(self, data, results ,sample_weight=None, catagorical = [],simple = False):
         
         self.params.update({k:v for k,v in self.__dict__.items() if k in self.params.keys()})
         
@@ -69,7 +69,13 @@ class ImpLogReg:
             if self.uncertain_data:
                 self.models = _uc_int(labeled_data, labeled_results, unlabeled_data, sample_weight, catagorical, self.params)
             else:
-                self.models = _uncertain_class(labeled_data, labeled_results, unlabeled_data, sample_weight = sample_weight, nested = False, params = self.params)
+                if simple:
+                    new_data = pd.concat((labeled_data,unlabeled_data), ignore_index = True)
+                    for i in it.product([False,True],repeat=len(unlabeled_data)):
+                        new_results = pd.concat((labeled_results, pd.Series(i)), ignore_index = True)
+                        self.models[i] = LogisticRegression().fit(new_data,new_results.to_numpy(dtype=bool))
+                else:
+                    self.models = _uncertain_class(labeled_data, labeled_results, unlabeled_data, sample_weight = sample_weight, nested = False, params = self.params)
             
         elif self.uncertain_data:
             self.models, self.data = _int_data(data,results,sample_weight,catagorical,self.params)
@@ -156,15 +162,16 @@ def _uncertain_class(data: pd.DataFrame, result: pd.Series, uncertain: pd.DataFr
             else:
                 return  -lr.coef_[:,n]
           
-    def find_xlr_model(data, results,  params,s,b ,ci, mm, n = 0):
+    def find_xlr_model(data, results, params,s,b ,ci, mm, n = 0,init = 0.5):
+
         method = 'TNC'
-        bounds = so.minimize(find_bounds, 0.5*np.ones(s), args = (data,results, params, ci, mm, n),bounds = b, method=method)
+        bounds = so.minimize(find_bounds, init*np.ones(s), args = (data,results, params, ci, mm, n),bounds = b, method=method)
         new_results = pd.concat((results, pd.Series(np.round(bounds.x))), ignore_index = True).convert_dtypes(bool)
         return LogisticRegression(**params).fit(data.to_numpy(),new_results.to_numpy(dtype=bool))
         
     s = len(uncertain)
     b = s*[(0,1)]
-    t = tqdm(total = 4+2*len(data.columns))
+    t = tqdm(total = 4+6*len(data.columns))
     new_data = pd.concat((data,uncertain), ignore_index = True)
 
     t.update(2)
@@ -176,13 +183,13 @@ def _uncertain_class(data: pd.DataFrame, result: pd.Series, uncertain: pd.DataFr
         '1most': LogisticRegression(**params).fit(new_data.to_numpy(),results_1s.to_numpy(dtype=bool)),
         '0most': LogisticRegression(**params).fit(new_data.to_numpy(),results_0s.to_numpy(dtype=bool))
     }
-    
-    for mm in ['min','max']:
-        models[f'r_{mm}_intercept'] = find_xlr_model(new_data, result, params,s,b, 'intercept', mm)
-        t.update()
-        for i,c in enumerate(data.columns):
-            models[f'r_{mm}_coef_{i}'] = find_xlr_model(new_data, result, params, s, b, 'coef', mm, i)
+    for init in [0,0.5,1]:
+        for mm in ['min','max']:
+            models[f'r{init}_{mm}_intercept'] = find_xlr_model(new_data, result, params,s,b, 'intercept', mm,init = init)
             t.update()
+            for i,c in enumerate(data.columns):
+                models[f'r{init}_{mm}_coef_{i}'] = find_xlr_model(new_data, result, params, s, b, 'coef', mm, i,init = init)
+                t.update()
         
     return models
 

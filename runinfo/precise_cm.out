@@ -1,2 +1,4 @@
-TP=0	FP=0
-FN=0	TN=1
+TP=37	FP=5
+FN=11	TN=47
+Sensitivity = 0.771
+Specificity = 0.904

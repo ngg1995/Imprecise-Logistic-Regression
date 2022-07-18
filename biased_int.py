@@ -39,6 +39,7 @@ def intervalise(val,eps,method,bias=0,bounds = None):
             return pba.I(m-eps,bounds[1])
        
     return pba.I(m-eps,m+eps)
+
 def midpoints(data):
     n_data = data.copy()
     for c in data.columns:
@@ -62,21 +63,8 @@ def generate_results(data):
     return results
 
 # %%
-### Generate Data
-# set seed for reproducability
-s = 1234
-np.random.seed(s)
-random.seed(s)
-
-# Params
-some = 50 # training datapoints
-many = 100 # many test samples
-
-train_data = pd.DataFrame(10*np.random.rand(some,1))
-train_results = generate_results(train_data)
-
-test_data = pd.DataFrame(10*np.random.rand(many,1))
-test_results = generate_results(test_data)
+#Load dataset 
+from dataset import train_data, train_results, test_data, test_results
 
 #%%
 ### Fit logistic regression model
@@ -109,35 +97,39 @@ def ex3(data):
             )
         elif data.iloc[i,0] < 8: 
             n_data.append(
-                intervalise(data.iloc[i,0],1,'u',-1,(0,10))
+                intervalise(data.iloc[i,0],0.75,'u',-1,(0,10))
             )
         else:
             n_data.append(
-                intervalise(data.iloc[i,0],1,'b',-1,(0,10))
+                intervalise(data.iloc[i,0],0.75,'b',-1,(0,10))
             )
     return pd.DataFrame({0:n_data}, dtype = 'O')
        
 def ex4(data,results):
     n_data = []
     for i in data.index:
-        if results.loc[i,0]:
-            intervalise(data.iloc[i,0],1,'b',1,(0,10))
+        if results.loc[i]:
+            n_data.append(
+                intervalise(data.iloc[i,0],0.5,'b',1,(0,10))
+            )
         else:
-            intervalise(data.iloc[i,0],1,'b',-1,(0,10))
+            n_data.append(
+                intervalise(data.iloc[i,0],0.5,'b',-1,(0,10))
+            )
     return pd.DataFrame({0:n_data}, dtype = 'O')
         
 UQdatasets = [
-    # low_val(data),
-    # hi_val(data),
+    low_val(train_data),
+    hi_val(train_data),
     ex3(train_data),
     ex4(train_data,train_results)
 ]
 
 
 #%%
-# fig, ax = plt.subplots(2,2,sharey = True)
+fig, axs = plt.subplots(2,2,sharey = True)
 
-for jj, UQdata in zip([0,1,2,3],UQdatasets):
+for jj, UQdata,ax in zip([0,1,2,3],UQdatasets,np.ravel(axs)):
 
     ### Fit models with midpoint data
     mid_data = midpoints(UQdata)
@@ -167,25 +159,25 @@ for jj, UQdata in zip([0,1,2,3],UQdatasets):
     # plt.set_xlabel('$x$')
     # plt.set_ylabel('$\pi(x)$')
 
-    plt.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = 'base')
-    plt.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = 'mid')
-    plt.plot(lX,lYd,color=col_ilr2,zorder=10,lw=3,label = 'ds',linestyle = '--')
-    plt.plot(lX,lYb,color=col_ilr3,zorder=10,lw=4,label = 'bd',linestyle = ':')
+    ax.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = 'base')
+    ax.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = 'mid')
+    ax.plot(lX,lYd,color=col_ilr2,zorder=10,lw=3,label = 'ds',linestyle = '--')
+    ax.plot(lX,lYb,color=col_ilr3,zorder=10,lw=4,label = 'bd',linestyle = ':')
 
     for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
         yd = np.random.uniform(-0.0,0.1)
         if r == 0: yd = -yd
         # plt.plot(m,r+yd,color = 'b',marker = 'x')
         if not isinstance(u,pba.Interval): u = pba.I(u)
-        plt.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
+        ax.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
         
-    plt.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
-    plt.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = 'Uncertainty Bounds')
-    plt.show()
+    ax.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
+    ax.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = 'Uncertainty Bounds')
+    # plt.show()
 
 #%%
 # fig.savefig('../LR-paper/figs/biased_int.png',dpi = 600)
 # fig.savefig('figs/biased_int.png',dpi = 600)
 
-# tikzplotlib.save("figs/biased_int.tikz",figure = fig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+tikzplotlib.save("figs/biased_int.tikz",figure = fig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
 

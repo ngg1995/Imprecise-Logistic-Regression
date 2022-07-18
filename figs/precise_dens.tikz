@@ -3,20 +3,228 @@
 
 \definecolor{darkgray176}{RGB}{176,176,176}
 
-\begin{axis}[
+\begin{groupplot}[group style={group size=1 by 2}]
+\nextgroupplot[
 tick align=outside,
 tick pos=left,
 x grid style={darkgray176},
-xlabel={\(\displaystyle \pi(x)\)},
-xmin=0, xmax=1,
+xmin=0.0250078662503221, xmax=1.01493582904701,
 xtick style={color=black},
 y grid style={darkgray176},
-ylabel={Outcome},
-ymin=-0.102850014321983, ymax=1.0920470259888,
+ymin=-0.104328662269497, ymax=0.0840287488169147,
 ytick style={color=black}
 ]
-\addplot [draw=black, fill=black, mark=*, only marks, opacity=0.5]
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
 table{dat/precise_dens-000.dat};
-\end{axis}
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-001.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-002.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-003.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-004.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-005.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-006.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-007.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-008.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-009.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-010.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-011.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-012.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-013.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-014.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-015.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-016.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-017.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-018.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-019.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-020.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-021.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-022.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-023.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-024.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-025.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-026.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-027.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-028.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-029.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-030.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-031.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-032.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-033.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-034.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-035.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-036.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-037.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-038.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-039.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-040.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-041.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-042.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-043.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-044.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-045.dat};
+
+\nextgroupplot[
+tick align=outside,
+tick pos=left,
+x grid style={darkgray176},
+xmin=-0.0218589900438756, xmax=0.761014219613343,
+xtick style={color=black},
+y grid style={darkgray176},
+ymin=-0.106705668862338, ymax=0.105212496563389,
+ytick style={color=black}
+]
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-046.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-047.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-048.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-049.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-050.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-051.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-052.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-053.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-054.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-055.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-056.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-057.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-058.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-059.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-060.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-061.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-062.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-063.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-064.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-065.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-066.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-067.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-068.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-069.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-070.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-071.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-072.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-073.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-074.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-075.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-076.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-077.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-078.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-079.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-080.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-081.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-082.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-083.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-084.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-085.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-086.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-087.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-088.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-089.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-090.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-091.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-092.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-093.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-094.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-095.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-096.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-097.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-098.dat};
+\addplot [draw=black, draw=none, fill=black, mark=*, opacity=0.5]
+table{dat/precise_dens-099.dat};
+\end{groupplot}
 
 \end{tikzpicture}

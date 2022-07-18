@@ -25,25 +25,6 @@ col_mid = '#DC143C'
 from ImpLogReg import *
 from LRF import *
 
-
-def intervalise(val,eps,method,b=0.5,bounds = None):
-    np.random.seed(100)
-    if method == 'u':
-        m = np.random.uniform(val-eps,val+eps)
-    elif method == 'b':
-        m = val - eps + 2*b*eps
-    elif method == 't':
-
-        m = np.random.triangular(val-eps,val+b*eps,val+eps)
-    
-    if bounds is not None:
-        if m-eps < bounds[0]:
-            return pba.I(bounds[0],m+eps)
-        elif m+eps >bounds[1]:
-            return pba.I(m-eps,bounds[1])
-        
-    return pba.I(m-eps,m+eps)
-
 def generate_results(data):
     # set seed for reproducability
     np.random.seed(10)
@@ -56,29 +37,10 @@ def generate_results(data):
     return results
 
 
-
-# %%
-# set seed for reproducability
-s = 1234
-np.random.seed(s)
-random.seed(s)
-
-# Params
-some = 50 # training datapoints
-many = 100 # many test samples
-
-train_data = pd.DataFrame(10*np.random.rand(some,1))
-train_results = generate_results(train_data)
-
-test_data = pd.DataFrame(10*np.random.rand(many,1))
-test_results = generate_results(test_data)
-
-
+from dataset import *
 
 # %%
 ### Intervalise data
-eps = 0.375
-
 # drop some results
 few = 5 #uncertain points
 random.seed(12345) # for reproducability
@@ -102,7 +64,7 @@ nuq.fit(nuq_data.to_numpy(),nuq_results.to_numpy())
 # %% [markdown]
 ### Fit UQ models
 ilr = ImpLogReg(uncertain_class=True, max_iter = 1000)
-ilr.fit(train_data,uq_results)
+ilr.fit(train_data,uq_results,simple = True)
 
 # %% 
 ### Plot results
@@ -281,7 +243,7 @@ print(*dat2,sep='\n',file = open('figs/dat/labels_dens-001.dat','w'))
 print(*dat3,sep='\n',file = open('figs/dat/labels_dens-002.dat','w'))
 print(*dat4,sep='\n',file = open('figs/dat/labels_dens-003.dat','w'))
 
-
+#%%
 with open('runinfo/labels_auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
     print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)

@@ -21,33 +21,8 @@ col_ilr3 = '#F7AEF8'
 col_ilr4 = '#132E32'
 col_mid = '#DC143C'
 
-def generate_results(data):
-    # set seed for reproducability
-    np.random.seed(10)
-    results = pd.Series(index = data.index, dtype = 'bool')
-    
-    for i in data.index:
-
-        results.loc[i] = data.loc[i,0] >= 5+2*np.random.randn()    
-        
-    return results
-
-
-### Generate Data
-# set seed for reproducability
-s = 1234
-np.random.seed(s)
-random.seed(s)
-
-# Params
-some = 50 # training datapoints
-many = 100 # many test samples
-
-train_data = pd.DataFrame(10*np.random.rand(some,1))
-train_results = generate_results(train_data)
-
-test_data = pd.DataFrame(10*np.random.rand(many,1))
-test_results = generate_results(test_data)
+# load dataset
+from dataset import train_data, train_results, test_data, test_results
 
 ### Fit logistic regression model
 base = LogisticRegression()
@@ -64,7 +39,7 @@ plt.scatter(train_data,train_results,color=col_points,zorder=10)
 # plt.scatter(test_data,test_results,color='green',zorder=10)
 plt.plot(lX,lY,color=col_precise,zorder=10,lw=2)
 plt.savefig('figs/precise.png',dpi = 600)
-plt.savefig('../LR-paper/figs/precise.png',dpi = 600)
+# plt.savefig('../LR-paper/figs/precise.png',dpi = 600)
 tikzplotlib.save('figs/precise.tikz',externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
 
 
@@ -85,25 +60,30 @@ s,fpr, predictions = ROC(model = base, data = test_data, results = test_results)
 
 rocfig,axroc = plt.subplots(1)
 densfig,axdens = plt.subplots(2,1)
-for p in predictions:
-    if p:
-        axdens[1].scatter(predictions,test_results+np.random.uniform(-0.05,0.05,len(predictions)),marker = 'o',color='k',alpha = 0.5)
+dat0 = ['x y']
+dat1 = ['x y']
+for i,(p,r) in enumerate(zip(predictions,test_results.to_list())):
+    yd = np.random.uniform(-0.1,0.1)
+    if r:
+        dat1 += [f"{p} {yd}"]
+        axdens[0].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
     else:
-        axdens[0].scatter(predictions,test_results+np.random.uniform(-0.05,0.05,len(predictions)),marker = 'o',color='k',alpha = 0.5)
-
+        dat0 += [f"{p} {yd}"]
+        axdens[1].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
 
 axroc.plot([0,1],[0,1],linestyle = ':',color=col_points,label = 'Random Classifier')
 axroc.set(xlabel = '$fpr$',ylabel='$s$')
 axroc.plot(fpr,s,color = col_precise, label = '$\mathcal{LR}(D)$')
 axroc.legend()
 rocfig.savefig('figs/precise_ROC.png',dpi = 600)
-rocfig.savefig('../LR-paper/figs/precise_ROC.png',dpi = 600)
+# rocfig.savefig('../LR-paper/figs/precise_ROC.png',dpi = 600)
 densfig.savefig('figs/precise_dens.png',dpi = 600)
-densfig.savefig('../LR-paper/figs/precise_dens.png',dpi = 600)
+# densfig.savefig('../LR-paper/figs/precise_dens.png',dpi = 600)
 
 tikzplotlib.save('figs/precise_ROC.tikz',figure = rocfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
-tikzplotlib.save('figs/precise_dens.tikz',figure = densfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
-
+# tikzplotlib.save('figs/precise_dens.tikz',figure = densfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+print(*dat0,sep='\n',file = open('figs/dat/precise_dens-000.dat','w'))
+print(*dat1,sep='\n',file = open('figs/dat/precise_dens-001.dat','w'))
 
 with open('runinfo/precise_auc.out','w') as f:
     print('AUC: %.4f' %auc(s,fpr), file = f)
