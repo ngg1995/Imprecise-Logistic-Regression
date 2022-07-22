@@ -15,7 +15,7 @@ def generate_results(data):
 
 ### Generate Data
 # set seed for reproducability
-s = 1
+s = 12
 np.random.seed(s)
 
 # Params

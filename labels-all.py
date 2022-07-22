@@ -34,8 +34,8 @@ eps = 0.375
 
 # drop some results
 few = 5 #uncertain points
-random.seed(12345) # for reproducability
-uq_data_index = random.sample([i for i in train_data.index ], k = few) # clustered around center
+random.seed(0) # for reproducability
+uq_data_index = random.sample([i for i in train_data.index if abs(train_data.loc[i,0]-5) <= 2], k = few) # clustered around center
 
 uq_data = train_data.loc[uq_data_index]
 uq_results = pd.Series([int(train_results.loc[i]) if i not in uq_data_index else pba.I(0,1) for i in train_results.index], index = train_data.index, dtype='O')
@@ -46,16 +46,17 @@ nuq_results = train_results.loc[[i for i in train_data.index if i not in uq_data
 #%% 
 ### Fit UQ models
 ilr = ImpLogReg(uncertain_class=True, max_iter = 1000)
-ilr.fit(train_data,uq_results,simple=True)
+ilr.fit(train_data,uq_results)
 
-all_models = []
+all_models = {}
 new_results = train_results.copy()
 for i in it.product([False,True],repeat=few):
+
     new_results.loc[uq_data_index] = i
-    all_models.append(
-        LogisticRegression().fit(train_data,new_results)
-    )
-# %% 
+    all_models[str(i)]= LogisticRegression().fit(train_data,new_results)
+
+       
+#%%
 ### Plot results
 steps = 300
 lX = np.linspace(0,10,steps)
@@ -69,22 +70,24 @@ ax1.set_ylabel('$\pi(x)$')
 
 ax1.scatter(nuq_data,nuq_results,color=col_points,zorder=10)
 
-for m in all_models:
-    lY = m.predict_proba(lX.reshape(-1,1))[:,1]
-    ax1.plot(lX,lY, color='grey', linewidth = 1)
     
 for i in uq_data_index:
     ax1.plot([uq_data.loc[i],uq_data.loc[i]],[0,1],color=col_points)
     # plt.scatter(uq_data.loc[i],train_results.loc[i],marker = 'd',color = 'grey',zorder = 14)
 
-
-
-for m,c,l in zip(ilr,[col_ilr,col_ilr2,col_ilr3,col_ilr4,col_mid,col_precise],[r"$\underline{E}$",r"$\underline{E}$",r"$E^\prime_{\underline{\beta_0}}$",r"$E^\prime_{\underline{\beta_1}}$",r"$E^\prime_{\overline{\beta_0}}$",r"$E^\prime_{\overline{\beta_1}}$"]):
-    lY = m.predict_proba(lX.reshape(-1, 1))[:,1]
-    ax1.plot(lX,lY, color=c, linewidth = 2,label = l)
-ax1.legend()
-ax1.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2,linestyle = '--',)
-ax1.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,linestyle = '--',label = '$\mathcal{ILR}(F)$')
+for m in all_models.values():
+    lY = m.predict_proba(lX.reshape(-1,1))[:,1]
+    ax1.plot(lX,lY, color='lightgrey', linewidth = 1)
+    
+for i,m in ilr.models.items():
+    lY = m.predict_proba(lX.reshape(-1,1))[:,1]
+    ax1.plot(lX,lY,  linewidth = 2,label = i)
+# ax1.legend()
+fig1.show()
+ax1.plot(lX,[i.left for i in lYu],color='k',lw=2,linestyle = '--',)
+ax1.plot(lX,[i.right for i in lYu],color='k',lw=2,linestyle = '--',label = '$\mathcal{ILR}(F)$')
 
 #%%
-tikzplotlib.save('figs/labels-all.tikz',figure = fig1,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+# tikzplotlib.save('figs/labels-all.tikz',figure = fig1,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+
+# %%

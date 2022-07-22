@@ -84,21 +84,8 @@ def get_sample(data,r = None):
             
     return n_data
 # %%
-### Generate Data
-# set seed for reproducability
-s = 1234
-np.random.seed(s)
-random.seed(s)
-
-# Params
-some = 50 # training datapoints
-many = 100 # many test samples
-
-train_data = pd.DataFrame(10*np.random.rand(some,1))
-train_results = generate_results(train_data)
-
-test_data = pd.DataFrame(10*np.random.rand(many,1))
-test_results = generate_results(test_data)
+### Load Data
+from dataset import train_data, train_results, test_data, test_results
 
 #%%
 ### Fit logistic regression model
@@ -116,7 +103,7 @@ UQdata = pd.DataFrame({
 #%%
 ### Fit UQ models
 ilr = ImpLogReg(uncertain_data=True, max_iter = 1000)
-ilr.fit(UQdata,train_results,False)
+ilr.fit(UQdata,train_results)
 
 #%%
 fig, ax = plt.subplots()
@@ -138,9 +125,9 @@ for i in range(many+10):
     ax.plot(lX,lY, color='grey', linewidth = 1)
     
 
-for m,c,l in zip(ilr,[col_ilr,col_ilr2,col_ilr3,col_ilr4,col_mid,col_precise],[r"$\underline{E}$",r"$\underline{E}$",r"$E^\prime_{\underline{\beta_0}}$",r"$E^\prime_{\underline{\beta_1}}$",r"$E^\prime_{\overline{\beta_0}}$",r"$E^\prime_{\overline{\beta_1}}$"]):
+for l,m in ilr.models.items():
     lY = m.predict_proba(lX.reshape(-1, 1))[:,1]
-    ax.plot(lX,lY, color=c, linewidth = 2,label = l)
+    ax.plot(lX,lY, linewidth = 2,label = l)
 ax.legend()
 
 for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
@@ -150,8 +137,7 @@ for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
         yd = -yd
     ax.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
 # %%
-# fig.show()
-tikzplotlib.save('figs/features-all.tikz',figure = fig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+fig.show()
+# tikzplotlib.save('figs/features-all.tikz',figure = fig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
 
-# %%
 # %%

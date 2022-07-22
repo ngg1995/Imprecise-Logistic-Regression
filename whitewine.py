@@ -1,22 +1,43 @@
+#%%
+from scipy import rand
+import tikzplotlib
 from ImpLogReg import ImpLogReg
 import pandas as pd
 import numpy as np
 import random
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
 import itertools as it
 from tqdm import tqdm
 import pba
 
-from LRF import *
-from ImpLogReg import *
+import matplotlib
+font = {'size'   : 16,'family' : 'Times New Roman'}
+matplotlib.rc('font', **font)
 
-def intervalise(val,eps,method='u',b=0,bounds = None):
-    
+from ImpLogReg import *
+from LRF import *
+
+
+# colors
+col_precise = 'black'
+col_points = '#A69888'
+col_ilr = '#4169E1'
+col_ilr2 = '#5d2e46'
+col_ilr3 = '#FF8C00'
+col_ilr4 = '#008000'
+col_mid = '#DC143C'
+
+def intervalise(val,eps,method,b=0.5,bounds = None):
+    np.random.seed(100)
     if method == 'u':
         m = np.random.uniform(val-eps,val+eps)
+    elif method == 'b':
+        m = val - eps + 2*b*eps
     elif method == 't':
-        m = np.random.triangular(val-eps,val-b*eps,val+eps)
+
+        m = np.random.triangular(val-eps,val+b*eps,val+eps)
     
     if bounds is not None:
         if m-eps < bounds[0]:
@@ -37,98 +58,104 @@ def deintervalise(data, binary_cols):
             
     return n_data
 
-### Import the data
-wine_data = pd.read_csv('whittwwine.csv',index_col = None)
+#%%
+### Load whitewine dataset
+whitewine = pd.read_csv('whitewine.csv',index_col = None)
 
-### Split the data into test/train factors and result and generate uncertain points
-random.seed(2) # for reproducability
+X = whitewine[[c for c in whitewine.columns if c != 'quality']]
+Y = whitewine.quality > 6
 
-train_data_index = random.sample(list(wine_data.index), k = 200)
-test_data_index = [i for i in wine_data.index if i not in train_data_index]
+### Split into test and train samples
+train_data, test_data, train_results, test_results = train_test_split(X, Y, test_size=0.75,random_state = 0)
+print(len(train_data))
 
-
-cols = [c for c in wine_data.columns if c in ["citric acid","total sulfur dioxide","sulphates","alcohol"]]
-
-# test_data = wine_data.loc[test_data_index,cols]
-# test_results = wine_data.loc[test_data_index,"quality"] >= 6
-
-train_data = wine_data.loc[train_data_index,cols]
-train_results = wine_data.loc[train_data_index,"quality"] >= 6
-
-uq_results_index = random.sample([i for i in train_data_index if wine_data.loc[i,"quality"] == 6], k = 5)
-uq_results = pd.Series([pba.I(0,1) if i in uq_results_index else train_results.loc[i] for i in train_data_index],index = train_data_index, dtype='O')
-
-# intervalise(val,eps,method='u',b=0,bounds = None):
-
-uq_data = pd.DataFrame({
-    # "fixed acidity": [intervalise(i,0.1,'u',0.5,None) for i in train_data["fixed acidity"]],
-    # "volatile acidity": [intervalise(i,0.05,'u',0.75,None) for i in train_data["volatile acidity"]],
-    "citric acid": [intervalise(i,0.01,'t',0,[0,1]) for i in train_data["citric acid"]],
-    # "residual sugar": [intervalise(i,0.1,'u',0,None) for i in train_data["residual sugar"]],
-    # "chlorides": [intervalise(i,0.001,'u',0,None) for i in train_data["chlorides"]],
-    # "free sulfur dioxide": [intervalise(i,1,'u',0,None) for i in train_data["free sulfur dioxide"]],
-    "total sulfur dioxide": [intervalise(i,5,'u',0,None) for i in train_data["total sulfur dioxide"]],
-    # "density": [intervalise(i,0.002,'t',1,[0,1]) for i in train_data["density"]],
-    # "pH": [intervalise(i,0.05,'u',0,None) for i in train_data["pH"]],
-    "sulphates": [intervalise(i,0.01,'u',0,None) for i in train_data["sulphates"]],
-    "alcohol": [intervalise(i,0.2,'u',0,None) for i in train_data["alcohol"]]
-    }, index = train_data_index, dtype = 'O'
-)
-
-nuq_data = deintervalise(uq_data.loc[[i for i in train_data_index if i not in uq_results_index]],[None])
-nuq_results = pd.Series([train_results.loc[i] for i in train_data_index if i not in uq_results_index])
-
-### Fit logistic regression model on full dataset
+# %%
+### Fit LR model on dataset
 base = LogisticRegression(max_iter=1000)
 base.fit(train_data.to_numpy(),train_results.to_numpy())
 
-### Fit nuq model
-nuq = LogisticRegression(max_iter=1000)
-nuq.fit(nuq_data.to_numpy(),nuq_results.to_numpy())
+train_data_index = list(train_data.index)
+uq_results_index = random.sample([i for i in train_data_index if (whitewine.loc[i,"quality"] == 6 or whitewine.loc[i,"quality"] == 7)], k = 20)
+uq_results = pd.Series([pba.I(0,1) if i in uq_results_index else train_results.loc[i] for i in train_data_index],index = train_data_index, dtype='O')
 
-### Fit uq model
-ilr = ImpLogReg(max_iter = 1000, uncertain_class=True, uncertain_data=True)
-ilr.fit(uq_data, uq_results)
+#%%
 
 
+#%%
+### Fit ILR model
+ilr = ImpLogReg(uncertain_data=0, uncertain_class=True, max_iter = 1000)
+ilr.fit(train_data,uq_results)
+
+# %% [markdown]
+s,fpr,probabilities = ROC(model = base, data = test_data, results = test_results)
+s_t, fpr_t, Sigma, Tau = incert_ROC(ilr, test_data, test_results)
+
+s_i, fpr_i,ilr_probabilities = ROC(ilr, test_data, test_results)
+
+
+xl = []
+xu = []
+yl = []
+yu = []
+for i,j in zip(fpr_i,s_i):
+    
+    if not isinstance(i,pba.Interval):
+        i = pba.I(i)
+    if not isinstance(j,pba.Interval):
+        j = pba.I(j)
+      
+    xl.append(i.left)
+    xu.append(i.right)
+    
+    yl.append(j.left)
+    yu.append(j.right)
+#%%
+rocfig,axroc = plt.subplots(1,1)
+axroc.plot(xl,yu, col_ilr,label = 'Imprecise Model')
+axroc.plot(xu,yl, col_ilr )
+axroc.plot([0,1],[0,1],linestyle = '--',color=col_points)
+axroc.set(xlabel = '$fpr$',ylabel='$s$')
+axroc.plot(fpr,s,color=col_precise,label = 'Base')
+# axroc.plot(nuq_fpr,nuq_s,color=col_mid,linestyle = '--',label='Deintervalised')
+# axroc.plot(fpr_t,s_t,col_ilr3,label='No Pwhiteiction')
+axroc.legend()
+# rocfig.savefig('figs/whitewine_ROC.eps',dpi = 600)
+# rocfig.savefig('../SUM/whitewine_ROC.eps',dpi = 600)
+
+tikzplotlib.savefig('figs/whitewine_roc.tikz',figure = rocfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+
+#%%
+with open('runinfo/whitewine_auc.out','w') as f:
+    print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
+    # print('NO Pwhite: %.4f' %auc(s_t,fpr_t), file = f)
+    print('ILR: [%.3f,%.3f]'  %(auc(yl,xu),auc(yu,xl)), file = f)
+
+    
+# %%
 ### Get confusion matrix
 # Classify test data
-base_predict = base.predict(test_data)
+c = 0.18
+base_pwhiteict = [p>=c for p in base.pwhiteict_proba(test_data.to_numpy())[:,1]]
 
 # CLASSIFY NO_UQ MODEL DATA 
-nuq_predict = nuq.predict(test_data)
+# nuq_pwhiteict = [p>=c for p in nuq.pwhiteict_proba(test_data.to_numpy())[:,1]]
 
 # CLASSIFY UQ MODEL 
-ilr_predict = ilr.predict(test_data)
+ilr_pwhiteict = [p>=c for p in ilr.pwhiteict_proba(test_data.to_numpy())[:,1]]
 
-with open('runinfo/redwine_cm.out','w') as f:
+with open('runinfo/whitewine_cm.out','w') as f:
     print('TRUE MODEL',file = f)
-    a,b,c,d = generate_confusion_matrix(test_results,base_predict)
+    a,b,c,d = generate_confusion_matrix(test_results,base_pwhiteict)
     print('TP=%i\tFP=%i\nFN=%i\tTN=%i' %(a,b,c,d),file = f)
 
     # Calculate sensitivity and specificity
     print('Sensitivity = %.3f' %(a/(a+c)),file = f)
     print('Specificity = %.3f' %(d/(b+d)),file = f)
 
-    print('DISCARDED DATA MODEL',file = f)
-    aa,bb,cc,dd = generate_confusion_matrix(test_results,nuq_predict)
-    try:
-        ss = 1/(1+cc/aa)
-    except:
-        ss = None
-    try:    
-        tt = 1/(1+bb/dd)
-    except:
-        tt = None
-    print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aa,bb,cc,dd),file = f)
-
-    # Calculate sensitivity and specificity
-    print('Sensitivity = %.3f' %(ss),file = f)
-    print('Specificity = %.3f' %(tt),file = f)
     
     print('UQ MODEL',file = f)
     
-    aaai,bbbi,ccci,dddi = generate_confusion_matrix(test_results,ilr_predict,throw = False)
+    aaai,bbbi,ccci,dddi = generate_confusion_matrix(test_results,ilr_pwhiteict,throw = False)
     try:
         sssi = aaai/(a+c)
     except:
@@ -144,7 +171,7 @@ with open('runinfo/redwine_cm.out','w') as f:
     print('Sensitivity = [%.3f,%.3f]\nSpecificity = [%.3f,%.3f]' %(*sssi,*ttti),file = f)
 
     
-    aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(test_results,ilr_predict,throw = True)
+    aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(test_results,ilr_pwhiteict,throw = True)
     try:
         sss = 1/(1+ccc/aaa)
     except:
@@ -162,95 +189,4 @@ with open('runinfo/redwine_cm.out','w') as f:
     print('sigma = %.3f' %(eee/(aaa+ccc+eee)),file = f)
     print('tau = %.3f' %(fff/(bbb+ddd+fff)),file = f)
    
-
-# ### Descriminatory Performance Plots
-# s,fpr,probabilities = ROC(model = base, data = train_data, results = train_results)
-
-# nuq_s,nuq_fpr,nuq_probabilities = ROC(model = nuq, data = train_data, results = train_results)
-# s_t, fpr_t, Sigma, Tau = incert_ROC(ilr, train_data, train_results)
-
-# s_i, fpr_i,ilr_probabilities = ROC(ilr, train_data, train_results)
-
-# densfig,axdens = plt.subplots(nrows = 2, sharex= True)
-
-# for i,(p,u,nuqp,r) in enumerate(zip(probabilities,ilr_probabilities,nuq_probabilities,train_results.to_list())):
-#     yd = np.random.uniform(-0.1,0.1)
-#     if r:
-#         axdens[0].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
-#         axdens[0].scatter(nuqp,0.21+yd,color = '#DC143C',marker = 'o',alpha = 0.5)
-#         axdens[0].plot([*u],[yd-0.21,yd-0.21],color = '#4169E1',alpha = 0.3)
-#         axdens[0].scatter([*u],[yd-0.21,yd-0.21],color = '#4169E1',marker = '|')
-#     else:
-#         axdens[1].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
-#         axdens[1].scatter(nuqp,0.21+yd,color = '#DC143C',marker = 'o',alpha = 0.5)
-#         axdens[1].plot([*u],[yd-0.21,yd-0.21],color = '#4169E1',alpha = 0.3)
-#         axdens[1].scatter([*u],[yd-0.21,yd-0.21],color = '#4169E1',marker = '|')
-        
-        
-# axdens[0].set(ylabel = 'Outcome = 1',yticks = [])
-# axdens[1].set(xlabel = '$\pi(x)$',ylabel = 'Outcome = 0',yticks = [],xlim  = (0, 1))
-
-# densfig.tight_layout()
-
-# rocfig,axroc = plt.subplots(1,1)
-# axroc.plot([0,1],[0,1],'k:',label = 'Random Classifier')
-# axroc.set(xlabel = '$fpr$',ylabel='$s$')
-# axroc.plot(fpr,s,'k',label = 'Base')
-# axroc.plot(nuq_fpr,nuq_s,color='#DC143C',linestyle='--',label='Ignored Uncertainty')
-# axroc.plot(fpr_t,s_t,'#4169E1',label='Imprecise Model')
-# axroc.legend()
-# rocfig.savefig('figs/redwine_ROC.png',dpi = 600)
-# rocfig.savefig('../paper/figs/redwine_ROC.png',dpi = 600)
-# densfig.savefig('figs/redwine_dens.png',dpi =600)
-# densfig.savefig('../paper/figs/redwine_dens.png',dpi =600)
-
-
-# with open('runinfo/redwine_auc.out','w') as f:
-#     print('NO UNCERTAINTY: %.3f' %auc(s,fpr), file = f)
-#     print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)
-#     print('THROW: %.3f' %auc(s_t,fpr_t), file = f)
-#     # print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
-    
-
-
-# fig = plt.figure()
-# ax = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
-# ax.set_xlabel('$fpr$')
-# ax.set_ylabel('$s$')
-# # ax.set_zlabel('$1-\sigma,1-\\tau$')
-# ax.plot(fpr_t,s_t,'#4169E1',alpha = 0.5)
-# ax.plot3D(fpr_t,s_t,Sigma,'#FF8C00',label = '$\\sigma$')
-# ax.plot3D(fpr_t,s_t,Tau,'#008000',label = '$\\tau$')
-# # ax.plot3D(fpr,s,Nu,'k',label = '$1-\\nu$')
-
-# ax.legend()
-
-# plt.savefig('figs/redwine_ROC3D.png',dpi = 600)
-# plt.savefig('../paper/figs/redwine_ROC3D.png',dpi = 600)
-# plt.clf()
-
-# plt.xlabel('$fpr$/$s$')
-# plt.ylabel('$\\sigma$/$\\tau$')
-# plt.plot(s_t,Sigma,'#FF8C00',label = '$\\sigma$ v $s$')
-# plt.plot(fpr_t,Tau,'#008000',label = '$\\tau$ v $fpr$')
-# plt.legend()
-
-
-# plt.savefig('figs/redwine_ST.png',dpi = 600)
-# plt.savefig('../paper/figs/redwine_ST.png',dpi = 600)
-
-# plt.clf()
-
-
-# ### Hosmer-Lemeshow
-# hl_b, pval_b = hosmer_lemeshow_test(base,train_data,train_results,g = 10)
-
-# hl_nuq, pval_nuq = hosmer_lemeshow_test(nuq,train_data,train_results,g = 10)
-# #
-# hl_uq, pval_uq = UQ_hosmer_lemeshow_test(ilr,train_data,train_results,g = 10)
-
-# with open('runinfo/redwine_HL.out','w') as f:
-#     print('base\nhl = %.3f, p = %.3f' %(hl_b,pval_b),file = f)
-#     print('no UQ\nhl = %.3f, p = %.3f' %(hl_nuq,pval_nuq),file = f) 
-
-#     print('UQ\nhl = [%.3f,%.3f], p = [%.3f,%.3f]' %(*hl_uq,*pval_uq),file = f) 
+# %%

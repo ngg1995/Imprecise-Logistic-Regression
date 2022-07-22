@@ -5,6 +5,7 @@
 \definecolor{darkgray176}{RGB}{176,176,176}
 \definecolor{darkorange}{RGB}{255,140,0}
 \definecolor{darkslategray934670}{RGB}{93,46,70}
+\definecolor{goldenrod1911910}{RGB}{191,191,0}
 \definecolor{gray}{RGB}{128,128,128}
 \definecolor{green}{RGB}{0,128,0}
 \definecolor{lightgray204}{RGB}{204,204,204}
@@ -17,8 +18,8 @@ legend style={
   fill opacity=0.8,
   draw opacity=1,
   text opacity=1,
-  at={(0.91,0.5)},
-  anchor=east,
+  at={(0.03,0.97)},
+  anchor=north west,
   draw=lightgray204
 },
 tick align=outside,
@@ -120,51 +121,53 @@ table {opts_str}{dat/labels-all-031.dat};
 table {opts_str}{dat/labels-all-032.dat};
 \addplot [semithick, rosybrown166152136, forget plot]
 table {%
-0.850442113697779 0
-0.850442113697779 1
+2.63315015185135 0
+2.63315015185135 1
 };
 \addplot [semithick, rosybrown166152136, forget plot]
 table {%
-9.08595503093096 0
-9.08595503093096 1
+3.09897584490029 0
+3.09897584490029 1
 };
 \addplot [semithick, rosybrown166152136, forget plot]
 table {%
-4.17022004702574 0
-4.17022004702574 1
+5.33739393380298 0
+5.33739393380298 1
 };
 \addplot [semithick, rosybrown166152136, forget plot]
 table {%
-1.98101489084879 0
-1.98101489084879 1
+4.65508100172511 0
+4.65508100172511 1
 };
 \addplot [semithick, rosybrown166152136, forget plot]
 table {%
-6.92322615669314 0
-6.92322615669314 1
+7.02622355255246 0
+7.02622355255246 1
 };
 \addplot [thick, royalblue]
 table {opts_str}{dat/labels-all-033.dat};
-\addlegendentry{$\underline{E}$}
+\addlegendentry{$E^\prime_{0}$}
 \addplot [thick, darkslategray934670]
 table {opts_str}{dat/labels-all-034.dat};
-\addlegendentry{$\underline{E}$}
+\addlegendentry{$E^\prime_{1}$}
 \addplot [thick, darkorange]
 table {opts_str}{dat/labels-all-035.dat};
 \addlegendentry{$E^\prime_{\underline{\beta_0}}$}
 \addplot [thick, green]
 table {opts_str}{dat/labels-all-036.dat};
-\addlegendentry{$E^\prime_{\underline{\beta_1}}$}
+\addlegendentry{$E^\prime_{\overline{\beta_0}}$}
 \addplot [thick, crimson]
 table {opts_str}{dat/labels-all-037.dat};
-\addlegendentry{$E^\prime_{\overline{\beta_0}}$}
+\addlegendentry{$E^\prime_{\underline{\beta_1}}$}
 \addplot [thick, black]
 table {opts_str}{dat/labels-all-038.dat};
 \addlegendentry{$E^\prime_{\overline{\beta_1}}$}
-\addplot [thick, royalblue, dashed, forget plot]
+\addplot [thick, black]
 table {opts_str}{dat/labels-all-039.dat};
-\addplot [thick, royalblue, dashed, forget plot]
+\addlegendentry{10_min}
+\addplot [thick, goldenrod1911910]
 table {opts_str}{dat/labels-all-040.dat};
+\addlegendentry{10_max}
 \addplot [draw=rosybrown166152136, fill=rosybrown166152136, forget plot, mark=*, only marks]
 table{dat/labels-all-000.dat};
 \end{axis}

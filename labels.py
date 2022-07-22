@@ -44,7 +44,7 @@ from dataset import *
 # drop some results
 few = 5 #uncertain points
 random.seed(12345) # for reproducability
-uq_data_index = random.sample([i for i in train_data.index if abs(train_data.loc[i,0]-5) <= 1.5], k = few) # clustered around center
+uq_data_index = random.sample([i for i in train_data.index if abs(train_data.loc[i,0]-5) <= 2], k = few) # clustered around center
 
 uq_data = train_data.loc[uq_data_index]
 uq_results = pd.Series([int(train_results.loc[i]) if i not in uq_data_index else pba.I(0,1) for i in train_results.index], index = train_data.index, dtype='O')
@@ -88,8 +88,8 @@ for i in uq_data_index:
 
 ax1.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
 ax1.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = '$\mathcal{ILR}(F)$')
-fig1.savefig('../LR-paper/figs/labels.png',dpi = 600)
-fig1.savefig('figs/labels.png',dpi = 600)
+# fig1.savefig('../LR-paper/figs/labels.png',dpi = 600)
+# fig1.savefig('figs/labels.png',dpi = 600)
 
 tikzplotlib.save('figs/labels.tikz',figure = fig1,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
 
@@ -230,10 +230,10 @@ axroc.plot(fpr,s,'k',label = '$\mathcal{LR}(D)$')
 axroc.plot(nuq_fpr,nuq_s,color=col_mid,linestyle='--',label='$\mathcal{LR}(F_\\times)$')
 axroc.plot(fpr_t,s_t,col_ilr2,label='$\mathcal{ILR}(F)$ (Predictive)')
 axroc.legend()
-rocfig.savefig('figs/labels_ROC.png',dpi = 600)
-rocfig.savefig('../LR-paper/figs/labels_ROC.png',dpi = 600)
-densfig.savefig('figs/labels_dens.png',dpi =600)
-densfig.savefig('../LR-paper/figs/labels_dens.png',dpi =600)
+# rocfig.savefig('figs/labels_ROC.png',dpi = 600)
+# rocfig.savefig('../LR-paper/figs/labels_ROC.png',dpi = 600)
+# densfig.savefig('figs/labels_dens.png',dpi =600)
+# densfig.savefig('../LR-paper/figs/labels_dens.png',dpi =600)
 
 tikzplotlib.save('figs/labels_ROC.tikz',figure = rocfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
 
@@ -266,8 +266,8 @@ ax2.plot3D(fpr_t,s_t,Tau,col_ilr4,label = '$\\tau$')
 
 ax2.legend()
 
-fig2.savefig('figs/labels_ROC3D.png',dpi = 600)
-fig2.savefig('../LR-paper/figs/labels_ROC3D.png',dpi = 600)
+# fig2.savefig('figs/labels_ROC3D.png',dpi = 600)
+# fig2.savefig('../LR-paper/figs/labels_ROC3D.png',dpi = 600)
 
 tikzplotlib.save("figs/labels_ROC3D.tikz",figure = fig2,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
 
@@ -280,8 +280,8 @@ ax3.plot(fpr_t,Tau,col_ilr4,label = '$\\tau$ v $fpr$')
 ax3.legend()
 
 
-fig3.savefig('figs/labels_ST.png',dpi = 600)
-fig3.savefig('../LR-paper/figs/labels_ST.png',dpi = 600)
+# fig3.savefig('figs/labels_ST.png',dpi = 600)
+# fig3.savefig('../LR-paper/figs/labels_ST.png',dpi = 600)
 tikzplotlib.save("figs/labels_ST.tikz",figure = fig3,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
 
 
