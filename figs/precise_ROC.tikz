@@ -11,8 +11,8 @@ legend style={
   fill opacity=0.8,
   draw opacity=1,
   text opacity=1,
-  at={(0.97,0.03)},
-  anchor=south east,
+  at={(0.03,0.97)},
+  anchor=north west,
   draw=lightgray204
 },
 tick align=outside,

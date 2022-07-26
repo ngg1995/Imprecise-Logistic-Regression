@@ -165,8 +165,8 @@ ax1.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
 ax1.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = 'ilr')
 ax1.legend()
 #%%
-fig1.savefig('../LR-paper/figs/features.png',dpi = 600)
-fig1.savefig('figs/features.png',dpi = 600)
+# fig1.savefig('../LR-paper/figs/features.png',dpi = 600)
+# fig1.savefig('figs/features.png',dpi = 600)
 tikzplotlib.save('figs/features.tikz',figure = fig1,externalize_tables = True, tex_relative_path_to_data = 'dat/',override_externals = True)
 
 #%% 
@@ -335,10 +335,10 @@ axroc.plot(fpr,s,'k',label = '$\mathcal{LR}(D)$')
 axroc.plot(mid_fpr,mid_s,color=col_mid,linestyle='--',label='$\mathcal{LR}(F_\\times)$')
 axroc.plot(fpr_t,s_t,col_ilr2,label='$\mathcal{ILR}(E)$ (Predictive)')
 axroc.legend()
-rocfig.savefig('figs/features_ROC.png',dpi = 600)
-rocfig.savefig('../LR-paper/figs/features_ROC.png',dpi = 600)
-densfig.savefig('figs/features_dens.png',dpi =600)
-densfig.savefig('../LR-paper/figs/features_dens.png',dpi =600)
+# rocfig.savefig('figs/features_ROC.png',dpi = 600)
+# rocfig.savefig('../LR-paper/figs/features_ROC.png',dpi = 600)
+# densfig.savefig('figs/features_dens.png',dpi =600)
+# densfig.savefig('../LR-paper/figs/features_dens.png',dpi =600)
 
 tikzplotlib.save('figs/features_ROC.tikz',figure = rocfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
 

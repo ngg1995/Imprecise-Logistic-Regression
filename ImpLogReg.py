@@ -252,7 +252,7 @@ def _int_data(data,results,sample_weight,catagorical,params, nested = False) -> 
             models[f'r_{mm}_coef_{i}'], dataset[f'r_{mm}_coef_{i}'] = find_xlr_model(data, results, uq, params,s,b, 'coef',mm,i,catagorical)
             t.update()
 
-    return models, dataset
+    return models
 
 def _uc_int(data, results, uncertain, sample_weight, catagorical, params) -> dict:
     

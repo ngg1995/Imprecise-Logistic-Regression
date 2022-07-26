@@ -1,0 +1,333 @@
+% This file was created with tikzplotlib v0.10.1.
+\begin{tikzpicture}
+
+\definecolor{crimson}{RGB}{220,20,60}
+\definecolor{darkgray176}{RGB}{176,176,176}
+\definecolor{green}{RGB}{0,128,0}
+\definecolor{rosybrown166152136}{RGB}{166,152,136}
+\definecolor{royalblue}{RGB}{65,105,225}
+
+\begin{groupplot}[group style={group size=2 by 2}]
+\nextgroupplot[
+tick align=outside,
+tick pos=left,
+x grid style={darkgray176},
+xmin=-0.5, xmax=10.5,
+xtick style={color=black},
+y grid style={darkgray176},
+ymin=-0.05, ymax=1.05,
+ytick style={color=black}
+]
+\addplot [semithick, rosybrown166152136]
+table {%
+4.80931901484361 0
+4.80931901484361 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+4.26351306962808 0
+4.26351306962808 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+5.19485119259809 0
+5.19485119259809 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+7.19468969785563 0
+7.19468969785563 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+1.824917304535 0
+1.824917304535 1
+};
+\addplot [thick, royalblue]
+table {opts_str}{dat/biased_labels-004.dat};
+\addplot [thick, royalblue]
+table {opts_str}{dat/biased_labels-005.dat};
+\addplot [thick, black]
+table {opts_str}{dat/biased_labels-000.dat};
+\addplot [thick, crimson]
+table {opts_str}{dat/biased_labels-001.dat};
+\addplot [thick, green]
+table {opts_str}{dat/biased_labels-002.dat};
+\addplot [draw=rosybrown166152136, fill=rosybrown166152136, mark=*, only marks]
+table{dat/biased_labels-003.dat};
+
+\nextgroupplot[
+scaled y ticks=manual:{}{\pgfmathparse{#1}},
+tick align=outside,
+tick pos=left,
+x grid style={darkgray176},
+xmin=-0.5, xmax=10.5,
+xtick style={color=black},
+y grid style={darkgray176},
+ymin=-0.05, ymax=1.05,
+ytick style={color=black},
+yticklabels={}
+]
+\addplot [semithick, rosybrown166152136]
+table {%
+5.51314769082891 0
+5.51314769082891 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+4.23106460124461 0
+4.23106460124461 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+5.19485119259809 0
+5.19485119259809 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+6.11023510677583 0
+6.11023510677583 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+3.43178016150869 0
+3.43178016150869 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+3.17285481820321 0
+3.17285481820321 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+5.31827587096866 0
+5.31827587096866 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+1.824917304535 0
+1.824917304535 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+9.4416001820388 0
+9.4416001820388 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+0.596778966095683 0
+0.596778966095683 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+1.15618395079296 0
+1.15618395079296 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+2.26851453564203 0
+2.26851453564203 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+8.93389163117135 0
+8.93389163117135 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+2.50455365396507 0
+2.50455365396507 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+2.28263230878956 0
+2.28263230878956 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+3.22958913853178 0
+3.22958913853178 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+4.30862763329644 0
+4.30862763329644 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+4.83034264262704 0
+4.83034264262704 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+2.93714046388829 0
+2.93714046388829 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+8.66309157883366 0
+8.66309157883366 1
+};
+\addplot [thick, royalblue]
+table {opts_str}{dat/biased_labels-010.dat};
+\addplot [thick, royalblue]
+table {opts_str}{dat/biased_labels-011.dat};
+\addplot [thick, black]
+table {opts_str}{dat/biased_labels-006.dat};
+\addplot [thick, crimson]
+table {opts_str}{dat/biased_labels-007.dat};
+\addplot [thick, green]
+table {opts_str}{dat/biased_labels-008.dat};
+\addplot [draw=rosybrown166152136, fill=rosybrown166152136, mark=*, only marks]
+table{dat/biased_labels-009.dat};
+
+\nextgroupplot[
+tick align=outside,
+tick pos=left,
+x grid style={darkgray176},
+xmin=-0.5, xmax=10.5,
+xtick style={color=black},
+y grid style={darkgray176},
+ymin=-0.05, ymax=1.05,
+ytick style={color=black}
+]
+\addplot [semithick, rosybrown166152136]
+table {%
+1.75451756147493 0
+1.75451756147493 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+3.61788655622314 0
+3.61788655622314 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+2.26851453564203 0
+2.26851453564203 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+2.93714046388829 0
+2.93714046388829 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+1.824917304535 0
+1.824917304535 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+2.50455365396507 0
+2.50455365396507 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+3.92117518194151 0
+3.92117518194151 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+1.15618395079296 0
+1.15618395079296 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+3.17285481820321 0
+3.17285481820321 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+2.86139334950379 0
+2.86139334950379 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+3.43178016150869 0
+3.43178016150869 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+0.596778966095683 0
+0.596778966095683 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+2.28263230878956 0
+2.28263230878956 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+3.12261222972465 0
+3.12261222972465 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+0.921049399450752 0
+0.921049399450752 1
+};
+\addplot [thick, royalblue]
+table {opts_str}{dat/biased_labels-016.dat};
+\addplot [thick, royalblue]
+table {opts_str}{dat/biased_labels-017.dat};
+\addplot [thick, black]
+table {opts_str}{dat/biased_labels-012.dat};
+\addplot [thick, crimson]
+table {opts_str}{dat/biased_labels-013.dat};
+\addplot [thick, green]
+table {opts_str}{dat/biased_labels-014.dat};
+\addplot [draw=rosybrown166152136, fill=rosybrown166152136, mark=*, only marks]
+table{dat/biased_labels-015.dat};
+
+\nextgroupplot[
+scaled y ticks=manual:{}{\pgfmathparse{#1}},
+tick align=outside,
+tick pos=left,
+x grid style={darkgray176},
+xmin=-0.5, xmax=10.5,
+xtick style={color=black},
+y grid style={darkgray176},
+ymin=-0.05, ymax=1.05,
+ytick style={color=black},
+yticklabels={}
+]
+\addplot [semithick, rosybrown166152136]
+table {%
+8.4943179407779 0
+8.4943179407779 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+7.29049707384042 0
+7.29049707384042 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+6.30976123854488 0
+6.30976123854488 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+6.23952951792111 0
+6.23952951792111 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+6.11023510677583 0
+6.11023510677583 1
+};
+\addplot [thick, royalblue]
+table {opts_str}{dat/biased_labels-022.dat};
+\addplot [thick, royalblue]
+table {opts_str}{dat/biased_labels-023.dat};
+\addplot [thick, black]
+table {opts_str}{dat/biased_labels-018.dat};
+\addplot [thick, crimson]
+table {opts_str}{dat/biased_labels-019.dat};
+\addplot [thick, green]
+table {opts_str}{dat/biased_labels-020.dat};
+\addplot [draw=rosybrown166152136, fill=rosybrown166152136, mark=*, only marks]
+table{dat/biased_labels-021.dat};
+\end{groupplot}
+
+\end{tikzpicture}

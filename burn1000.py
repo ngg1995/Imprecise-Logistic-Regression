@@ -1,4 +1,5 @@
 # %%
+import tikzplotlib
 from ImpLogReg import ImpLogReg
 import pandas as pd
 import numpy as np
@@ -171,13 +172,29 @@ with open('runinfo/burn1000_cm.out','w') as f:
 
 nuq_s,nuq_fpr,nuq_probabilities = ROC(model = nuq, data = train_data, results = results)
 s_t, fpr_t, Sigma, Tau = incert_ROC(ilr, train_data, results)
-
 s_i, fpr_i,ilr_probabilities = ROC(ilr, train_data, results)
 s_l, fpr_l,ilr_l_probabilities = ROC(ilr, train_data, results, func = lambda x: x.left)
 s_r, fpr_r,ilr_r_probabilities = ROC(ilr, train_data, results, func = lambda x: x.right)
 
 #%%
 densfig,axdens = plt.subplots(nrows = 2, sharex= True)
+
+dat1 = ['x y']
+dat2 = ['x y']
+
+for i,(u,nuqp,r) in enumerate(zip(ilr_probabilities,nuq_probabilities,results.to_list())):
+    yd = np.random.uniform(-0,0.3)
+    if r:
+        dat1 += [f"{nuqp} {yd}"]
+        axdens[0].scatter(nuqp,yd,color = col_mid,marker = 'o',alpha = 0.5)
+        axdens[0].plot([*u],[-yd,-yd],color = col_ilr, alpha = 0.3)
+        axdens[0].scatter([*u],[-yd,-yd],color = col_ilr, marker = '|')
+    else:
+        dat2 += [f"{nuqp} {yd}"]
+        axdens[1].scatter(nuqp,yd,color = col_mid,marker = 'o',alpha = 0.5)
+        axdens[1].plot([*u],[-yd,-yd],color = col_ilr, alpha = 0.3)
+        axdens[1].scatter([*u],[-yd,-yd],color = col_ilr, marker = '|')
+        
 
 for i,(u,nuqp,r) in enumerate(zip(ilr_probabilities,nuq_probabilities,results.to_list())):
     yd = np.random.uniform(-0.1,0.1)
@@ -229,16 +246,22 @@ for i,j in zip(fpr_i,s_i):
 axroc.plot(xl,yu, col_ilr,label = '$\mathcal{ILR}(B)$')
 axroc.plot(xu,yl, col_ilr )
 axroc.legend()
-rocfig.savefig('figs/burn1000_ROC.png',dpi = 600)
-rocfig.savefig('../LR-paper/figs/burn1000_ROC.png',dpi = 600)
+tikzplotlib.save('figs/burn1000_roc.tikz',figure = rocfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
 
-axroc.set_xlim([0,0.3])
-axroc.set_ylim([0.6,1])
-rocfig.savefig('figs/burn1000_ROC_zoom.png',dpi = 600)
-rocfig.savefig('../LR-paper/figs/burn1000_ROC_zoom.png',dpi = 600)
+print(*dat1,sep='\n',file = open('figs/dat/burn1000_dens-000.dat','w'))
+print(*dat2,sep='\n',file = open('figs/dat/burn1000_dens-001.dat','w'))
 
-densfig.savefig('figs/burn1000_dens.png',dpi =600)
-densfig.savefig('../LR-paper/figs/burn1000_dens.png',dpi =600)
+
+# rocfig.savefig('figs/burn1000_ROC.png',dpi = 600)
+# rocfig.savefig('../LR-paper/figs/burn1000_ROC.png',dpi = 600)
+
+# axroc.set_xlim([0,0.3])
+# axroc.set_ylim([0.6,1])
+# rocfig.savefig('figs/burn1000_ROC_zoom.png',dpi = 600)
+# rocfig.savefig('../LR-paper/figs/burn1000_ROC_zoom.png',dpi = 600)
+
+# densfig.savefig('figs/burn1000_dens.png',dpi =600)
+# densfig.savefig('../LR-paper/figs/burn1000_dens.png',dpi =600)
 
 #%%
 with open('runinfo/burn1000_auc.out','w') as f:
@@ -262,8 +285,8 @@ ax.plot3D(fpr_t,s_t,Tau,'#008000',label = '$\\tau$')
 
 ax.legend()
 
-plt.savefig('figs/burn1000_ROC3D.png',dpi = 600)
-plt.savefig('../LR-paper/figs/burn1000_ROC3D.png',dpi = 600)
+# plt.savefig('figs/burn1000_ROC3D.png',dpi = 600)
+# plt.savefig('../LR-paper/figs/burn1000_ROC3D.png',dpi = 600)
 plt.clf()
 
 plt.xlabel('$fpr$/$s$')
@@ -273,8 +296,8 @@ plt.plot(fpr_t,Tau,'#008000',label = '$\\tau$ v $fpr$')
 plt.legend()
 
 
-plt.savefig('figs/burn1000_ST.png',dpi = 600)
-plt.savefig('../LR-paper/figs/burn1000_ST.png',dpi = 600)
+# plt.savefig('figs/burn1000_ST.png',dpi = 600)
+# plt.savefig('../LR-paper/figs/burn1000_ST.png',dpi = 600)
 
 plt.clf()
 
