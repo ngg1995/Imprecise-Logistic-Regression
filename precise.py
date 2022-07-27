@@ -40,10 +40,9 @@ scat_results = [r+0.1*rng1.random() if r else r-0.1*rng1.random() for r in train
 plt.scatter(train_data,scat_results,color=col_points,zorder=10)
 # plt.scatter(test_data,test_results,color='green',zorder=10)
 plt.plot(lX,lY,color=col_precise,zorder=10,lw=2)
-plt.show()
 # plt.savefig('figs/precise.png',dpi = 600)
 # plt.savefig('../LR-paper/figs/precise.png',dpi = 600)
-tikzplotlib.save('figs/precise.tikz',externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+tikzplotlib.save('figs/precise.tikz',externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/precise/')
 
 
 ### Get confusion matrix 
@@ -83,10 +82,10 @@ axroc.legend()
 # densfig.savefig('figs/precise_dens.png',dpi = 600)
 # densfig.savefig('../LR-paper/figs/precise_dens.png',dpi = 600)
 
-tikzplotlib.save('figs/precise_ROC.tikz',figure = rocfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+tikzplotlib.save('figs/precise_ROC.tikz',figure = rocfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/precise')
 # tikzplotlib.save('figs/precise_dens.tikz',figure = densfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
-print(*dat0,sep='\n',file = open('figs/dat/precise_dens-000.dat','w'))
-print(*dat1,sep='\n',file = open('figs/dat/precise_dens-001.dat','w'))
+print(*dat0,sep='\n',file = open('figs/dat/precise/precise_dens-000.dat','w'))
+print(*dat1,sep='\n',file = open('figs/dat/precise/precise_dens-001.dat','w'))
 
 with open('runinfo/precise_auc.out','w') as f:
     print('AUC: %.4f' %auc(s,fpr), file = f)

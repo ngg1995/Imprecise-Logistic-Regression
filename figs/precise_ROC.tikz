@@ -33,7 +33,7 @@ table {%
 };
 \addlegendentry{Random Classifier}
 \addplot [semithick, black]
-table {opts_str}{dat/precise_ROC-000.dat};
+table {opts_str}{dat/precise/precise_ROC-000.dat};
 \addlegendentry{$\mathcal{LR}(D)$}
 \end{axis}
 

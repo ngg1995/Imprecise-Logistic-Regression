@@ -68,18 +68,24 @@ def generate_results(data):
         
     return results
 
-def get_sample(data,r = None):
+def get_sample(data,r = None,ends = False, seed = 0):
     
+    rng1 = np.random.default_rng(seed)
     n_data = data.copy()
-    
+    end = rng1.random(len(data)) > rng1.random(len(data))
     for c in data.columns:
         
-        for i in data.index:
+        for i,e in zip(data.index,end):
             
             if data.loc[i,c].__class__.__name__ == 'Interval':
                 
                 if r is not None:
                     n_data.loc[i,c] = data.loc[i,c].left + r*data.loc[i,c].width()
+                elif ends:
+                    if e: 
+                        n_data.loc[i,c] = data.loc[i,c].left
+                    else:
+                        n_data.loc[i,c] = data.loc[i,c].right
                 else:
                     n_data.loc[i,c] = data.loc[i,c].left + np.random.random()*data.loc[i,c].width()
             
@@ -99,7 +105,7 @@ np.random.seed(10)
 eps = 0.375
 
 UQdata = pd.DataFrame({
-    0:[intervalise(train_data.iloc[i,0],eps,'t',0.8,bounds = (0,10)) for i in train_data.index]
+    0:[intervalise(train_data.iloc[i,0],eps,'t',2/3,bounds = (0,10)) for i in train_data.index]
     }, dtype = 'O')
 
 #%%
@@ -117,15 +123,16 @@ mid.fit(mid_data.to_numpy(),train_results.to_numpy())
 ### Fit de Souza model
 ds = DSLR(max_iter = 1000)
 ds.fit(UQdata,train_results)
+
+#%%
+### Fit Billard--Diday model
+bd = BDLR(max_iter = 1000)
+bd.fit(UQdata,train_results)
     
 #%%
 ### Fit UQ models
 ilr = ImpLogReg(uncertain_data=True, max_iter = 1000)
 ilr.fit(UQdata,train_results,False)
-
-### Fit Billard--Diday model
-bd = BDLR(max_iter = 1000)
-bd.fit(UQdata,train_results)
 
 
 # %% [markdown]
@@ -172,14 +179,23 @@ tikzplotlib.save('figs/features.tikz',figure = fig1,externalize_tables = True, t
 #%% 
 ### PLOT ALL
 fig_a, ax_a = plt.subplots()
-many = 50
-steps = 300
+
+steps = 50
 lX = np.linspace(0,10,steps)
 
-for lr in bd:
+many = 25
+for i in range(3*many):
+    if i < many:
+        n_data = get_sample(UQdata,r = i/many)
+    elif i < 2*many:
+        n_data = get_sample(UQdata)
+    else:
+        n_data = get_sample(UQdata, ends = True, seed = i)
+    lr = LogisticRegression()
+    lr.fit(n_data, train_results)
     
     lY = lr.predict_proba(lX.reshape(-1, 1))[:,1]
-
+    
     ax_a.plot(lX,lY, color='grey', linewidth = 1)
     
 
@@ -187,6 +203,11 @@ for m,c,l in zip(ilr,[col_ilr,col_ilr2,col_ilr3,col_ilr4,col_mid,col_precise],[r
     lY = m.predict_proba(lX.reshape(-1, 1))[:,1]
     ax_a.plot(lX,lY, color=c, linewidth = 2,label = l)
 ax_a.legend()
+
+lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
+
+ax_a.plot(lX,[i.left for i in lYu],color='k',lw=2,linestyle='--')
+ax_a.plot(lX,[i.right for i in lYu],color='k',lw=2,label = 'ilr',linestyle='--')
 
 for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
     yd = np.random.uniform(0,0.1)
