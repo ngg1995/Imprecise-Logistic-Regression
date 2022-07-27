@@ -35,7 +35,9 @@ lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
 
 plt.xlabel('$x$')
 plt.ylabel('$\pi(x)$')
-plt.scatter(train_data,train_results,color=col_points,zorder=10)
+rng1 = np.random.default_rng(1)
+scat_results = [r+0.1*rng1.random() if r else r-0.1*rng1.random() for r in train_results.to_numpy()]
+plt.scatter(train_data,scat_results,color=col_points,zorder=10)
 # plt.scatter(test_data,test_results,color='green',zorder=10)
 plt.plot(lX,lY,color=col_precise,zorder=10,lw=2)
 plt.show()
@@ -76,9 +78,9 @@ axroc.plot([0,1],[0,1],linestyle = ':',color=col_points,label = 'Random Classifi
 axroc.set(xlabel = '$fpr$',ylabel='$s$')
 axroc.plot(fpr,s,color = col_precise, label = '$\mathcal{LR}(D)$')
 axroc.legend()
-rocfig.savefig('figs/precise_ROC.png',dpi = 600)
+# rocfig.savefig('figs/precise_ROC.png',dpi = 600)
 # rocfig.savefig('../LR-paper/figs/precise_ROC.png',dpi = 600)
-densfig.savefig('figs/precise_dens.png',dpi = 600)
+# densfig.savefig('figs/precise_dens.png',dpi = 600)
 # densfig.savefig('../LR-paper/figs/precise_dens.png',dpi = 600)
 
 tikzplotlib.save('figs/precise_ROC.tikz',figure = rocfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
