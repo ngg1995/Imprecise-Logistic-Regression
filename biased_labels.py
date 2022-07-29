@@ -9,7 +9,8 @@ from tqdm import tqdm
 import pba
 import random
 from sklearn.semi_supervised import SelfTrainingClassifier
-# import matplotlib
+import matplotlib
+import tikzplotlib
 # font = {'size'   : 14,'family' : 'Times New Roman'}
 # matplotlib.rc('font', **font)
 
@@ -121,3 +122,5 @@ for jj, uq_data_index ,ax in zip(range(len(UQdatasets)),UQdatasets,np.ravel(axs)
     ax.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = '$\mathcal{ILR}(F)$')
 # %%
 tikzplotlib.save("figs/biased_labels.tikz",figure = fig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+
+# %%

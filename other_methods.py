@@ -66,6 +66,10 @@ class BDLR:
         
         return np.array([[i.mean() for i in predictions0.T],[i.mean() for i in predictions1.T]]).T
     
+    def predict(self,X):
+        probs = self.predict_proba(X)
+        return probs[:,1] > 0.5
+    
 class DSLR:
 
     
@@ -116,3 +120,7 @@ class DSLR:
             predictions1[i] = model.predict_proba(X)[:,1]
         
         return np.array([[i.mean() for i in predictions0.T],[i.mean() for i in predictions1.T]]).T
+
+    def predict(self,X):
+        probs = self.predict_proba(X)
+        return probs[:,1] > 0.5

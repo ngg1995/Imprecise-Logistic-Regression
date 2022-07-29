@@ -26,423 +26,401 @@ tick pos=left,
 x grid style={darkgray176},
 xmin=-0.5, xmax=10.5,
 xtick style={color=black},
-xtick={-2,0,2,4,6,8,10,12},
-xticklabels={
-  \(\displaystyle {\ensuremath{-}2}\),
-  \(\displaystyle {0}\),
-  \(\displaystyle {2}\),
-  \(\displaystyle {4}\),
-  \(\displaystyle {6}\),
-  \(\displaystyle {8}\),
-  \(\displaystyle {10}\),
-  \(\displaystyle {12}\)
-},
 y grid style={darkgray176},
-ymin=-0.159101211704604, ymax=1.159390567073,
-ytick style={color=black},
-ytick={-0.2,0,0.2,0.4,0.6,0.8,1,1.2},
-yticklabels={
-  \(\displaystyle {\ensuremath{-}0.2}\),
-  \(\displaystyle {0.0}\),
-  \(\displaystyle {0.2}\),
-  \(\displaystyle {0.4}\),
-  \(\displaystyle {0.6}\),
-  \(\displaystyle {0.8}\),
-  \(\displaystyle {1.0}\),
-  \(\displaystyle {1.2}\)
-}
+ymin=-0.153049288099733, ymax=1.15943101078834,
+ytick style={color=black}
 ]
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-000.dat};
+table {opts_str}{dat/features/features-all-000.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-001.dat};
+table {opts_str}{dat/features/features-all-001.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-002.dat};
+table {opts_str}{dat/features/features-all-002.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-003.dat};
+table {opts_str}{dat/features/features-all-003.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-004.dat};
+table {opts_str}{dat/features/features-all-004.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-005.dat};
+table {opts_str}{dat/features/features-all-005.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-006.dat};
+table {opts_str}{dat/features/features-all-006.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-007.dat};
+table {opts_str}{dat/features/features-all-007.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-008.dat};
+table {opts_str}{dat/features/features-all-008.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-009.dat};
+table {opts_str}{dat/features/features-all-009.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-010.dat};
+table {opts_str}{dat/features/features-all-010.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-011.dat};
+table {opts_str}{dat/features/features-all-011.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-012.dat};
+table {opts_str}{dat/features/features-all-012.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-013.dat};
+table {opts_str}{dat/features/features-all-013.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-014.dat};
+table {opts_str}{dat/features/features-all-014.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-015.dat};
+table {opts_str}{dat/features/features-all-015.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-016.dat};
+table {opts_str}{dat/features/features-all-016.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-017.dat};
+table {opts_str}{dat/features/features-all-017.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-018.dat};
+table {opts_str}{dat/features/features-all-018.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-019.dat};
+table {opts_str}{dat/features/features-all-019.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-020.dat};
+table {opts_str}{dat/features/features-all-020.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-021.dat};
+table {opts_str}{dat/features/features-all-021.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-022.dat};
+table {opts_str}{dat/features/features-all-022.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-023.dat};
+table {opts_str}{dat/features/features-all-023.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-024.dat};
+table {opts_str}{dat/features/features-all-024.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-025.dat};
+table {opts_str}{dat/features/features-all-025.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-026.dat};
+table {opts_str}{dat/features/features-all-026.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-027.dat};
+table {opts_str}{dat/features/features-all-027.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-028.dat};
+table {opts_str}{dat/features/features-all-028.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-029.dat};
+table {opts_str}{dat/features/features-all-029.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-030.dat};
+table {opts_str}{dat/features/features-all-030.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-031.dat};
+table {opts_str}{dat/features/features-all-031.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-032.dat};
+table {opts_str}{dat/features/features-all-032.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-033.dat};
+table {opts_str}{dat/features/features-all-033.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-034.dat};
+table {opts_str}{dat/features/features-all-034.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-035.dat};
+table {opts_str}{dat/features/features-all-035.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-036.dat};
+table {opts_str}{dat/features/features-all-036.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-037.dat};
+table {opts_str}{dat/features/features-all-037.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-038.dat};
+table {opts_str}{dat/features/features-all-038.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-039.dat};
+table {opts_str}{dat/features/features-all-039.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-040.dat};
+table {opts_str}{dat/features/features-all-040.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-041.dat};
+table {opts_str}{dat/features/features-all-041.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-042.dat};
+table {opts_str}{dat/features/features-all-042.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-043.dat};
+table {opts_str}{dat/features/features-all-043.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-044.dat};
+table {opts_str}{dat/features/features-all-044.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-045.dat};
+table {opts_str}{dat/features/features-all-045.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-046.dat};
+table {opts_str}{dat/features/features-all-046.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-047.dat};
+table {opts_str}{dat/features/features-all-047.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-048.dat};
+table {opts_str}{dat/features/features-all-048.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-049.dat};
+table {opts_str}{dat/features/features-all-049.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-050.dat};
+table {opts_str}{dat/features/features-all-050.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-051.dat};
+table {opts_str}{dat/features/features-all-051.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-052.dat};
+table {opts_str}{dat/features/features-all-052.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-053.dat};
+table {opts_str}{dat/features/features-all-053.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-054.dat};
+table {opts_str}{dat/features/features-all-054.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-055.dat};
+table {opts_str}{dat/features/features-all-055.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-056.dat};
+table {opts_str}{dat/features/features-all-056.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-057.dat};
+table {opts_str}{dat/features/features-all-057.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-058.dat};
+table {opts_str}{dat/features/features-all-058.dat};
 \addplot [gray, forget plot]
-table {opts_str}{dat/features-all-059.dat};
+table {opts_str}{dat/features/features-all-059.dat};
 \addplot [thick, royalblue]
-table {opts_str}{dat/features-all-060.dat};
+table {opts_str}{dat/features/features-all-060.dat};
 \addlegendentry{$\underline{E}$}
 \addplot [thick, darkslategray934670]
-table {opts_str}{dat/features-all-061.dat};
+table {opts_str}{dat/features/features-all-061.dat};
 \addlegendentry{$\underline{E}$}
 \addplot [thick, darkorange]
-table {opts_str}{dat/features-all-062.dat};
+table {opts_str}{dat/features/features-all-062.dat};
 \addlegendentry{$E^\prime_{\underline{\beta_0}}$}
 \addplot [thick, green]
-table {opts_str}{dat/features-all-063.dat};
+table {opts_str}{dat/features/features-all-063.dat};
 \addlegendentry{$E^\prime_{\underline{\beta_1}}$}
 \addplot [thick, crimson]
-table {opts_str}{dat/features-all-064.dat};
+table {opts_str}{dat/features/features-all-064.dat};
 \addlegendentry{$E^\prime_{\overline{\beta_0}}$}
 \addplot [thick, black]
-table {opts_str}{dat/features-all-065.dat};
+table {opts_str}{dat/features/features-all-065.dat};
 \addlegendentry{$E^\prime_{\overline{\beta_1}}$}
 \addplot [thick, black, dashed, forget plot]
-table {opts_str}{dat/features-all-066.dat};
+table {opts_str}{dat/features/features-all-066.dat};
 \addplot [thick, black, dashed, forget plot]
-table {opts_str}{dat/features-all-067.dat};
+table {opts_str}{dat/features/features-all-067.dat};
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-6.71939084197375 -0.0929230856969528
-7.46939084197375 -0.0929230856969528
+7.56450215985275 1.04044412582676
+8.31450215985275 1.04044412582676
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-2.61609233549893 -0.0695661263624516
-3.36609233549893 -0.0695661263624516
+0 -0.0271923642605957
+0.306147462559311 -0.0271923642605957
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-2.02321352163716 -0.0714856535203614
-2.77321352163716 -0.0714856535203614
+6.13148015670944 -0.00359210564274284
+6.88148015670944 -0.00359210564274284
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-5.26784667682405 -0.0679321952505603
-6.01784667682405 -0.0679321952505603
+7.33049289106545 1.05496284711451
+8.08049289106545 1.05496284711451
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-6.94938868385076 1.08003815042076
-7.69938868385076 1.08003815042076
+4.71846971137579 -0.0235500673246137
+5.46846971137579 -0.0235500673246137
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-3.98576358723974 1.06670302383699
-4.73576358723974 1.06670302383699
+1.82257919010578 -0.0177638550541299
+2.57257919010578 -0.0177638550541299
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-9.56234096984129 1.08488598155449
-10 1.08488598155449
+1.53532844716308 -0.0591674307879121
+2.28532844716308 -0.0591674307879121
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-6.60299637184377 -0.00467503565108207
-7.35299637184377 -0.00467503565108207
+7.45238230263543 1.09331034471306
+8.20238230263543 1.09331034471306
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-4.56401800083874 1.0674935844167
-5.31401800083874 1.0674935844167
+1.22265890218796 -0.0573376511500848
+1.97265890218796 -0.0573376511500848
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-3.67587416793664 1.05588751324585
-4.42587416793664 1.05588751324585
+0.336890863708401 -0.0535629370493564
+1.0868908637084 -0.0535629370493564
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-3.18647914750383 -0.0182962950388502
-3.93647914750383 -0.0182962950388502
+6.67039833792981 1.04134679681933
+7.42039833792981 1.04134679681933
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-7.04519605983555 1.05587254917049
-7.79519605983555 1.05587254917049
+9.46783222297289 1.03090155189783
+10 1.03090155189783
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-4.14042143279138 1.09945912258311
-4.89042143279138 1.09945912258311
+0 -0.0729888453979097
+0.0825030054582799 -0.0729888453979097
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-0.351477952090816 -0.055011816906865
-1.10147795209082 -0.055011816906865
+4.86191255565421 -0.0273790658669806
+5.61191255565421 -0.0273790658669806
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-3.73514153929945 -0.0374512868735448
-4.48514153929945 -0.0374512868735448
+7.99339360511322 1.09774752419399
+8.74339360511322 1.09774752419399
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-7.13465304331549 1.06160832438525
-7.88465304331549 1.06160832438525
+5.91109795126911 1.02248370699555
+6.66109795126911 1.02248370699555
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-1.57961629053013 -0.0113498135019984
-2.32961629053013 -0.0113498135019984
+7.04920840299402 1.04981919800418
+7.79920840299402 1.04981919800418
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-1.50921654747006 -0.0509059631190699
-2.25921654747006 -0.0509059631190699
+2.53864837676388 -0.0558716764034404
+3.28864837676388 -0.0558716764034404
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-5.07021272441352 1.09495801461789
-5.82021272441352 1.09495801461789
+9.08994215899311 1.05008857353477
+9.83994215899311 1.05008857353477
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-5.07297485696379 -0.0530520741613329
-5.82297485696379 -0.0530520741613329
+6.97451287582766 1.07356883073322
+7.72451287582766 1.07356883073322
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-6.09870857150834 -0.067270474338003
-6.84870857150834 -0.067270474338003
+5.17974286958775 1.06319967219916
+5.92974286958775 1.06319967219916
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-8.24901692677303 1.0734607065749
-8.99901692677303 1.0734607065749
+0.929852000924993 -0.0592912830494129
+1.67985200092499 -0.0592912830494129
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-6.99925223460149 1.03506217722433
-7.74925223460149 1.03506217722433
+3.40174177467947 -0.0633179669348304
+4.15174177467947 -0.0633179669348304
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-5.86493409277096 1.00025552847451
-6.61493409277096 1.00025552847451
+6.55347504102984 1.08661227981358
+7.30347504102984 1.08661227981358
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-6.97913281169735 1.08428349549869
-7.72913281169735 1.08428349549869
+4.12342437272528 -0.0732892083886278
+4.87342437272528 -0.0732892083886278
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-2.98428812452691 -0.00178613150660646
-3.73428812452691 -0.00178613150660646
+4.041187668473 1.06477827138586
+4.791187668473 1.06477827138586
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-3.37258554221827 1.03779027317874
-4.12258554221827 1.03779027317874
+5.96579455754561 -0.012138795192015
+6.71579455754561 -0.012138795192015
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-2.03733129478469 -0.0991697672147125
-2.78733129478469 -0.0991697672147125
+4.87182462519375 -0.00963920398187779
+5.62182462519375 -0.00963920398187779
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-2.69183944988343 -0.0115699842764626
-3.44183944988343 -0.0115699842764626
+6.3061254926977 1.003783402326
+7.0561254926977 1.003783402326
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-6.06446022454001 1.02318355487225
-6.81446022454001 1.02318355487225
+5.79117857821307 -0.0092523486769882
+6.54117857821307 -0.0092523486769882
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-0.675748385445885 -0.00525189775374806
-1.42574838544588 -0.00525189775374806
+7.9166002402258 1.07135766675311
+8.6666002402258 1.07135766675311
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-4.09171071279042 1.09466588166438
-4.84171071279042 1.09466588166438
+4.96096328593498 1.09949413701771
+5.71096328593498 1.09949413701771
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-4.06332661929157 1.08143831909098
-4.81332661929157 1.08143831909098
+8.993946021095 1.06985231436495
+9.743946021095 1.06985231436495
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-4.6915499624982 1.02435760041421
-5.4415499624982 1.02435760041421
+2.82919666474784 1.02806765390479
+3.57919666474784 1.02806765390479
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-4.01300188895341 1.05906200181955
-4.76300188895341 1.05906200181955
+0.360512942909238 -0.0474408350545416
+1.11051294290924 -0.0474408350545416
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-2.87731121571979 -0.0367666047993255
-3.62731121571979 -0.0367666047993255
+2.63243784680741 1.02541595200868
+3.38243784680741 1.02541595200868
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-4.01821205562322 1.06399621784739
-4.76821205562322 1.06399621784739
+0.620993287948562 -0.0731342896307998
+1.37099328794856 -0.0731342896307998
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-8.68859061716648 1.08543796938221
-9.43859061716648 1.08543796938221
+8.16006631899123 1.03983504347963
+8.91006631899123 1.03983504347963
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-9.19629916803393 1.07434561144044
-9.94629916803393 1.07434561144044
+0 -0.08829097577953
+0.61722866429512 -0.08829097577953
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-4.7730657448385 1.06305578364448
-5.5230657448385 1.06305578364448
+6.05469442538471 1.02352538780153
+6.80469442538471 1.02352538780153
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-5.99422850391624 -0.011936640541699
-6.74422850391624 -0.011936640541699
+5.23249852052387 1.09928804138444
+5.98249852052387 1.09928804138444
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-0.91088293678809 -0.0530174041057812
-1.66088293678809 -0.0530174041057812
+8.06258019481229 1.05996173447939
+8.81258019481229 1.05996173447939
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-2.92755380419834 -0.0358401208443053
-3.67755380419834 -0.0358401208443053
+1.54485492986859 -0.0817353561073991
+2.29485492986859 -0.0817353561073991
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-3.90296110553145 -0.0889450584324863
-4.65296110553145 -0.0889450584324863
+8.45265707452042 1.04934396719746
+9.20265707452042 1.04934396719746
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-8.41779056482879 1.08383239041471
-9.16779056482879 1.08383239041471
+3.17252784103479 1.09977281538434
+3.92252784103479 1.09977281538434
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-2.2592526399602 -0.0803001283689888
-3.0092526399602 -0.0803001283689888
+7.39123830056549 1.01246888550401
+8.14123830056549 1.01246888550401
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-4.58504162862218 -0.0566253170530725
-5.33504162862218 -0.0566253170530725
+2.5820845842929 -0.0252927713649175
+3.3320845842929 -0.0252927713649175
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-9.61029684210218 1.06836355662572
-10 1.06836355662572
+8.7350529792096 1.03065096953301
+9.4850529792096 1.03065096953301
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-4.94955017859323 1.08384345196203
-5.69955017859323 1.08384345196203
+2.89573586098287 -0.0159100906909943
+3.64573586098287 -0.0159100906909943
 };
 \addplot [semithick, rosybrown166152136, mark=|, mark size=3, mark options={solid}, forget plot]
 table {%
-5.88364424362481 1.09415976993148
-6.63364424362481 1.09415976993148
+1.17827981793495 -0.0933910926957301
+1.92827981793495 -0.0933910926957301
 };
 \end{axis}
 

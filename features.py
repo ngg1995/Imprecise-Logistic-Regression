@@ -29,7 +29,7 @@ col_ilr4 = '#008000'
 col_mid = '#DC143C'
 
 def intervalise(val,eps,method,b=0.5,bounds = None):
-    np.random.seed(100)
+    
     if method == 'u':
         m = np.random.uniform(val-eps,val+eps)
     elif method == 'b':
@@ -174,7 +174,7 @@ ax1.legend()
 #%%
 # fig1.savefig('../LR-paper/figs/features.png',dpi = 600)
 # fig1.savefig('figs/features.png',dpi = 600)
-tikzplotlib.save('figs/features.tikz',figure = fig1,externalize_tables = True, tex_relative_path_to_data = 'dat/',override_externals = True)
+tikzplotlib.save('figs/features.tikz',figure = fig1,externalize_tables = True, tex_relative_path_to_data = 'dat/features/',override_externals = True)
 
 #%% 
 ### PLOT ALL
@@ -183,7 +183,7 @@ fig_a, ax_a = plt.subplots()
 steps = 50
 lX = np.linspace(0,10,steps)
 
-many = 25
+many = 20
 for i in range(3*many):
     if i < many:
         n_data = get_sample(UQdata,r = i/many)
@@ -217,7 +217,7 @@ for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
     ax_a.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
 
 #%%
-tikzplotlib.save('figs/features-all.tikz',figure = fig_a,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+tikzplotlib.save('figs/features-all.tikz',figure = fig_a,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/features/')
 
 # %% [markdown]
 ### Get confusion matrix
@@ -361,13 +361,13 @@ axroc.legend()
 # densfig.savefig('figs/features_dens.png',dpi =600)
 # densfig.savefig('../LR-paper/figs/features_dens.png',dpi =600)
 
-tikzplotlib.save('figs/features_ROC.tikz',figure = rocfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+tikzplotlib.save('figs/features_ROC.tikz',figure = rocfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/features/')
 
-# tikzplotlib.save('figs/features_dens.tikz',figure = densfig,externalize_tables = False, override_externals = True,tex_relative_path_to_data = 'dat/')
-print(*dat1,sep='\n',file = open('figs/dat/features_dens-000.dat','w'))
-print(*dat2,sep='\n',file = open('figs/dat/features_dens-001.dat','w'))
-print(*dat3,sep='\n',file = open('figs/dat/features_dens-002.dat','w'))
-print(*dat4,sep='\n',file = open('figs/dat/features_dens-003.dat','w'))
+# tikzplotlib.save('figs/features_dens.tikz',figure = densfig,externalize_tables = False, override_externals = True,tex_relative_path_to_data = 'dat/features/')
+print(*dat1,sep='\n',file = open('figs/dat/features/features_dens-000.dat','w'))
+print(*dat2,sep='\n',file = open('figs/dat/features/features_dens-001.dat','w'))
+print(*dat3,sep='\n',file = open('figs/dat/features/features_dens-002.dat','w'))
+print(*dat4,sep='\n',file = open('figs/dat/features/features_dens-003.dat','w'))
 
 
 with open('runinfo/features_auc.out','w') as f:
@@ -395,7 +395,7 @@ with open('runinfo/features_auc.out','w') as f:
 # fig2.savefig('figs/features_ROC3D.png',dpi = 600)
 # fig2.savefig('../LR-paper/figs/features_ROC3D.png',dpi = 600)
 
-# tikzplotlib.save("figs/features_ROC3D.tikz",figure = fig2,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+# tikzplotlib.save("figs/features_ROC3D.tikz",figure = fig2,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/features/')
 
 # fig3, ax3 = plt.subplots()
 
@@ -408,6 +408,6 @@ with open('runinfo/features_auc.out','w') as f:
 
 # fig3.savefig('figs/features_ST.png',dpi = 600)
 # fig3.savefig('../LR-paper/figs/features_ST.png',dpi = 600)
-# tikzplotlib.save("figs/features_ST.tikz",figure = fig3,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+# tikzplotlib.save("figs/features_ST.tikz",figure = fig3,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/features/')
 
 # %%

@@ -1,4 +1,4 @@
-TP=40	FP=16
-FN=9	TN=35
-Sensitivity = 0.816
-Specificity = 0.686
+TP=34	FP=14
+FN=10	TN=42
+Sensitivity = 0.773
+Specificity = 0.750

@@ -237,7 +237,7 @@ def _int_data(data,results,sample_weight,catagorical,params, nested = False) -> 
         
     models = {}
     dataset = {}
-    for i in it.product([0,1],repeat=1):
+    for i in it.product([0,1],repeat=n):
         x = {c:v for c,v in zip(data.columns,i)}
         r = [x[c] for _,c in uq]
         models[str(i)] = LogisticRegression(**params).fit(get_vals_from_intervals(r,data,uq),results)

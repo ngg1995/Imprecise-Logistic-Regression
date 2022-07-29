@@ -173,6 +173,7 @@ for jj, UQdata,ax in zip([0,1,2,3],UQdatasets,np.ravel(axs)):
         
     ax.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
     ax.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = 'Uncertainty Bounds')
+    ax.legend()
     # plt.show()
 
 #%%

@@ -19,8 +19,7 @@ def generate_results(data):
 
 ### Generate Data
 # set seed for reproducability
-s = 123
-np.random.seed(s)
+np.random.seed(10)
 
 # Params
 some = 50 # training datapoints
