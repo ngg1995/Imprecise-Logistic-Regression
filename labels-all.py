@@ -30,8 +30,6 @@ from dataset import *
 
 # %%
 ### Intervalise data
-eps = 0.375
-
 # drop some results
 few = 5 #uncertain points
 random.seed(0) # for reproducability
@@ -39,9 +37,12 @@ uq_data_index = random.sample([i for i in train_data.index if abs(train_data.loc
 
 uq_data = train_data.loc[uq_data_index]
 uq_results = pd.Series([int(train_results.loc[i]) if i not in uq_data_index else pba.I(0,1) for i in train_results.index], index = train_data.index, dtype='O')
+
+### Fit models with no uq data
 nuq_data = train_data.loc[[i for i in train_data.index if i not in uq_data_index]]
 nuq_results = train_results.loc[[i for i in train_data.index if i not in uq_data_index]]
-
+nuq = LogisticRegression(max_iter=1000)
+nuq.fit(nuq_data.to_numpy(),nuq_results.to_numpy())
 
 #%% 
 ### Fit UQ models
@@ -68,7 +69,9 @@ fig1, ax1 = plt.subplots()
 ax1.set_xlabel('$x$')
 ax1.set_ylabel('$\pi(x)$')
 
-ax1.scatter(nuq_data,nuq_results,color=col_points,zorder=10)
+jitter = np.random.default_rng(0)
+
+ax1.scatter(nuq_data,[r + jitter.uniform(0,0.1) if r else r - jitter.uniform(-0.1,0.1) for r in nuq_results ],color=col_points,zorder=10)
 
     
 for i in uq_data_index:
@@ -88,6 +91,6 @@ ax1.plot(lX,[i.left for i in lYu],color='k',lw=2,linestyle = '--',)
 ax1.plot(lX,[i.right for i in lYu],color='k',lw=2,linestyle = '--',label = '$\mathcal{ILR}(F)$')
 
 #%%
-tikzplotlib.save('figs/labels-all.tikz',figure = fig1,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+tikzplotlib.save('figs/labels-all.tikz',figure = fig1,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/labels')
 
 # %%

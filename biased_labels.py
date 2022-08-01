@@ -42,30 +42,30 @@ def random_5(data,results):
        
 def random_20(data,results):
     few = 20
-    random.seed(2)
+    random.seed(1)
     uq_data_index = random.sample([i for i in data.index], k = few)
     return uq_data_index
     
 def hi_10(data,results):
     few = 5 #uncertain points
-    random.seed(3) # for reproducability
+    random.seed(2) # for reproducability
     uq_data_index = random.sample([i for i in data.index if train_data.loc[i,0] > 6], k = few) # clustered around center
     return uq_data_index
 
 def lo_20(data,results):
     few = 15 #uncertain points
-    random.seed(4) # for reproducability
+    random.seed(2) # for reproducability
     uq_data_index = random.sample([i for i in data.index if train_data.loc[i,0] < 4], k = few) # clustered around center
     return uq_data_index
         
 def ones_8(data,results):
-    few = 8 #uncertain points
+    few = 15 #uncertain points
     random.seed(1) # for reproducability
     uq_data_index = random.sample([i for i in results[results].index], k = few) # clustered around center
     return uq_data_index
 
 def zeroes_8(data,results):
-    few = 8 #uncertain points
+    few = 15 #uncertain points
     random.seed(6) # for reproducability
     uq_data_index = random.sample([i for i in results[~results].index], k = few) # clustered around center
     return uq_data_index
@@ -73,10 +73,10 @@ def zeroes_8(data,results):
 UQdatasets = [
     random_5(train_data,train_results),
     random_20(train_data,train_results),
-    lo_20(train_data,train_results),
-    hi_10(train_data,train_results)
-    # ones_8(train_data,train_results),
-    # zeroes_8(train_data,train_results)
+    # lo_20(train_data,train_results),
+    # hi_10(train_data,train_results)
+    ones_8(train_data,train_results),
+    zeroes_8(train_data,train_results)
 ]
 
 # %% [markdown]
@@ -112,7 +112,8 @@ for jj, uq_data_index ,ax in zip(range(len(UQdatasets)),UQdatasets,np.ravel(axs)
     ax.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = '$\mathcal{LR}(D)$') 
     ax.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = '$\mathcal{LR}(F_\\times)$') 
     ax.plot(lX,lYs,color=col_ilr4,zorder=10,lw=2,label = r'$ss$') 
-    ax.scatter(nuq_data,nuq_results,color=col_points,zorder=10)
+    jitter = np.random.default_rng(0)
+    ax.scatter(nuq_data,[r + jitter.uniform(0,0.1) if r else r - jitter.uniform(0,0.1) for r in nuq_results ],color=col_points,zorder=10)
     for i in uq_data_index:
 
         ax.plot([uq_data.loc[i],uq_data.loc[i]],[0,1],color=col_points)
@@ -121,6 +122,6 @@ for jj, uq_data_index ,ax in zip(range(len(UQdatasets)),UQdatasets,np.ravel(axs)
     ax.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
     ax.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = '$\mathcal{ILR}(F)$')
 # %%
-tikzplotlib.save("figs/biased_labels.tikz",figure = fig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+tikzplotlib.save("figs/biased_labels.tikz",figure = fig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/labels')
 
 # %%

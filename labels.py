@@ -31,7 +31,7 @@ from dataset import *
 ### Intervalise data
 # drop some results
 few = 5 #uncertain points
-random.seed(12345) # for reproducability
+random.seed(0) # for reproducability
 uq_data_index = random.sample([i for i in train_data.index if abs(train_data.loc[i,0]-5) <= 2], k = few) # clustered around center
 
 uq_data = train_data.loc[uq_data_index]
@@ -77,7 +77,9 @@ ax1.set_ylabel('$\pi(x)$')
 ax1.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = '$\mathcal{LR}(D)$') 
 ax1.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = '$\mathcal{LR}(F_\\times)$') 
 ax1.plot(lX,lYs,color=col_ilr4,zorder=10,lw=2,label = r'$ss$') 
-ax1.scatter(nuq_data,nuq_results,color=col_points,zorder=10)
+
+jitter = np.random.default_rng(0)
+ax1.scatter(nuq_data,[r + jitter.uniform(0,0.1) if r else r - jitter.uniform(0,0.1) for r in nuq_results ],color=col_points,zorder=10)
 for i in uq_data_index:
 
     ax1.plot([uq_data.loc[i],uq_data.loc[i]],[0,1],color=col_points)

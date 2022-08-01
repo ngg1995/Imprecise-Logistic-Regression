@@ -59,13 +59,13 @@ with open('runinfo/precise_cm.out','w') as f:
 
 ### ROC/AUC
 s,fpr, predictions = ROC(model = base, data = test_data, results = test_results)
-
+jitter = np.random.defaul_rng(0)
 rocfig,axroc = plt.subplots(1)
 densfig,axdens = plt.subplots(2,1)
 dat0 = ['x y']
 dat1 = ['x y']
 for i,(p,r) in enumerate(zip(predictions,test_results.to_list())):
-    yd = np.random.uniform(-0.1,0.1)
+    yd = jitter.uniform(-0.1,0.1)
     if r:
         dat1 += [f"{p} {yd}"]
         axdens[0].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)

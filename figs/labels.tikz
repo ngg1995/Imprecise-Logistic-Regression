@@ -26,9 +26,14 @@ xmin=-0.5, xmax=10.5,
 xtick style={color=black},
 y grid style={darkgray176},
 ylabel={\(\displaystyle \pi(x)\)},
-ymin=-0.05, ymax=1.05,
+ymin=-0.150825385293107, ymax=1.15927082114426,
 ytick style={color=black}
 ]
+\addplot [semithick, rosybrown166152136, forget plot]
+table {%
+6.50397181931467 0
+6.50397181931467 1
+};
 \addplot [semithick, rosybrown166152136, forget plot]
 table {%
 6.01038953404544 0
@@ -36,23 +41,18 @@ table {%
 };
 \addplot [semithick, rosybrown166152136, forget plot]
 table {%
-6.33648234926275 0
-6.33648234926275 1
+4.9850701230259 0
+4.9850701230259 1
 };
 \addplot [semithick, rosybrown166152136, forget plot]
 table {%
-4.34013993333294 0
-4.34013993333294 1
+4.41833174422996 0
+4.41833174422996 1
 };
 \addplot [semithick, rosybrown166152136, forget plot]
 table {%
-5.13138242554391 0
-5.13138242554391 1
-};
-\addplot [semithick, rosybrown166152136, forget plot]
-table {%
-3.73340760051469 0
-3.73340760051469 1
+3.00700056636203 0
+3.00700056636203 1
 };
 \addplot [thick, royalblue, forget plot]
 table {opts_str}{dat/labels/labels-004.dat};

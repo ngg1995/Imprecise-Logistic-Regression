@@ -24,7 +24,7 @@ xmin=-0.5, xmax=10.5,
 xtick style={color=black},
 y grid style={darkgray176},
 ylabel={\(\displaystyle \pi(x)\)},
-ymin=-0.05, ymax=1.05,
+ymin=-0.141664720907268, ymax=1.15883459903064,
 ytick style={color=black}
 ]
 \addplot [semithick, rosybrown166152136]
@@ -53,95 +53,95 @@ table {%
 3.00700056636203 1
 };
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-001.dat};
+table {opts_str}{dat/labels/labels-all-001.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-002.dat};
+table {opts_str}{dat/labels/labels-all-002.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-003.dat};
+table {opts_str}{dat/labels/labels-all-003.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-004.dat};
+table {opts_str}{dat/labels/labels-all-004.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-005.dat};
+table {opts_str}{dat/labels/labels-all-005.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-006.dat};
+table {opts_str}{dat/labels/labels-all-006.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-007.dat};
+table {opts_str}{dat/labels/labels-all-007.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-008.dat};
+table {opts_str}{dat/labels/labels-all-008.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-009.dat};
+table {opts_str}{dat/labels/labels-all-009.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-010.dat};
+table {opts_str}{dat/labels/labels-all-010.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-011.dat};
+table {opts_str}{dat/labels/labels-all-011.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-012.dat};
+table {opts_str}{dat/labels/labels-all-012.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-013.dat};
+table {opts_str}{dat/labels/labels-all-013.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-014.dat};
+table {opts_str}{dat/labels/labels-all-014.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-015.dat};
+table {opts_str}{dat/labels/labels-all-015.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-016.dat};
+table {opts_str}{dat/labels/labels-all-016.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-017.dat};
+table {opts_str}{dat/labels/labels-all-017.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-018.dat};
+table {opts_str}{dat/labels/labels-all-018.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-019.dat};
+table {opts_str}{dat/labels/labels-all-019.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-020.dat};
+table {opts_str}{dat/labels/labels-all-020.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-021.dat};
+table {opts_str}{dat/labels/labels-all-021.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-022.dat};
+table {opts_str}{dat/labels/labels-all-022.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-023.dat};
+table {opts_str}{dat/labels/labels-all-023.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-024.dat};
+table {opts_str}{dat/labels/labels-all-024.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-025.dat};
+table {opts_str}{dat/labels/labels-all-025.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-026.dat};
+table {opts_str}{dat/labels/labels-all-026.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-027.dat};
+table {opts_str}{dat/labels/labels-all-027.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-028.dat};
+table {opts_str}{dat/labels/labels-all-028.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-029.dat};
+table {opts_str}{dat/labels/labels-all-029.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-030.dat};
+table {opts_str}{dat/labels/labels-all-030.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-031.dat};
+table {opts_str}{dat/labels/labels-all-031.dat};
 \addplot [lightgray]
-table {opts_str}{dat/labels-all-032.dat};
+table {opts_str}{dat/labels/labels-all-032.dat};
 \addplot [thick, steelblue31119180]
-table {opts_str}{dat/labels-all-033.dat};
+table {opts_str}{dat/labels/labels-all-033.dat};
 \addplot [thick, darkorange25512714]
-table {opts_str}{dat/labels-all-034.dat};
+table {opts_str}{dat/labels/labels-all-034.dat};
 \addplot [thick, forestgreen4416044]
-table {opts_str}{dat/labels-all-035.dat};
+table {opts_str}{dat/labels/labels-all-035.dat};
 \addplot [thick, crimson2143940]
-table {opts_str}{dat/labels-all-036.dat};
+table {opts_str}{dat/labels/labels-all-036.dat};
 \addplot [thick, mediumpurple148103189]
-table {opts_str}{dat/labels-all-037.dat};
+table {opts_str}{dat/labels/labels-all-037.dat};
 \addplot [thick, sienna1408675]
-table {opts_str}{dat/labels-all-038.dat};
+table {opts_str}{dat/labels/labels-all-038.dat};
 \addplot [thick, orchid227119194]
-table {opts_str}{dat/labels-all-039.dat};
+table {opts_str}{dat/labels/labels-all-039.dat};
 \addplot [thick, gray127]
-table {opts_str}{dat/labels-all-040.dat};
+table {opts_str}{dat/labels/labels-all-040.dat};
 \addplot [thick, goldenrod18818934]
-table {opts_str}{dat/labels-all-041.dat};
+table {opts_str}{dat/labels/labels-all-041.dat};
 \addplot [thick, darkturquoise23190207]
-table {opts_str}{dat/labels-all-042.dat};
+table {opts_str}{dat/labels/labels-all-042.dat};
 \addplot [thick, black, dashed]
-table {opts_str}{dat/labels-all-043.dat};
+table {opts_str}{dat/labels/labels-all-043.dat};
 \addplot [thick, black, dashed]
-table {opts_str}{dat/labels-all-044.dat};
+table {opts_str}{dat/labels/labels-all-044.dat};
 \addplot [draw=rosybrown166152136, fill=rosybrown166152136, mark=*, only marks]
-table{dat/labels-all-000.dat};
+table{dat/labels/labels-all-000.dat};
 \end{axis}
 
 \end{tikzpicture}
