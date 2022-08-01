@@ -310,15 +310,15 @@ for i,(p,u,midp,r) in enumerate(zip(probabilities,ilr_probabilities,mid_probabil
     if r:
         dat1 += [f"{p} {yd}"]
         dat2 += [f"{midp} {0.21+yd}"]
-        axdens[0].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
-        axdens[0].scatter(midp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
+        # axdens[0].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
+        # axdens[0].scatter(midp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
         axdens[0].plot([*u],[yd-0.21,yd-0.21],color = col_ilr, alpha = 0.3)
-        axdens[0].scatter([*u],[yd-0.21,yd-0.21],color = col_ilr, marker = '|')
+        axdens[0].scatter([*u],[yd-0.21,yd-0.21],color = col_ilr, marker = '|') 
     else:
         dat3 += [f"{p} {yd}"]
         dat4 += [f"{midp} {0.21+yd}"]
-        axdens[1].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
-        axdens[1].scatter(midp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
+        # axdens[1].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
+        # axdens[1].scatter(midp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
         axdens[1].plot([*u],[yd-0.21,yd-0.21],color = col_ilr, alpha = 0.3)
         axdens[1].scatter([*u],[yd-0.21,yd-0.21],color = col_ilr, marker = '|')
         
@@ -363,7 +363,7 @@ axroc.legend()
 
 tikzplotlib.save('figs/features_ROC.tikz',figure = rocfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/features/')
 
-# tikzplotlib.save('figs/features_dens.tikz',figure = densfig,externalize_tables = False, override_externals = True,tex_relative_path_to_data = 'dat/features/')
+tikzplotlib.save('figs/features_dens.tikz',figure = densfig,externalize_tables = False, override_externals = True,tex_relative_path_to_data = 'dat/features/')
 print(*dat1,sep='\n',file = open('figs/dat/features/features_dens-000.dat','w'))
 print(*dat2,sep='\n',file = open('figs/dat/features/features_dens-001.dat','w'))
 print(*dat3,sep='\n',file = open('figs/dat/features/features_dens-002.dat','w'))

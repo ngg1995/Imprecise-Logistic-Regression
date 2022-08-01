@@ -1,174 +1,146 @@
 % This file was created with tikzplotlib v0.10.1.
 \begin{tikzpicture}
 
-\definecolor{crimson}{RGB}{220,20,60}
+\definecolor{crimson2143940}{RGB}{214,39,40}
 \definecolor{darkgray176}{RGB}{176,176,176}
-\definecolor{darkorange}{RGB}{255,140,0}
-\definecolor{darkslategray934670}{RGB}{93,46,70}
-\definecolor{goldenrod1911910}{RGB}{191,191,0}
-\definecolor{gray}{RGB}{128,128,128}
-\definecolor{green}{RGB}{0,128,0}
-\definecolor{lightgray204}{RGB}{204,204,204}
+\definecolor{darkorange25512714}{RGB}{255,127,14}
+\definecolor{darkturquoise23190207}{RGB}{23,190,207}
+\definecolor{forestgreen4416044}{RGB}{44,160,44}
+\definecolor{goldenrod18818934}{RGB}{188,189,34}
+\definecolor{gray127}{RGB}{127,127,127}
+\definecolor{lightgray}{RGB}{211,211,211}
+\definecolor{mediumpurple148103189}{RGB}{148,103,189}
+\definecolor{orchid227119194}{RGB}{227,119,194}
 \definecolor{rosybrown166152136}{RGB}{166,152,136}
-\definecolor{royalblue}{RGB}{65,105,225}
+\definecolor{sienna1408675}{RGB}{140,86,75}
+\definecolor{steelblue31119180}{RGB}{31,119,180}
 
 \begin{axis}[
-legend cell align={left},
-legend style={
-  fill opacity=0.8,
-  draw opacity=1,
-  text opacity=1,
-  at={(0.03,0.97)},
-  anchor=north west,
-  draw=lightgray204
-},
 tick align=outside,
 tick pos=left,
 x grid style={darkgray176},
 xlabel={\(\displaystyle x\)},
 xmin=-0.5, xmax=10.5,
 xtick style={color=black},
-xtick={-2,0,2,4,6,8,10,12},
-xticklabels={
-  \(\displaystyle {\ensuremath{-}2}\),
-  \(\displaystyle {0}\),
-  \(\displaystyle {2}\),
-  \(\displaystyle {4}\),
-  \(\displaystyle {6}\),
-  \(\displaystyle {8}\),
-  \(\displaystyle {10}\),
-  \(\displaystyle {12}\)
-},
 y grid style={darkgray176},
 ylabel={\(\displaystyle \pi(x)\)},
 ymin=-0.05, ymax=1.05,
-ytick style={color=black},
-ytick={-0.2,0,0.2,0.4,0.6,0.8,1,1.2},
-yticklabels={
-  \(\displaystyle {\ensuremath{-}0.2}\),
-  \(\displaystyle {0.0}\),
-  \(\displaystyle {0.2}\),
-  \(\displaystyle {0.4}\),
-  \(\displaystyle {0.6}\),
-  \(\displaystyle {0.8}\),
-  \(\displaystyle {1.0}\),
-  \(\displaystyle {1.2}\)
-}
+ytick style={color=black}
 ]
-\addplot [gray, forget plot]
+\addplot [semithick, rosybrown166152136]
+table {%
+6.50397181931467 0
+6.50397181931467 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+6.01038953404544 0
+6.01038953404544 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+4.9850701230259 0
+4.9850701230259 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+4.41833174422996 0
+4.41833174422996 1
+};
+\addplot [semithick, rosybrown166152136]
+table {%
+3.00700056636203 0
+3.00700056636203 1
+};
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-001.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-002.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-003.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-004.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-005.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-006.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-007.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-008.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-009.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-010.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-011.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-012.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-013.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-014.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-015.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-016.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-017.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-018.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-019.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-020.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-021.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-022.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-023.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-024.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-025.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-026.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-027.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-028.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-029.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-030.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-031.dat};
-\addplot [gray, forget plot]
+\addplot [lightgray]
 table {opts_str}{dat/labels-all-032.dat};
-\addplot [semithick, rosybrown166152136, forget plot]
-table {%
-2.63315015185135 0
-2.63315015185135 1
-};
-\addplot [semithick, rosybrown166152136, forget plot]
-table {%
-3.09897584490029 0
-3.09897584490029 1
-};
-\addplot [semithick, rosybrown166152136, forget plot]
-table {%
-5.33739393380298 0
-5.33739393380298 1
-};
-\addplot [semithick, rosybrown166152136, forget plot]
-table {%
-4.65508100172511 0
-4.65508100172511 1
-};
-\addplot [semithick, rosybrown166152136, forget plot]
-table {%
-7.02622355255246 0
-7.02622355255246 1
-};
-\addplot [thick, royalblue]
+\addplot [thick, steelblue31119180]
 table {opts_str}{dat/labels-all-033.dat};
-\addlegendentry{$E^\prime_{0}$}
-\addplot [thick, darkslategray934670]
+\addplot [thick, darkorange25512714]
 table {opts_str}{dat/labels-all-034.dat};
-\addlegendentry{$E^\prime_{1}$}
-\addplot [thick, darkorange]
+\addplot [thick, forestgreen4416044]
 table {opts_str}{dat/labels-all-035.dat};
-\addlegendentry{$E^\prime_{\underline{\beta_0}}$}
-\addplot [thick, green]
+\addplot [thick, crimson2143940]
 table {opts_str}{dat/labels-all-036.dat};
-\addlegendentry{$E^\prime_{\overline{\beta_0}}$}
-\addplot [thick, crimson]
+\addplot [thick, mediumpurple148103189]
 table {opts_str}{dat/labels-all-037.dat};
-\addlegendentry{$E^\prime_{\underline{\beta_1}}$}
-\addplot [thick, black]
+\addplot [thick, sienna1408675]
 table {opts_str}{dat/labels-all-038.dat};
-\addlegendentry{$E^\prime_{\overline{\beta_1}}$}
-\addplot [thick, black]
+\addplot [thick, orchid227119194]
 table {opts_str}{dat/labels-all-039.dat};
-\addlegendentry{10_min}
-\addplot [thick, goldenrod1911910]
+\addplot [thick, gray127]
 table {opts_str}{dat/labels-all-040.dat};
-\addlegendentry{10_max}
-\addplot [draw=rosybrown166152136, fill=rosybrown166152136, forget plot, mark=*, only marks]
+\addplot [thick, goldenrod18818934]
+table {opts_str}{dat/labels-all-041.dat};
+\addplot [thick, darkturquoise23190207]
+table {opts_str}{dat/labels-all-042.dat};
+\addplot [thick, black, dashed]
+table {opts_str}{dat/labels-all-043.dat};
+\addplot [thick, black, dashed]
+table {opts_str}{dat/labels-all-044.dat};
+\addplot [draw=rosybrown166152136, fill=rosybrown166152136, mark=*, only marks]
 table{dat/labels-all-000.dat};
 \end{axis}
 

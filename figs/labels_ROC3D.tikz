@@ -27,7 +27,6 @@ legend style={fill opacity=0.8, draw opacity=1, text opacity=1, draw=lightgray20
 tick align=outside,
 tick pos=left,
 x grid style={darkgray176},
-xlabel style={rotate=234.73561031724535},
 xlabel={\(\displaystyle fpr\)},
 xmin=-0.05, xmax=1.05,
 xtick style={color=black},
@@ -39,12 +38,12 @@ ytick style={color=black},
 yticklabel style={anchor=center}
 ]
 \addplot [semithick, darkslategray934670, opacity=0.5, forget plot]
-table {opts_str}{dat/labels_ROC3D-000.dat};
+table {opts_str}{dat/labels/labels_ROC3D-000.dat};
 \addplot [semithick, darkorange]
-table {opts_str}{dat/labels_ROC3D-001.dat};
+table {opts_str}{dat/labels/labels_ROC3D-001.dat};
 \addlegendentry{$\sigma$}
 \addplot [semithick, green]
-table {opts_str}{dat/labels_ROC3D-002.dat};
+table {opts_str}{dat/labels/labels_ROC3D-002.dat};
 \addlegendentry{$\tau$}
 \end{axis}
 

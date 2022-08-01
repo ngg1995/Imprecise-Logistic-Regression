@@ -30,23 +30,23 @@ ymin=-0.05, ymax=1.05,
 ytick style={color=black}
 ]
 \addplot [semithick, royalblue]
-table {opts_str}{dat/labels_ROC-000.dat};
+table {opts_str}{dat/labels/labels_ROC-000.dat};
 \addlegendentry{$\mathcal{ILR}(F)$}
 \addplot [semithick, royalblue, forget plot]
-table {opts_str}{dat/labels_ROC-001.dat};
+table {opts_str}{dat/labels/labels_ROC-001.dat};
 \addplot [semithick, rosybrown166152136, dotted, forget plot]
 table {%
 0 0
 1 1
 };
 \addplot [semithick, black]
-table {opts_str}{dat/labels_ROC-002.dat};
+table {opts_str}{dat/labels/labels_ROC-002.dat};
 \addlegendentry{$\mathcal{LR}(D)$}
 \addplot [semithick, crimson, dashed]
-table {opts_str}{dat/labels_ROC-003.dat};
+table {opts_str}{dat/labels/labels_ROC-003.dat};
 \addlegendentry{$\mathcal{LR}(F_\times)$}
 \addplot [semithick, darkslategray934670]
-table {opts_str}{dat/labels_ROC-004.dat};
+table {opts_str}{dat/labels/labels_ROC-004.dat};
 \addlegendentry{$\mathcal{ILR}(F)$ (Predictive)}
 \end{axis}
 

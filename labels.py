@@ -88,7 +88,7 @@ ax1.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = '$\mathcal{ILR}(F)
 # fig1.savefig('../LR-paper/figs/labels.png',dpi = 600)
 # fig1.savefig('figs/labels.png',dpi = 600)
 ax1.legend()
-tikzplotlib.save('figs/labels.tikz',figure = fig1,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+tikzplotlib.save('figs/labels.tikz',figure = fig1,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/labels/')
 
 # %% [markdown]
 ### Get confusion matrix
@@ -97,6 +97,9 @@ base_predict = base.predict(test_data)
 
 # CLASSIFY NO_UQ MODEL DATA 
 nuq_predict = nuq.predict(test_data)
+
+# CLASSIFY NO_UQ MODEL DATA 
+sslr_predict = sslr.predict(test_data)
 
 # CLASSIFY UQ MODEL 
 ilr_predict = ilr.predict(test_data)
@@ -110,8 +113,21 @@ with open('runinfo/labels_cm.out','w') as f:
     print('Sensitivity = %.3f' %(a/(a+c)),file = f)
     print('Specificity = %.3f' %(d/(b+d)),file = f)
 
-    print('DISCARDED DATA MODEL',file = f)
+    print('\nDISCARDED DATA MODEL',file = f)
     aa,bb,cc,dd = generate_confusion_matrix(test_results,nuq_predict)
+    try:
+        ss = 1/(1+cc/aa)
+    except:
+        ss = None
+    try:    
+        tt = 1/(1+bb/dd)
+    except:
+        tt = None
+    print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aa,bb,cc,dd),file = f)
+    
+    
+    print('\nSSLR MODEL',file = f)
+    aa,bb,cc,dd = generate_confusion_matrix(test_results,sslr_predict)
     try:
         ss = 1/(1+cc/aa)
     except:
@@ -126,7 +142,7 @@ with open('runinfo/labels_cm.out','w') as f:
     print('Sensitivity = %.3f' %(ss),file = f)
     print('Specificity = %.3f' %(tt),file = f)
     
-    print('UQ MODEL',file = f)
+    print('\nUQ MODEL',file = f)
     
     aaai,bbbi,ccci,dddi = generate_confusion_matrix(test_results,ilr_predict,throw = False)
     try:
@@ -141,7 +157,7 @@ with open('runinfo/labels_cm.out','w') as f:
     print('TP=[%i,%i]\tFP=[%i,%i]\nFN=[%i,%i]\tTN=[%i,%i]' %(*aaai,*bbbi,*ccci,*dddi),file = f)
 
     # Calculate sensitivity and specificity
-    print('Sensitivity = [%.3f,%.3f]\nSpecificity = [%.3f,%.3f]' %(*sssi,*ttti),file = f)
+    print('Sensitivity = [%.3f,%.3f]\nSpecificity = [%.3f,%.3f]\n' %(*sssi,*ttti),file = f)
 
     
     aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(test_results,ilr_predict,throw = True)
@@ -181,15 +197,15 @@ for i,(p,u,nuqp,r) in enumerate(zip(probabilities,ilr_probabilities,nuq_probabil
     if r:
         dat1 += [f"{p} {yd}"]
         dat2 += [f"{nuqp} {0.21+yd}"]
-        axdens[0].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
-        axdens[0].scatter(nuqp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
+        # axdens[0].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
+        # axdens[0].scatter(nuqp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
         axdens[0].plot([*u],[yd-0.21,yd-0.21],color = col_ilr, alpha = 0.3)
         axdens[0].scatter([*u],[yd-0.21,yd-0.21],color = col_ilr, marker = '|')
     else:
         dat3 += [f"{p} {yd}"]
         dat4 += [f"{nuqp} {0.21+yd}"]
-        axdens[1].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
-        axdens[1].scatter(nuqp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
+        # axdens[1].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
+        # axdens[1].scatter(nuqp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
         axdens[1].plot([*u],[yd-0.21,yd-0.21],color = col_ilr, alpha = 0.3)
         axdens[1].scatter([*u],[yd-0.21,yd-0.21],color = col_ilr, marker = '|')
         
@@ -232,13 +248,13 @@ axroc.legend()
 # densfig.savefig('figs/labels_dens.png',dpi =600)
 # densfig.savefig('../LR-paper/figs/labels_dens.png',dpi =600)
 
-tikzplotlib.save('figs/labels_ROC.tikz',figure = rocfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+tikzplotlib.save('figs/labels_ROC.tikz',figure = rocfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/labels/')
 
-# tikzplotlib.save('figs/labels_dens.tikz',figure = densfig,externalize_tables = False, override_externals = True,tex_relative_path_to_data = 'dat/')
-print(*dat1,sep='\n',file = open('figs/dat/labels_dens-000.dat','w'))
-print(*dat2,sep='\n',file = open('figs/dat/labels_dens-001.dat','w'))
-print(*dat3,sep='\n',file = open('figs/dat/labels_dens-002.dat','w'))
-print(*dat4,sep='\n',file = open('figs/dat/labels_dens-003.dat','w'))
+tikzplotlib.save('figs/labels_dens.tikz',figure = densfig,externalize_tables = False, override_externals = True,tex_relative_path_to_data = 'dat/labels/')
+print(*dat1,sep='\n',file = open('figs/dat/labels/labels_dens-000.dat','w'))
+print(*dat2,sep='\n',file = open('figs/dat/labels/labels_dens-001.dat','w'))
+print(*dat3,sep='\n',file = open('figs/dat/labels/labels_dens-002.dat','w'))
+print(*dat4,sep='\n',file = open('figs/dat/labels/labels_dens-003.dat','w'))
 
 #%%
 with open('runinfo/labels_auc.out','w') as f:
@@ -266,7 +282,7 @@ ax2.legend()
 # fig2.savefig('figs/labels_ROC3D.png',dpi = 600)
 # fig2.savefig('../LR-paper/figs/labels_ROC3D.png',dpi = 600)
 
-tikzplotlib.save("figs/labels_ROC3D.tikz",figure = fig2,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+tikzplotlib.save("figs/labels_ROC3D.tikz",figure = fig2,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/labels/')
 
 fig3, ax3 = plt.subplots()
 
@@ -279,7 +295,7 @@ ax3.legend()
 
 # fig3.savefig('figs/labels_ST.png',dpi = 600)
 # fig3.savefig('../LR-paper/figs/labels_ST.png',dpi = 600)
-tikzplotlib.save("figs/labels_ST.tikz",figure = fig3,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+tikzplotlib.save("figs/labels_ST.tikz",figure = fig3,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/labels/')
 
 
 # %% [markdown]

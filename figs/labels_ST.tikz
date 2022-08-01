@@ -17,14 +17,14 @@ xmin=-0.05, xmax=1.05,
 xtick style={color=black},
 y grid style={darkgray176},
 ylabel={\(\displaystyle \sigma\)/\(\displaystyle \tau\)},
-ymin=-0.0175925925925926, ymax=0.369444444444444,
+ymin=-0.0159090909090909, ymax=0.334090909090909,
 ytick style={color=black}
 ]
 \addplot [semithick, darkorange]
-table {opts_str}{dat/labels_ST-000.dat};
+table {opts_str}{dat/labels/labels_ST-000.dat};
 \addlegendentry{$\sigma$ v $s$}
 \addplot [semithick, green]
-table {opts_str}{dat/labels_ST-001.dat};
+table {opts_str}{dat/labels/labels_ST-001.dat};
 \addlegendentry{$\tau$ v $fpr$}
 \end{axis}
 

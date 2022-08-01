@@ -88,6 +88,6 @@ ax1.plot(lX,[i.left for i in lYu],color='k',lw=2,linestyle = '--',)
 ax1.plot(lX,[i.right for i in lYu],color='k',lw=2,linestyle = '--',label = '$\mathcal{ILR}(F)$')
 
 #%%
-# tikzplotlib.save('figs/labels-all.tikz',figure = fig1,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+tikzplotlib.save('figs/labels-all.tikz',figure = fig1,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
 
 # %%
