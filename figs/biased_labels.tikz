@@ -231,41 +231,6 @@ table {%
 8.05223196832747 0
 8.05223196832747 1
 };
-\addplot [semithick, rosybrown166152136]
-table {%
-6.26287148311393 0
-6.26287148311393 1
-};
-\addplot [semithick, rosybrown166152136]
-table {%
-4.34013993333294 0
-4.34013993333294 1
-};
-\addplot [semithick, rosybrown166152136]
-table {%
-6.12526066829388 0
-6.12526066829388 1
-};
-\addplot [semithick, rosybrown166152136]
-table {%
-5.47586155919244 0
-5.47586155919244 1
-};
-\addplot [semithick, rosybrown166152136]
-table {%
-7.217553174318 0
-7.217553174318 1
-};
-\addplot [semithick, rosybrown166152136]
-table {%
-7.71320643266746 0
-7.71320643266746 1
-};
-\addplot [semithick, rosybrown166152136]
-table {%
-9.08648880808668 0
-9.08648880808668 1
-};
 \addplot [thick, royalblue]
 table {opts_str}{dat/labels/biased_labels-016.dat};
 \addplot [thick, royalblue]
@@ -330,41 +295,6 @@ table {%
 table {%
 2.95961706879679 0
 2.95961706879679 1
-};
-\addplot [semithick, rosybrown166152136]
-table {%
-4.41833174422996 0
-4.41833174422996 1
-};
-\addplot [semithick, rosybrown166152136]
-table {%
-3.73340760051469 0
-3.73340760051469 1
-};
-\addplot [semithick, rosybrown166152136]
-table {%
-1.69110836562535 0
-1.69110836562535 1
-};
-\addplot [semithick, rosybrown166152136]
-table {%
-5.13138242554391 0
-5.13138242554391 1
-};
-\addplot [semithick, rosybrown166152136]
-table {%
-1.1398436186355 0
-1.1398436186355 1
-};
-\addplot [semithick, rosybrown166152136]
-table {%
-0.904593492709074 0
-0.904593492709074 1
-};
-\addplot [semithick, rosybrown166152136]
-table {%
-0.0394826632791445 0
-0.0394826632791445 1
 };
 \addplot [thick, royalblue]
 table {opts_str}{dat/labels/biased_labels-022.dat};

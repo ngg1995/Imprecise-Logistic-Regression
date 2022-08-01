@@ -59,13 +59,13 @@ def lo_20(data,results):
     return uq_data_index
         
 def ones_8(data,results):
-    few = 15 #uncertain points
+    few = 8 #uncertain points
     random.seed(1) # for reproducability
     uq_data_index = random.sample([i for i in results[results].index], k = few) # clustered around center
     return uq_data_index
 
 def zeroes_8(data,results):
-    few = 15 #uncertain points
+    few = 8 #uncertain points
     random.seed(6) # for reproducability
     uq_data_index = random.sample([i for i in results[~results].index], k = few) # clustered around center
     return uq_data_index
