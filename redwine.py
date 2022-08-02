@@ -8,7 +8,6 @@ from matplotlib import pyplot as plt
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.semi_supervised import SelfTrainingClassifier
-from sklearn.preprocessing import StandardScaler
 import itertools as it
 from tqdm import tqdm
 import pba
