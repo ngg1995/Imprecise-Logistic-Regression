@@ -158,21 +158,18 @@ def _uncertain_class(data: pd.DataFrame, result: pd.Series, uq_data_index: list,
     new_results.loc[uq_data_index] = [True]*len(uq_data_index)
     models['one_most'] = LogisticRegression().fit(data,new_results)
 
-    k_0 = lambda x:  abs(models['zero_most'].predict_proba(np.array([x]).reshape(1,-1))[0][1] - 0.5)
-    k_1 = lambda x:  abs(models['one_most'].predict_proba(np.array([x]).reshape(1,-1))[0][1] - 0.5)
-
-    k = pba.I(so.minimize(k_1,np.median(data)).x,so.minimize(k_0,np.median(data)).x)
-
     zones = {
         'left': [],
         'center': [],
         'right': []
     }
 
-    for u in uq_data_index:
-        if data.loc[u,0] < k.left:
+    r_0 = models['zero_most'].predict_proba(data)[0:,1]
+    r_1 = models['one_most'].predict_proba(data)[0:,1]
+    for u,i,j in zip(uq_data_index,r_1,r_0):
+        if i < 0.5 and  j < 0.5:
             zones['left'].append(u)
-        elif data.loc[u,0] > k.right:
+        elif i > 0.5 and j > 0.5:
             zones['right'].append(u)
         else:
             zones['center'].append(u)

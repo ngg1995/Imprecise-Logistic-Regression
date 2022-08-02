@@ -1,5 +1,4 @@
 #%%
-from scipy import rand
 import tikzplotlib
 from ImpLogReg import ImpLogReg
 import pandas as pd
@@ -8,6 +7,8 @@ import random
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
+from sklearn.semi_supervised import SelfTrainingClassifier
+from sklearn.preprocessing import StandardScaler
 import itertools as it
 from tqdm import tqdm
 import pba
@@ -18,7 +19,7 @@ matplotlib.rc('font', **font)
 
 from ImpLogReg import *
 from LRF import *
-from other_methods import *
+
 
 # colors
 col_precise = 'black'
@@ -47,94 +48,71 @@ def intervalise(val,eps,method,b=0.5,bounds = None):
         
     return pba.I(m-eps,m+eps)
 
-def midpoints(data):
+def deintervalise(data, binary_cols):
     n_data = data.copy()
     for c in data.columns:
+        if c in binary_cols:
+            continue
         for i in data.index:
             if data.loc[i,c].__class__.__name__ == 'Interval':
-
-                n_data.loc[i,c] = data.loc[i,c].midpoint()
-
+                n_data.loc[i,c] = data.loc[i,c].left + np.random.rand()*data.loc[i,c].width()
             
     return n_data
 
-
 #%%
 ### Load redwine dataset
-wine_data = pd.read_csv('redwine.csv',index_col = None,usecols = ['volatile acidity','citric acid','chlorides','pH','sulphates','alcohol','quality'])
+redwine = pd.read_csv('redwine.csv',index_col = None)
 
-X = wine_data[[c for c in wine_data.columns if c != 'quality']]
-Y = wine_data.quality > 6
-
+X = StandardScaler().fit(redwine[[c for c in redwine.columns if c != 'quality']])
+Y = redwine['quality'] > 6
+print(sum(Y))
 ### Split into test and train samples
-train_data, test_data, train_results, test_results = train_test_split(X, Y, test_size=0.85,random_state = 0)
-print(len(train_data))
+train_data, test_data, train_results, test_results = train_test_split(X, Y, test_size=0.5,random_state = 0)
+print(len(train_data),sum(train_results))
 
-#%% 
-### Intervalise dataset
-
-intervalisation = {
-    # "fixed acidity":lambda val: intervalise(val,0.2,'u'),
-       "volatile acidity":lambda val: intervalise(val,0.05,'t'),
-       "citric acid":lambda val: intervalise(val,0.03,'t',-0.75),
-    #    "residual sugar":lambda val: intervalise(val,0.02,'u'),
-       "chlorides":lambda val: intervalise(val,0.003,'u'),
-    #    "free sulfur dioxide":(2,'u'),
-    #    "total sulfur dioxide":(2,'u'),
-    #    "density":(0.01,'t',0.9,(0,1)),
-       "pH":lambda val: intervalise(val,.01,'t',1),
-       "sulphates":lambda val: intervalise(val,0.01,'u'),
-       "alcohol":lambda val: intervalise(val,0.1,'u')
-}
-
-UQdata = pd.DataFrame({
-    c: [intervalisation[c](train_data.loc[i,c]) for i in train_data.index] for c in train_data.columns    
-}, index = train_data.index)
+train_data_index = list(train_data.index)
+uq_data_index = random.sample([i for i in train_data_index if (redwine.loc[i,"quality"] == 6 or redwine.loc[i,"quality"] == 7)], k = 25)
+uq_results = pd.Series([pba.I(0,1) if i in uq_data_index else train_results.loc[i] for i in train_data_index],index = train_data_index, dtype='O')
 
 #%%
 ### Fit logistic regression model on full dataset
 base = LogisticRegression(max_iter=1000)
-base.fit(train_data.to_numpy(),train_results.to_numpy())
-
-#%%
-### Fit models with midpoint data
-mid_data = midpoints(UQdata)
-mid = LogisticRegression(max_iter=1000)
-mid.fit(mid_data.to_numpy(),train_results.to_numpy())
-
-#%%
-### Fit de Souza model
-ds = DSLR(max_iter = 1000)
-ds.fit(UQdata,train_results)
-
-#%%
-### Fit Billard--Diday model
-bd = BDLR(max_iter = 1000)
-bd.fit(UQdata,train_results)
-    
-#%%
-### Fit UQ models
-ilr = ImpLogReg(uncertain_data=True, max_iter = 1000)
-ilr.fit(UQdata,train_results,False)
+base.fit(train_data,train_results)
 
 # %% [markdown]
+### Fit models with no uq data
+nuq_data = train_data.loc[[i for i in train_data.index if i not in uq_data_index]]
+nuq_results = train_results.loc[[i for i in train_data.index if i not in uq_data_index]]
+nuq = LogisticRegression(max_iter=1000)
+nuq.fit(nuq_data,nuq_results)
+
+#%%
+### Fit Semi-Supervised Model
+sslr_results = pd.Series([int(train_results.loc[i]) if i not in uq_data_index else -1 for i in train_results.index], index = train_data.index, dtype=int)
+
+sslr = SelfTrainingClassifier(LogisticRegression(max_iter=1000))
+sslr.fit(train_data,sslr_results)
+
+# %% [markdown]
+### Fit UQ models
+ilr = ImpLogReg(uncertain_class=True, max_iter = 10000)
+ilr.fit(train_data,uq_results)
+
+# %%
 ### Get confusion matrix
 # Classify test data
 base_predict = base.predict(test_data)
 
 # CLASSIFY NO_UQ MODEL DATA 
-mid_predict = mid.predict(test_data)
+nuq_predict = nuq.predict(test_data)
 
 # CLASSIFY NO_UQ MODEL DATA 
-bd_predict = bd.predict(test_data)
-
-# CLASSIFY NO_UQ MODEL DATA 
-ds_predict = ds.predict(test_data)
+sslr_predict = sslr.predict(test_data)
 
 # CLASSIFY UQ MODEL 
 ilr_predict = ilr.predict(test_data)
 
-with open('runinfo/features_cm.out','w') as f:
+with open('runinfo/redwine_cm.out','w') as f:
     print('TRUE MODEL',file = f)
     a,b,c,d = generate_confusion_matrix(test_results,base_predict)
     print('TP=%i\tFP=%i\nFN=%i\tTN=%i' %(a,b,c,d),file = f)
@@ -143,8 +121,8 @@ with open('runinfo/features_cm.out','w') as f:
     print('Sensitivity = %.3f' %(a/(a+c)),file = f)
     print('Specificity = %.3f' %(d/(b+d)),file = f)
 
-    print('MIDPOINT MODEL',file = f)
-    aa,bb,cc,dd = generate_confusion_matrix(test_results,mid_predict)
+    print('\nDISCARDED DATA MODEL',file = f)
+    aa,bb,cc,dd = generate_confusion_matrix(test_results,nuq_predict)
     try:
         ss = 1/(1+cc/aa)
     except:
@@ -156,20 +134,8 @@ with open('runinfo/features_cm.out','w') as f:
     print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aa,bb,cc,dd),file = f)
     
     
-    print('DE SOUZA MODEL',file = f)
-    aa,bb,cc,dd = generate_confusion_matrix(test_results,ds_predict)
-    try:
-        ss = 1/(1+cc/aa)
-    except:
-        ss = None
-    try:    
-        tt = 1/(1+bb/dd)
-    except:
-        tt = None
-    print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aa,bb,cc,dd),file = f)
-    
-    print('BILLARD-DIDAY MODEL',file = f)
-    aa,bb,cc,dd = generate_confusion_matrix(test_results,bd_predict)
+    print('\nSSLR MODEL',file = f)
+    aa,bb,cc,dd = generate_confusion_matrix(test_results,sslr_predict)
     try:
         ss = 1/(1+cc/aa)
     except:
@@ -184,7 +150,7 @@ with open('runinfo/features_cm.out','w') as f:
     print('Sensitivity = %.3f' %(ss),file = f)
     print('Specificity = %.3f' %(tt),file = f)
     
-    print('UQ MODEL',file = f)
+    print('\nUQ MODEL',file = f)
     
     aaai,bbbi,ccci,dddi = generate_confusion_matrix(test_results,ilr_predict,throw = False)
     try:
@@ -199,7 +165,7 @@ with open('runinfo/features_cm.out','w') as f:
     print('TP=[%i,%i]\tFP=[%i,%i]\nFN=[%i,%i]\tTN=[%i,%i]' %(*aaai,*bbbi,*ccci,*dddi),file = f)
 
     # Calculate sensitivity and specificity
-    print('Sensitivity = [%.3f,%.3f]\nSpecificity = [%.3f,%.3f]' %(*sssi,*ttti),file = f)
+    print('Sensitivity = [%.3f,%.3f]\nSpecificity = [%.3f,%.3f]\n' %(*sssi,*ttti),file = f)
 
     
     aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(test_results,ilr_predict,throw = True)
@@ -222,7 +188,8 @@ with open('runinfo/features_cm.out','w') as f:
    
 # %% [markdown]
 s,fpr,probabilities = ROC(model = base, data = test_data, results = test_results)
-mid_s,mid_fpr,mid_probabilities = ROC(model = mid, data = test_data, results = test_results)
+nuq_s,nuq_fpr,nuq_probabilities = ROC(model = nuq, data = test_data, results = test_results)
+sslr_s,sslr_fpr,nuq_probabilities = ROC(model = sslr, data = test_data, results = test_results)
 s_t, fpr_t, Sigma, Tau = incert_ROC(ilr, test_data, test_results)
 
 s_i, fpr_i,ilr_probabilities = ROC(ilr, test_data, test_results)
@@ -234,20 +201,20 @@ dat2 = ['x y']
 dat3 = ['x y']
 dat4 = ['x y']
 
-for i,(p,u,midp,r) in enumerate(zip(probabilities,ilr_probabilities,mid_probabilities,test_results.to_list())):
+for i,(p,u,nuqp,r) in enumerate(zip(probabilities,ilr_probabilities,nuq_probabilities,test_results.to_list())):
     yd = np.random.uniform(-0.1,0.1)
     if r:
         dat1 += [f"{p} {yd}"]
-        dat2 += [f"{midp} {0.21+yd}"]
-        axdens[0].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
-        axdens[0].scatter(midp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
+        dat2 += [f"{nuqp} {0.21+yd}"]
+        # axdens[0].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
+        # axdens[0].scatter(nuqp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
         axdens[0].plot([*u],[yd-0.21,yd-0.21],color = col_ilr, alpha = 0.3)
         axdens[0].scatter([*u],[yd-0.21,yd-0.21],color = col_ilr, marker = '|')
     else:
         dat3 += [f"{p} {yd}"]
-        dat4 += [f"{midp} {0.21+yd}"]
-        axdens[1].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
-        axdens[1].scatter(midp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
+        dat4 += [f"{nuqp} {0.21+yd}"]
+        # axdens[1].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
+        # axdens[1].scatter(nuqp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
         axdens[1].plot([*u],[yd-0.21,yd-0.21],color = col_ilr, alpha = 0.3)
         axdens[1].scatter([*u],[yd-0.21,yd-0.21],color = col_ilr, marker = '|')
         
@@ -270,40 +237,42 @@ for i,j in zip(fpr_i,s_i):
     if not isinstance(j,pba.Interval):
         j = pba.I(j)
       
-    xl.append(i.left)
-    xu.append(i.right)
+    xl.append(i.left  )
+    xu.append(i.right  )
     
     yl.append(j.left)
     yu.append(j.right)
     
-axroc.plot(xl,yu, col_ilr,label = '$\mathcal{ILR}(E)$')
+axroc.plot(xl,yu, col_ilr,label = '$\mathcal{ILR}(F)$')
 axroc.plot(xu,yl, col_ilr )
 axroc.plot([0,1],[0,1],linestyle = ':',color=col_points)
 
 axroc.set(xlabel = '$fpr$',ylabel='$s$')
 axroc.plot(fpr,s,'k',label = '$\mathcal{LR}(D)$')
-axroc.plot(mid_fpr,mid_s,color=col_mid,linestyle='--',label='$\mathcal{LR}(F_\\times)$')
-axroc.plot(fpr_t,s_t,col_ilr2,label='$\mathcal{ILR}(E)$ (Predictive)')
+axroc.plot(nuq_fpr,nuq_s,color=col_mid,linestyle='--',label='$\mathcal{LR}(F_\\times)$')
+axroc.plot(sslr_fpr,sslr_s,color='g',linestyle='--',label='$\mathcal{LR}(F_\\times)$')
+axroc.plot(fpr_t,s_t,col_ilr2,label='$\mathcal{ILR}(F)$ (Predictive)')
 axroc.legend()
-# rocfig.savefig('figs/features_ROC.png',dpi = 600)
-# rocfig.savefig('../LR-paper/figs/features_ROC.png',dpi = 600)
-# densfig.savefig('figs/features_dens.png',dpi =600)
-# densfig.savefig('../LR-paper/figs/features_dens.png',dpi =600)
+# rocfig.savefig('figs/redwine_ROC.png',dpi = 600)
+# rocfig.savefig('../LR-paper/figs/redwine_ROC.png',dpi = 600)
+# densfig.savefig('figs/redwine_dens.png',dpi =600)
+# densfig.savefig('../LR-paper/figs/redwine_dens.png',dpi =600)
 
-tikzplotlib.save('figs/features_ROC.tikz',figure = rocfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
+tikzplotlib.save('figs/redwine_ROC.tikz',figure = rocfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/redwine/')
 
-# tikzplotlib.save('figs/features_dens.tikz',figure = densfig,externalize_tables = False, override_externals = True,tex_relative_path_to_data = 'dat/')
-print(*dat1,sep='\n',file = open('figs/dat/features_dens-000.dat','w'))
-print(*dat2,sep='\n',file = open('figs/dat/features_dens-001.dat','w'))
-print(*dat3,sep='\n',file = open('figs/dat/features_dens-002.dat','w'))
-print(*dat4,sep='\n',file = open('figs/dat/features_dens-003.dat','w'))
+tikzplotlib.save('figs/redwine_dens.tikz',figure = densfig,externalize_tables = False, override_externals = True,tex_relative_path_to_data = 'dat/redwine/')
+print(*dat1,sep='\n',file = open('figs/dat/redwine/redwine_dens-000.dat','w'))
+print(*dat2,sep='\n',file = open('figs/dat/redwine/redwine_dens-001.dat','w'))
+print(*dat3,sep='\n',file = open('figs/dat/redwine/redwine_dens-002.dat','w'))
+print(*dat4,sep='\n',file = open('figs/dat/redwine/redwine_dens-003.dat','w'))
 
-
-with open('runinfo/features_auc.out','w') as f:
+#%%
+with open('runinfo/redwine_auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
-    print('MIDPOINTS: %.4F' %auc(mid_s,mid_fpr),file = f)
+    print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)
     print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
     print('ILR: [%.3f,%.3f]'  %(auc(yl,xu),auc(yu,xl)), file = f)
-
-
-# %%
+    
+    # print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
+    
+#%%

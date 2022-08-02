@@ -1,0 +1,29 @@
+TRUE MODEL
+TP=32	FP=26
+FN=59	TN=683
+Sensitivity = 0.352
+Specificity = 0.963
+
+DISCARDED DATA MODEL
+TP=33	FP=26
+FN=58	TN=683
+
+SSLR MODEL
+TP=33	FP=25
+FN=58	TN=684
+Sensitivity = 0.363
+Specificity = 0.965
+
+UQ MODEL
+TP=[29,35]	FP=[18,39]
+FN=[56,62]	TN=[670,691]
+Sensitivity = [0.319,0.385]
+Specificity = [0.945,0.975]
+
+TP=29	FP=18
+FN=56	TN=670
+NP(+)=6	NP(-)=21
+Sensitivity = 0.341
+Specificity = 0.974
+sigma = 0.066
+tau = 0.030
