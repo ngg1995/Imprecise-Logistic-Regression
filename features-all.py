@@ -9,7 +9,7 @@ import pba
 import random
 import tikzplotlib
 import matplotlib
-
+import old
 font = {'size'   : 14,'family' : 'Times New Roman'}
 matplotlib.rc('font', **font)
 plt.rcParams['text.usetex'] = True
@@ -104,7 +104,11 @@ UQdata = pd.DataFrame({
 ### Fit UQ models
 ilr = ImpLogReg(uncertain_data=True, max_iter = 1000)
 ilr.fit(UQdata,train_results)
-
+#%% 
+### Fit old models
+ilr_old = old.ImpLogReg(uncertain_data=True, max_iter = 1000)
+ilr_old.fit(UQdata,train_results)
+       
 #%%
 fig, ax = plt.subplots()
 many = 10
@@ -122,7 +126,7 @@ for i in range(many+10):
     
     lY = lr.predict_proba(lX.reshape(-1, 1))[:,1]
     
-    ax.plot(lX,lY, color='grey', linewidth = 1)
+    # ax.plot(lX,lY, color='grey', linewidth = 1)
     
 
 for l,m in ilr.models.items():
@@ -136,7 +140,11 @@ for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
     if r == 0:
         yd = -yd
     ax.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
-# %%
+
+lYu = ilr_old.predict_proba(lX.reshape(-1,1))[:,1]
+    
+ax.plot(lX,[i.left for i in lYu],color='k',lw=2)
+ax.plot(lX,[i.right for i in lYu],color='k',lw=2,label = 'ilr')
 fig.show()
 # tikzplotlib.save('figs/features-all.tikz',figure = fig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
 
