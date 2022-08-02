@@ -273,33 +273,33 @@ with open('runinfo/burn1000_auc.out','w') as f:
     
 
 
-fig = plt.figure()
-ax = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
-ax.set_xlabel('$fpr$')
-ax.set_ylabel('$s$')
-# ax.set_zlabel('$1-\sigma,1-\\tau$')
-ax.plot(fpr_t,s_t,'#4169E1',alpha = 0.5)
-ax.plot3D(fpr_t,s_t,Sigma,'#FF8C00',label = '$\\sigma$')
-ax.plot3D(fpr_t,s_t,Tau,'#008000',label = '$\\tau$')
-# ax.plot3D(fpr,s,Nu,'k',label = '$1-\\nu$')
+# fig = plt.figure()
+# ax = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
+# ax.set_xlabel('$fpr$')
+# ax.set_ylabel('$s$')
+# # ax.set_zlabel('$1-\sigma,1-\\tau$')
+# ax.plot(fpr_t,s_t,'#4169E1',alpha = 0.5)
+# ax.plot3D(fpr_t,s_t,Sigma,'#FF8C00',label = '$\\sigma$')
+# ax.plot3D(fpr_t,s_t,Tau,'#008000',label = '$\\tau$')
+# # ax.plot3D(fpr,s,Nu,'k',label = '$1-\\nu$')
 
-ax.legend()
+# ax.legend()
 
-# plt.savefig('figs/burn1000_ROC3D.png',dpi = 600)
-# plt.savefig('../LR-paper/figs/burn1000_ROC3D.png',dpi = 600)
-plt.clf()
+# # plt.savefig('figs/burn1000_ROC3D.png',dpi = 600)
+# # plt.savefig('../LR-paper/figs/burn1000_ROC3D.png',dpi = 600)
+# plt.clf()
 
-plt.xlabel('$fpr$/$s$')
-plt.ylabel('$\\sigma$/$\\tau$')
-plt.plot(s_t,Sigma,'#FF8C00',label = '$\\sigma$ v $s$')
-plt.plot(fpr_t,Tau,'#008000',label = '$\\tau$ v $fpr$')
-plt.legend()
+# plt.xlabel('$fpr$/$s$')
+# plt.ylabel('$\\sigma$/$\\tau$')
+# plt.plot(s_t,Sigma,'#FF8C00',label = '$\\sigma$ v $s$')
+# plt.plot(fpr_t,Tau,'#008000',label = '$\\tau$ v $fpr$')
+# plt.legend()
 
 
 # plt.savefig('figs/burn1000_ST.png',dpi = 600)
 # plt.savefig('../LR-paper/figs/burn1000_ST.png',dpi = 600)
 
-plt.clf()
+# plt.clf()
 
 
 # ### Hosmer-Lemeshow

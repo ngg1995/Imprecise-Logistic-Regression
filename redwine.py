@@ -63,15 +63,15 @@ def deintervalise(data, binary_cols):
 ### Load redwine dataset
 redwine = pd.read_csv('redwine.csv',index_col = None)
 
-X = StandardScaler().fit(redwine[[c for c in redwine.columns if c != 'quality']])
-Y = redwine['quality'] > 6
-print(sum(Y))
+X = redwine[[c for c in redwine.columns if c != 'quality']]
+Y = redwine['quality'] >= 6
+
 ### Split into test and train samples
 train_data, test_data, train_results, test_results = train_test_split(X, Y, test_size=0.5,random_state = 0)
 print(len(train_data),sum(train_results))
 
 train_data_index = list(train_data.index)
-uq_data_index = random.sample([i for i in train_data_index if (redwine.loc[i,"quality"] == 6 or redwine.loc[i,"quality"] == 7)], k = 25)
+uq_data_index = random.sample([i for i in train_data_index if (redwine.loc[i,"quality"] == 6)], k = 40)
 uq_results = pd.Series([pba.I(0,1) if i in uq_data_index else train_results.loc[i] for i in train_data_index],index = train_data_index, dtype='O')
 
 #%%
@@ -132,7 +132,9 @@ with open('runinfo/redwine_cm.out','w') as f:
     except:
         tt = None
     print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aa,bb,cc,dd),file = f)
-    
+    # Calculate sensitivity and specificity
+    print('Sensitivity = %.3f' %(ss),file = f)
+    print('Specificity = %.3f' %(tt),file = f)
     
     print('\nSSLR MODEL',file = f)
     aa,bb,cc,dd = generate_confusion_matrix(test_results,sslr_predict)
@@ -270,6 +272,7 @@ print(*dat4,sep='\n',file = open('figs/dat/redwine/redwine_dens-003.dat','w'))
 with open('runinfo/redwine_auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
     print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)
+    print('SSLR: %.4F' %auc(sslr_s,sslr_fpr),file = f)
     print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
     print('ILR: [%.3f,%.3f]'  %(auc(yl,xu),auc(yu,xl)), file = f)
     

@@ -164,8 +164,8 @@ def _uncertain_class(data: pd.DataFrame, result: pd.Series, uq_data_index: list,
         'right': []
     }
 
-    r_0 = models['zero_most'].predict_proba(data)[0:,1]
-    r_1 = models['one_most'].predict_proba(data)[0:,1]
+    r_0 = models['zero_most'].predict_proba(data.loc[uq_data_index])[0:,1]
+    r_1 = models['one_most'].predict_proba(data.loc[uq_data_index])[0:,1]
     for u,i,j in zip(uq_data_index,r_1,r_0):
         if i < 0.5 and  j < 0.5:
             zones['left'].append(u)
