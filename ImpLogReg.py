@@ -157,11 +157,11 @@ def _uncertain_class(data: pd.DataFrame, result: pd.Series, uq_data_index: list,
 
     new_results = result.copy().astype(bool)
     new_results.loc[uq_data_index] = [False]*len(uq_data_index)
-    models['zero_most'] = LogisticRegression().fit(data,new_results)
+    models['zero_most'] = LogisticRegression(**params).fit(data,new_results)
 
     new_results = result.copy().astype(bool)
     new_results.loc[uq_data_index] = [True]*len(uq_data_index)
-    models['one_most'] = LogisticRegression().fit(data,new_results)
+    models['one_most'] = LogisticRegression(**params).fit(data,new_results)
 
     zones = {
         'left': [],
@@ -187,7 +187,7 @@ def _uncertain_class(data: pd.DataFrame, result: pd.Series, uq_data_index: list,
             new_results.loc[zones['center']] = c_bool
             new_results.loc[zones['right']] = r_bool
             
-            models[str(new_results.loc[uq_data_index].to_list())] = LogisticRegression().fit(data,new_results.astype(bool))
+            models[str(new_results.loc[uq_data_index].to_list())] = LogisticRegression(**params).fit(data,new_results.astype(bool))
             t.update()
             
     return models
