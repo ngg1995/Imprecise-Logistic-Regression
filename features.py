@@ -132,8 +132,9 @@ bd.fit(UQdata,train_results)
 #%%
 ### Fit UQ models
 ilr = ImpLogReg(uncertain_data=True, max_iter = 1000)
-ilr.fit(UQdata,train_results,False)
-
+ilr.fit(UQdata,train_results,fast=False)
+ilr_fast = ImpLogReg(uncertain_data=True, max_iter = 1000)
+ilr_fast.fit(UQdata,train_results,fast=True)
 
 # %% [markdown]
 ### Plot results
@@ -376,38 +377,3 @@ with open('runinfo/features_auc.out','w') as f:
     print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
     print('ILR: [%.3f,%.3f]'  %(auc(yl,xu),auc(yu,xl)), file = f)
     
-    # print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
-    
-
-
-# fig2= plt.figure()
-# ax2 = plt.axes(projection='3d',elev = 45,azim = -45,proj_type = 'ortho')
-# ax2.set_xlabel('$fpr$')
-# ax2.set_ylabel('$s$')
-# # ax2.set_zlabel('$1-\sigma,1-\\tau$')
-# ax2.plot(fpr_t,s_t,col_ilr2,alpha = 0.5)
-# ax2.plot3D(fpr_t,s_t,Sigma,col_ilr3,label = '$\\sigma$')
-# ax2.plot3D(fpr_t,s_t,Tau,col_ilr4,label = '$\\tau$')
-
-
-# ax2.legend()
-
-# fig2.savefig('figs/features_ROC3D.png',dpi = 600)
-# fig2.savefig('../LR-paper/figs/features_ROC3D.png',dpi = 600)
-
-# tikzplotlib.save("figs/features_ROC3D.tikz",figure = fig2,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/features/')
-
-# fig3, ax3 = plt.subplots()
-
-# ax3.set_xlabel('$fpr$/$s$')
-# ax3.set_ylabel('$\\sigma$/$\\tau$')
-# ax3.plot(s_t,Sigma,col_ilr3,label = '$\\sigma$ v $s$')
-# ax3.plot(fpr_t,Tau,col_ilr4,label = '$\\tau$ v $fpr$')
-# ax3.legend()
-
-
-# fig3.savefig('figs/features_ST.png',dpi = 600)
-# fig3.savefig('../LR-paper/figs/features_ST.png',dpi = 600)
-# tikzplotlib.save("figs/features_ST.tikz",figure = fig3,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/features/')
-
-# %%

@@ -175,41 +175,41 @@ def _int_data(data,results,sample_weight,catagorical,params, nested = False) -> 
              for k, func in zip(it.product('lr',repeat = len(uq_col)),it.product((left,right),repeat = len(uq_col)))
             }
     models = {}
-    pbar = tqdm(total = 3*2**len(uq_col),leave = (not nested), desc='Uncertain Data')
-    for k,d in data_.items():
+    # pbar = tqdm(total = 3*2**len(uq_col),leave = True, colour='red',desc='Uncertain Data',position=0)
+    for k,d in tqdm(data_.items(),leave = True, colour='red',desc='Uncertain Data (1)',position=0):
         models.update({k:LogisticRegression(**params).fit(d,results.to_numpy(dtype = bool),sample_weight)})
-        pbar.update()
+
 
    
     n_models = models.copy()
-    
-    for k,m in models.items():
-        min_data = data.copy()
-        max_data = data.copy()
-        x0 = [pba.I(np.median(data[c])).midpoint() for c in data.columns]
-        x = {c:v for v,c in zip(so.minimize(lambda x:  abs(m.predict_proba(np.array([x]).reshape(1,-1))[0][1] - 0.5),x0).x,data.columns)}
-        
-        for i,c in uq:
-            if data.loc[i,c].straddles(x[c]):
-                min_data.loc[i,c] = x[c]
-                if abs(data.loc[i,c].right - x[c]) > (data.loc[i,c].left - x[c]):
-                    max_data.loc[i,c] = data.loc[i,c].right
-                    min_data.loc[i,c] = data.loc[i,c].left
-                else:
+    for k,m in tqdm(models.items(),leave = True, colour='red',desc='Uncertain Data (2)',position=0):
+        for p in tqdm(np.arange(0.01,1,0.01),colour='green', position=1):
+            min_data = data.copy()
+            max_data = data.copy()
+            x0 = [pba.I(np.median(data[c])).midpoint() for c in data.columns]
+            x = {c:v for v,c in zip(so.minimize(lambda x:  abs(m.predict_proba(np.array([x]).reshape(1,-1))[0][1] - p),x0).x,data.columns)}
+            
+            for i,c in uq:
+                if data.loc[i,c].straddles(x[c]):
+                    min_data.loc[i,c] = x[c]
+                    if abs(data.loc[i,c].right - x[c]) > (data.loc[i,c].left - x[c]):
+                        max_data.loc[i,c] = data.loc[i,c].right
+                        # min_data.loc[i,c] = data.loc[i,c].left
+                    else:
+                        max_data.loc[i,c] = data.loc[i,c].left
+                        # min_data.loc[i,c] = data.loc[i,c].right
+                        
+                elif pba.always(data.loc[i,c] < x[c]):
                     max_data.loc[i,c] = data.loc[i,c].left
                     min_data.loc[i,c] = data.loc[i,c].right
-                    
-            elif pba.always(data.loc[i,c] < x[c]):
-                max_data.loc[i,c] = data.loc[i,c].right
-                min_data.loc[i,c] = data.loc[i,c].left
-            else:
-                max_data.loc[i,c] = data.loc[i,c].left
-                min_data.loc[i,c] = data.loc[i,c].right
-        
-        n_models[f'{k}-min'] = LogisticRegression(**params).fit(min_data,results.to_numpy(dtype = bool),sample_weight)
-        pbar.update()
-        n_models[f'{k}-max'] = LogisticRegression(**params).fit(max_data,results.to_numpy(dtype = bool),sample_weight)
-        pbar.update()
+                else:
+                    max_data.loc[i,c] = data.loc[i,c].right
+                    min_data.loc[i,c] = data.loc[i,c].left
+            
+            n_models[f'{k}-min({p})'] = LogisticRegression(**params).fit(min_data,results.to_numpy(dtype = bool),sample_weight)
+
+            n_models[f'{k}-max({p})'] = LogisticRegression(**params).fit(max_data,results.to_numpy(dtype = bool),sample_weight)
+            
     return n_models
 
 def _uc_int(data, results, uncertain, sample_weight, catagorical, params) -> dict:

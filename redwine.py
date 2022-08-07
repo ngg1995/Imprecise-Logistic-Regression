@@ -60,7 +60,7 @@ def deintervalise(data, binary_cols):
 
 #%%
 ### Load redwine dataset
-redwine = pd.read_csv('redwine.csv',index_col = None)
+redwine = pd.read_csv('whitewine.csv',index_col = None)
 
 X = redwine[[c for c in redwine.columns if c != 'quality']]
 Y = redwine['quality'] >= 6
@@ -75,26 +75,26 @@ uq_results = pd.Series([pba.I(0,1) if i in uq_data_index else train_results.loc[
 
 #%%
 ### Fit logistic regression model on full dataset
-base = LogisticRegression(max_iter=1000)
+base = LogisticRegression(max_iter=10000,solver='saga')
 base.fit(train_data,train_results)
 
 # %% [markdown]
 ### Fit models with no uq data
 nuq_data = train_data.loc[[i for i in train_data.index if i not in uq_data_index]]
 nuq_results = train_results.loc[[i for i in train_data.index if i not in uq_data_index]]
-nuq = LogisticRegression(max_iter=1000)
+nuq = LogisticRegression(max_iter=10000,solver='saga')
 nuq.fit(nuq_data,nuq_results)
 
 #%%
 ### Fit Semi-Supervised Model
 sslr_results = pd.Series([int(train_results.loc[i]) if i not in uq_data_index else -1 for i in train_results.index], index = train_data.index, dtype=int)
 
-sslr = SelfTrainingClassifier(LogisticRegression(max_iter=1000))
+sslr = SelfTrainingClassifier(LogisticRegression(max_iter=10000,solver='saga'))
 sslr.fit(train_data,sslr_results)
 
 # %% [markdown]
 ### Fit UQ models
-ilr = ImpLogReg(uncertain_class=True, max_iter = 10000)
+ilr = ImpLogReg(uncertain_class=True, max_iter = 10000,solver='saga')
 ilr.fit(train_data,uq_results)
 
 # %%

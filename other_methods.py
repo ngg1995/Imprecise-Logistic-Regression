@@ -49,7 +49,7 @@ class BDLR:
     def fit(self, data, results ,sample_weight=None,N = 100):
                     
         self.models = {
-            i: LogisticRegression(**self.params).fit(get_sample(data),results,sample_weight=sample_weight) for i in range(N)
+            i: LogisticRegression(**self.params).fit(get_sample(data),results,sample_weight=sample_weight) for i in tqdm(range(N),desc = "Billard-Diday",colour='blue')
         }
         
     def predict_proba(self, X):
