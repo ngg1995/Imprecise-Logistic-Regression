@@ -70,7 +70,7 @@ train_data, test_data, train_results, test_results = train_test_split(X, Y, test
 print(len(train_data),sum(train_results))
 
 train_data_index = list(train_data.index)
-uq_data_index = random.sample([i for i in train_data_index if (whitewine.loc[i,"quality"] == 6)], k = 80)
+uq_data_index = random.sample([i for i in train_data_index if (whitewine.loc[i,"quality"] == 6)], k = 100)
 uq_results = pd.Series([pba.I(0,1) if i in uq_data_index else train_results.loc[i] for i in train_data_index],index = train_data_index, dtype='O')
 
 #%%

@@ -5,27 +5,27 @@ Sensitivity = 0.164
 Specificity = 0.963
 
 DISCARDED DATA MODEL
-TP=95	FP=72
-FN=453	TN=1829
-Sensitivity = 0.173
-Specificity = 0.962
+TP=115	FP=100
+FN=433	TN=1801
+Sensitivity = 0.210
+Specificity = 0.947
 
 SSLR MODEL
-TP=96	FP=73
-FN=452	TN=1828
-Sensitivity = 0.175
-Specificity = 0.962
+TP=114	FP=99
+FN=434	TN=1802
+Sensitivity = 0.208
+Specificity = 0.948
 
 UQ MODEL
-TP=[90,103]	FP=[69,83]
-FN=[445,458]	TN=[1818,1832]
-Sensitivity = [0.164,0.188]
-Specificity = [0.956,0.964]
+TP=[89,139]	FP=[69,122]
+FN=[409,459]	TN=[1779,1832]
+Sensitivity = [0.162,0.254]
+Specificity = [0.936,0.964]
 
-TP=90	FP=69
-FN=445	TN=1818
-NP(+)=13	NP(-)=14
-Sensitivity = 0.168
+TP=89	FP=69
+FN=409	TN=1779
+NP(+)=50	NP(-)=53
+Sensitivity = 0.179
 Specificity = 0.963
-sigma = 0.024
-tau = 0.007
+sigma = 0.091
+tau = 0.028
