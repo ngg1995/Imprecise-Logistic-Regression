@@ -57,7 +57,7 @@ def deintervalise(data, binary_cols):
 ### Import the data
 redwine = pd.read_csv('redwine.csv',index_col = None)
 X = redwine[[c for c in redwine.columns if c not in ['quality']]]
-Y = redwine['quality'] >= 7
+Y = redwine['quality'] >= 6
 
 #%%
 ### Split into test and train samples
