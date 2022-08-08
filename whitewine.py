@@ -64,12 +64,16 @@ whitewine = pd.read_csv('whitewine.csv',index_col = None)
 
 X = whitewine[[c for c in whitewine.columns if c != 'quality']]
 Y = whitewine['quality'] >= 6
+print(f"size = {len(X)}; good wine = {sum(Y)}")
 
 ### Split into test and train samples
-train_data, test_data, train_results, test_results = train_test_split(X, Y, test_size=0.5,random_state = 0)
-print(len(train_data),sum(train_results))
 
+train_data, test_data, train_results, test_results = train_test_split(X, Y, test_size=0.5,random_state = 0)
+
+print(len(train_data),sum(train_results))
+print(f"train_sample = {len(train_data)} train_results = {sum(train_results)}")
 train_data_index = list(train_data.index)
+random.seed(1)
 uq_data_index = random.sample([i for i in train_data_index if (whitewine.loc[i,"quality"] == 6)], k = 100)
 uq_results = pd.Series([pba.I(0,1) if i in uq_data_index else train_results.loc[i] for i in train_data_index],index = train_data_index, dtype='O')
 
@@ -97,19 +101,112 @@ sslr.fit(train_data,sslr_results)
 ilr = ImpLogReg(uncertain_class=True, max_iter = 10000,solver='saga')
 ilr.fit(train_data,uq_results)
 
+
+# %% [markdown]
+s,fpr,probabilities = ROC(model = base, data = test_data, results = test_results)
+nuq_s,nuq_fpr,nuq_probabilities = ROC(model = nuq, data = test_data, results = test_results)
+sslr_s,sslr_fpr,sslr_probabilities = ROC(model = sslr, data = test_data, results = test_results)
+s_t, fpr_t, Sigma, Tau = incert_ROC(ilr, test_data, test_results)
+
+s_i, fpr_i,ilr_probabilities = ROC(ilr, test_data, test_results)
+
+densfig,axdens = plt.subplots(nrows = 2, sharex= True)
+
+dat1 = ['x y']
+dat2 = ['x y']
+dat3 = ['x y']
+dat4 = ['x y']
+
+for i,(p,u,nuqp,r) in enumerate(zip(probabilities,ilr_probabilities,nuq_probabilities,test_results.to_list())):
+    if i > 1000: break
+    yd = np.random.uniform(-0.1,0.1)
+    if r:
+        dat1 += [f"{p} {yd}"]
+        dat2 += [f"{nuqp} {0.21+yd}"]
+        # axdens[0].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
+        # axdens[0].scatter(nuqp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
+        axdens[0].plot([*u],[yd-0.21,yd-0.21],color = col_ilr, marker = '|')
+        # axdens[0].scatter([*u],[yd-0.21,yd-0.21],color = col_ilr)
+    else:
+        dat3 += [f"{p} {yd}"]
+        dat4 += [f"{nuqp} {0.21+yd}"]
+        # axdens[1].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
+        # axdens[1].scatter(nuqp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
+        axdens[1].plot([*u],[yd-0.21,yd-0.21],color = col_ilr, marker = '|')
+        # axdens[1].scatter([*u],[yd-0.21,yd-0.21],color = col_ilr, marker = '|')
+        # 
+        
+axdens[0].set(ylabel = '1',yticks = [])
+axdens[1].set(xlabel = '$\pi(x)$',ylabel = '0',yticks = [],xlim  = (0, 1))
+
+densfig.tight_layout()
+
+rocfig,axroc = plt.subplots(1,1)
+
+xl = []
+xu = []
+yl = []
+yu = []
+for i,j in zip(fpr_i,s_i):
+    
+    if not isinstance(i,pba.Interval):
+        i = pba.I(i)
+    if not isinstance(j,pba.Interval):
+        j = pba.I(j)
+      
+    xl.append(i.left  )
+    xu.append(i.right  )
+    
+    yl.append(j.left)
+    yu.append(j.right)
+    
+axroc.plot(xl,yu, col_ilr,label = '$\mathcal{ILR}(F)$')
+axroc.plot(xu,yl, col_ilr )
+axroc.plot([0,1],[0,1],linestyle = ':',color=col_points)
+
+axroc.set(xlabel = '$fpr$',ylabel='$s$')
+axroc.plot(fpr,s,'k',label = '$\mathcal{LR}(D)$')
+axroc.plot(nuq_fpr,nuq_s,color=col_mid,linestyle='--',label='$\mathcal{LR}(F_\\times)$')
+axroc.plot(sslr_fpr,sslr_s,color='g',linestyle='--',label='$\mathcal{LR}(ss)$')
+axroc.plot(fpr_t,s_t,col_ilr2,label='$\mathcal{ILR}(F)$ (Predictive)')
+axroc.legend()
+# rocfig.savefig('figs/whitewine_ROC.png',dpi = 600)
+# rocfig.savefig('../LR-paper/figs/whitewine_ROC.png',dpi = 600)
+# densfig.savefig('figs/whitewine_dens.png',dpi =600)
+# densfig.savefig('../LR-paper/figs/whitewine_dens.png',dpi =600)
+
+tikzplotlib.save('figs/whitewine_ROC.tikz',figure = rocfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/whitewine/')
+
+tikzplotlib.save('figs/whitewine_dens.tikz',figure = densfig,externalize_tables = False, override_externals = True,tex_relative_path_to_data = 'dat/whitewine/')
+print(*dat1,sep='\n',file = open('figs/dat/whitewine/whitewine_dens-000.dat','w'))
+print(*dat2,sep='\n',file = open('figs/dat/whitewine/whitewine_dens-001.dat','w'))
+print(*dat3,sep='\n',file = open('figs/dat/whitewine/whitewine_dens-002.dat','w'))
+print(*dat4,sep='\n',file = open('figs/dat/whitewine/whitewine_dens-003.dat','w'))
+
+#%%
+with open('runinfo/whitewine_auc.out','w') as f:
+    print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
+    print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)
+    print('SSLR: %.4F' %auc(sslr_s,sslr_fpr),file = f)
+    print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
+    print('ILR: [%.3f,%.3f]'  %(auc(yl,xu),auc(yu,xl)), file = f)
+    
+    # print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
+    
 # %%
 ### Get confusion matrix
+C = 0.7
 # Classify test data
-base_predict = base.predict(test_data)
+base_predict = probabilities>=C
 
 # CLASSIFY NO_UQ MODEL DATA 
-nuq_predict = nuq.predict(test_data)
+nuq_predict = nuq_probabilities>=C
 
 # CLASSIFY NO_UQ MODEL DATA 
-sslr_predict = sslr.predict(test_data)
+sslr_predict = sslr_probabilities>=C
 
 # CLASSIFY UQ MODEL 
-ilr_predict = ilr.predict(test_data)
+ilr_predict = [i>= C for i in ilr_probabilities]
 
 with open('runinfo/whitewine_cm.out','w') as f:
     print('TRUE MODEL',file = f)
@@ -187,94 +284,4 @@ with open('runinfo/whitewine_cm.out','w') as f:
     print('sigma = %.3f' %(eee/(aaa+ccc+eee)),file = f)
     print('tau = %.3f' %(fff/(bbb+ddd+fff)),file = f)
    
-# %% [markdown]
-s,fpr,probabilities = ROC(model = base, data = test_data, results = test_results)
-nuq_s,nuq_fpr,nuq_probabilities = ROC(model = nuq, data = test_data, results = test_results)
-sslr_s,sslr_fpr,nuq_probabilities = ROC(model = sslr, data = test_data, results = test_results)
-s_t, fpr_t, Sigma, Tau = incert_ROC(ilr, test_data, test_results)
-
-s_i, fpr_i,ilr_probabilities = ROC(ilr, test_data, test_results)
-
-densfig,axdens = plt.subplots(nrows = 2, sharex= True)
-
-dat1 = ['x y']
-dat2 = ['x y']
-dat3 = ['x y']
-dat4 = ['x y']
-
-for i,(p,u,nuqp,r) in enumerate(zip(probabilities,ilr_probabilities,nuq_probabilities,test_results.to_list())):
-    yd = np.random.uniform(-0.1,0.1)
-    if r:
-        dat1 += [f"{p} {yd}"]
-        dat2 += [f"{nuqp} {0.21+yd}"]
-        # axdens[0].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
-        # axdens[0].scatter(nuqp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
-        axdens[0].plot([*u],[yd-0.21,yd-0.21],color = col_ilr, alpha = 0.3)
-        axdens[0].scatter([*u],[yd-0.21,yd-0.21],color = col_ilr, marker = '|')
-    else:
-        dat3 += [f"{p} {yd}"]
-        dat4 += [f"{nuqp} {0.21+yd}"]
-        # axdens[1].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
-        # axdens[1].scatter(nuqp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
-        axdens[1].plot([*u],[yd-0.21,yd-0.21],color = col_ilr, alpha = 0.3)
-        axdens[1].scatter([*u],[yd-0.21,yd-0.21],color = col_ilr, marker = '|')
-        
-        
-axdens[0].set(ylabel = '1',yticks = [])
-axdens[1].set(xlabel = '$\pi(x)$',ylabel = '0',yticks = [],xlim  = (0, 1))
-
-densfig.tight_layout()
-
-rocfig,axroc = plt.subplots(1,1)
-
-xl = []
-xu = []
-yl = []
-yu = []
-for i,j in zip(fpr_i,s_i):
-    
-    if not isinstance(i,pba.Interval):
-        i = pba.I(i)
-    if not isinstance(j,pba.Interval):
-        j = pba.I(j)
-      
-    xl.append(i.left  )
-    xu.append(i.right  )
-    
-    yl.append(j.left)
-    yu.append(j.right)
-    
-axroc.plot(xl,yu, col_ilr,label = '$\mathcal{ILR}(F)$')
-axroc.plot(xu,yl, col_ilr )
-axroc.plot([0,1],[0,1],linestyle = ':',color=col_points)
-
-axroc.set(xlabel = '$fpr$',ylabel='$s$')
-axroc.plot(fpr,s,'k',label = '$\mathcal{LR}(D)$')
-axroc.plot(nuq_fpr,nuq_s,color=col_mid,linestyle='--',label='$\mathcal{LR}(F_\\times)$')
-axroc.plot(sslr_fpr,sslr_s,color='g',linestyle='--',label='$\mathcal{LR}(F_\\times)$')
-axroc.plot(fpr_t,s_t,col_ilr2,label='$\mathcal{ILR}(F)$ (Predictive)')
-axroc.legend()
-# rocfig.savefig('figs/whitewine_ROC.png',dpi = 600)
-# rocfig.savefig('../LR-paper/figs/whitewine_ROC.png',dpi = 600)
-# densfig.savefig('figs/whitewine_dens.png',dpi =600)
-# densfig.savefig('../LR-paper/figs/whitewine_dens.png',dpi =600)
-
-tikzplotlib.save('figs/whitewine_ROC.tikz',figure = rocfig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/whitewine/')
-
-tikzplotlib.save('figs/whitewine_dens.tikz',figure = densfig,externalize_tables = False, override_externals = True,tex_relative_path_to_data = 'dat/whitewine/')
-print(*dat1,sep='\n',file = open('figs/dat/whitewine/whitewine_dens-000.dat','w'))
-print(*dat2,sep='\n',file = open('figs/dat/whitewine/whitewine_dens-001.dat','w'))
-print(*dat3,sep='\n',file = open('figs/dat/whitewine/whitewine_dens-002.dat','w'))
-print(*dat4,sep='\n',file = open('figs/dat/whitewine/whitewine_dens-003.dat','w'))
-
-#%%
-with open('runinfo/whitewine_auc.out','w') as f:
-    print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
-    print('MIDPOINTS: %.4F' %auc(nuq_s,nuq_fpr),file = f)
-    print('SSLR: %.4F' %auc(sslr_s,sslr_fpr),file = f)
-    print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
-    print('ILR: [%.3f,%.3f]'  %(auc(yl,xu),auc(yu,xl)), file = f)
-    
-    # print('INTERVALS: [%.3f,%.3f]' %(auc_int_min,auc_int_max), file = f)
-    
-#%%
+# %%
