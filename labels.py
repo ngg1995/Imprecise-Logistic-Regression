@@ -183,8 +183,8 @@ with open('runinfo/labels_cm.out','w') as f:
 # %% [markdown]
 s,fpr,probabilities = ROC(model = base, data = test_data, results = test_results)
 nuq_s,nuq_fpr,nuq_probabilities = ROC(model = nuq, data = test_data, results = test_results)
+sslr_s,sslr_fpr,nuq_probabilities = ROC(model = sslr, data = test_data, results = test_results)
 s_t, fpr_t, Sigma, Tau = incert_ROC(ilr, test_data, test_results)
-
 s_i, fpr_i,ilr_probabilities = ROC(ilr, test_data, test_results)
 
 densfig,axdens = plt.subplots(nrows = 2, sharex= True)
@@ -241,9 +241,10 @@ axroc.plot(xu,yl, col_ilr )
 axroc.plot([0,1],[0,1],linestyle = ':',color=col_points)
 
 axroc.set(xlabel = '$fpr$',ylabel='$s$')
+axroc.plot(fpr_t,s_t,col_ilr2,label='$\mathcal{ILR}(F)$ (Predictive)')
 axroc.plot(fpr,s,'k',label = '$\mathcal{LR}(D)$')
 axroc.plot(nuq_fpr,nuq_s,color=col_mid,linestyle='--',label='$\mathcal{LR}(F_\\times)$')
-axroc.plot(fpr_t,s_t,col_ilr2,label='$\mathcal{ILR}(F)$ (Predictive)')
+axroc.plot(sslr_fpr,sslr_s,color='g',linestyle='--',label='$\mathcal{LR}(ss)$')
 axroc.legend()
 # rocfig.savefig('figs/labels_ROC.png',dpi = 600)
 # rocfig.savefig('../LR-paper/figs/labels_ROC.png',dpi = 600)

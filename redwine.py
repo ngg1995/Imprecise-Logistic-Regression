@@ -58,15 +58,16 @@ def deintervalise(data, binary_cols):
 redwine = pd.read_csv('redwine.csv',index_col = None)
 X = redwine[[c for c in redwine.columns if c not in ['quality']]]
 Y = redwine['quality'] >= 6
+print(f"size = {len(X)}; good wine = {sum(Y)}")
 
 #%%
 ### Split into test and train samples
-train_data, test_data, train_results, test_results = train_test_split(X, Y, test_size=0.9,random_state = 0,stratify=Y)
-print(len(train_data),sum(train_results))
-random.seed(1)
-drop_index = random.sample([i for i in train_data.index if not train_results.loc[i]],k=2*sum(train_results))
-train_data.drop(drop_index)
-train_results.drop(drop_index)
+train_data, test_data, train_results, test_results = train_test_split(X, Y, test_size=0.5,random_state = 0,stratify=Y)
+print(f"train_sample = {len(train_data)} train_results = {sum(train_results)}")
+# random.seed(1)
+# drop_index = random.sample([i for i in train_data.index if not train_results.loc[i]],k=2*sum(train_results))
+# train_data.drop(drop_index)
+# train_results.drop(drop_index)
 UQdata = pd.DataFrame({
     "fixed acidity": [intervalise(i,0.1,'u',0.5,None) for i in train_data["fixed acidity"]],
     "volatile acidity": [intervalise(i,0.05,'u',0.75,None) for i in train_data["volatile acidity"]],
@@ -191,7 +192,7 @@ print(*dat3,sep='\n',file = open('figs/dat/redwine/redwine_dens-002.dat','w'))
 print(*dat4,sep='\n',file = open('figs/dat/redwine/redwine_dens-003.dat','w'))
 
 
-with open('runinfo/features_auc.out','w') as f:
+with open('runinfo/redwine_auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
     print('MIDPOINTS: %.4F' %auc(mid_s,mid_fpr),file = f)
     print('THROW: %.4f' %auc(s_t,fpr_t), file = f)

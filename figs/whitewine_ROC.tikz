@@ -48,7 +48,7 @@ table {opts_str}{dat/whitewine/whitewine_ROC-003.dat};
 \addlegendentry{$\mathcal{LR}(F_\times)$}
 \addplot [semithick, green01270, dashed]
 table {opts_str}{dat/whitewine/whitewine_ROC-004.dat};
-\addlegendentry{$\mathcal{LR}(F_\times)$}
+\addlegendentry{$\mathcal{LR}(ss)$}
 \addplot [semithick, darkslategray934670]
 table {opts_str}{dat/whitewine/whitewine_ROC-005.dat};
 \addlegendentry{$\mathcal{ILR}(F)$ (Predictive)}

@@ -4,6 +4,7 @@
 \definecolor{crimson}{RGB}{220,20,60}
 \definecolor{darkgray176}{RGB}{176,176,176}
 \definecolor{darkslategray934670}{RGB}{93,46,70}
+\definecolor{green01270}{RGB}{0,127,0}
 \definecolor{lightgray204}{RGB}{204,204,204}
 \definecolor{rosybrown166152136}{RGB}{166,152,136}
 \definecolor{royalblue}{RGB}{65,105,225}
@@ -39,15 +40,18 @@ table {%
 0 0
 1 1
 };
-\addplot [semithick, black]
+\addplot [semithick, darkslategray934670]
 table {opts_str}{dat/labels/labels_ROC-002.dat};
+\addlegendentry{$\mathcal{ILR}(F)$ (Predictive)}
+\addplot [semithick, black]
+table {opts_str}{dat/labels/labels_ROC-003.dat};
 \addlegendentry{$\mathcal{LR}(D)$}
 \addplot [semithick, crimson, dashed]
-table {opts_str}{dat/labels/labels_ROC-003.dat};
-\addlegendentry{$\mathcal{LR}(F_\times)$}
-\addplot [semithick, darkslategray934670]
 table {opts_str}{dat/labels/labels_ROC-004.dat};
-\addlegendentry{$\mathcal{ILR}(F)$ (Predictive)}
+\addlegendentry{$\mathcal{LR}(F_\times)$}
+\addplot [semithick, green01270, dashed]
+table {opts_str}{dat/labels/labels_ROC-005.dat};
+\addlegendentry{$\mathcal{LR}(ss)$}
 \end{axis}
 
 \end{tikzpicture}
