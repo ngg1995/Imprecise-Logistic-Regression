@@ -44,7 +44,7 @@ class ImpLogReg:
         for k,m in self.models.items():
             self.models[k] = m.densify()
             
-    def fit(self, data, results ,sample_weight=None, catagorical = [], fast = False):
+    def fit(self, data, results ,sample_weight=None, catagorical = [], fast = False,n_p_vals = 1):
         
         self.params.update({k:v for k,v in self.__dict__.items() if k in self.params.keys()})
         
@@ -80,7 +80,7 @@ class ImpLogReg:
         elif self.uncertain_data:
             
             if fast:
-                self.models = _int_data_fast(data,results,sample_weight,catagorical,self.params)
+                self.models = _int_data_fast(data,results,sample_weight,catagorical,self.params,n_p_vals)
                 
             else:
                 self.models = _int_data(data,results,sample_weight,catagorical,self.params)
@@ -314,8 +314,8 @@ def _uc_int(data, results, uncertain, sample_weight, catagorical, params) -> dic
     return models
 
 
-def _int_data_fast(data,results,sample_weight,catagorical,params, nested = False) -> dict:
-
+def _int_data_fast(data,results,sample_weight,catagorical,params,n, nested = False) -> dict:
+    pvals = (np.arange(n)+1)/(n+1)
     def _find(X, p, model, columns):
         X = pd.DataFrame(np.array(x0).reshape(1,len(x0)),columns = columns,index=[0])
         pr = model.predict_proba(X)[0][1]
@@ -332,7 +332,7 @@ def _int_data_fast(data,results,sample_weight,catagorical,params, nested = False
 
     models = {}
 
-    for k, func in tqdm(list(zip(it.product('lr',repeat = len(uq_col)),it.product((left,right),repeat = len(uq_col)))),leave = True, colour='red',desc='Uncertain Data (1)',position=0):
+    for k, func in tqdm(list(zip(it.product('lr',repeat = len(uq_col)),it.product((left,right),repeat = len(uq_col)))),leave = True, colour='red',desc='Uncertain Features',position=0):
         data_ = pd.DataFrame({
                 **{c:[F(i) if i.__class__.__name__ == 'Interval' else i for i in data[c]] for c,F in zip(uq_col,func)},
                 **{c:data[c] for c in data.columns if c not in uq_col}
@@ -342,7 +342,7 @@ def _int_data_fast(data,results,sample_weight,catagorical,params, nested = False
         models[key] = m
     # n_models = models.copy()
     # for k,m in tqdm(models.items()):
-        for p in [0.5]:
+        for p in pvals:
             min_data = data.copy()
             max_data = data.copy()
             x0 = [pba.I(np.median(data[c])).midpoint() for c in data.columns]

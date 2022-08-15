@@ -110,7 +110,8 @@ ilr_fast = ImpLogReg(uncertain_data=True, max_iter = 1000)
 ilr_fast.fit(UQdata,train_results,fast=True)
        
 #%%
-fig, ax = plt.subplots()
+### Make `all` plot
+fig_all, ax_all = plt.subplots()
 many = 10
 steps = 300
 lX = np.linspace(0,10,steps)
@@ -126,26 +127,26 @@ for i in range(many+10):
     
     lY = lr.predict_proba(lX.reshape(-1, 1))[:,1]
     
-    ax.plot(lX,lY, color='grey', linewidth = 1)
+    ax_all.plot(lX,lY, color='grey', linewidth = 1)
     
 
 for l,m in ilr.models.items():
     lY = m.predict_proba(lX.reshape(-1, 1))[:,1]
-    ax.plot(lX,lY, linewidth = 2,label = l)
-ax.legend()
+    ax_all.plot(lX,lY, linewidth = 2,label = l)
+ax_all.legend()
 
 for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
     yd = np.random.uniform(0,0.1)
     # plt.plot(m,r+yd,color = 'b',marker = 'x')
     if r == 0:
         yd = -yd
-    ax.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
+    ax_all.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
 
 lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
     
-ax.plot(lX,[i.left for i in lYu],'k--',lw=2)
-ax.plot(lX,[i.right for i in lYu],'k--',lw=2,label = 'ilr')
-fig.show()
-tikzplotlib.save('figs/features-all.tikz',figure = fig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/features/')
+ax_all.plot(lX,[i.left for i in lYu],'k--',lw=2)
+ax_all.plot(lX,[i.right for i in lYu],'k--',lw=2,label = 'ilr')
+fig_all.show()
+tikzplotlib.save('figs/features-all.tikz',figure = fig_all,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/features/')
 
 # %%

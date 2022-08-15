@@ -7,9 +7,6 @@ import random
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
-from sklearn.semi_supervised import SelfTrainingClassifier
-import itertools as it
-from tqdm import tqdm
 import pba
 
 from LRF import *
@@ -70,28 +67,28 @@ print(f"train_sample = {len(train_data)} train_results = {sum(train_results)}")
 # train_results.drop(drop_index)
 UQdata = pd.DataFrame({
     "fixed acidity": [intervalise(i,0.1,'u',0.5,None) for i in train_data["fixed acidity"]],
-    "volatile acidity": [intervalise(i,0.05,'u',0.75,None) for i in train_data["volatile acidity"]],
+    "volatile acidity": [intervalise(i,0.01,'u',0.75,None) for i in train_data["volatile acidity"]],
     "citric acid": [intervalise(i,0.01,'t',0,[0,1]) for i in train_data["citric acid"]],
     "residual sugar": [intervalise(i,0.1,'u',0,None) for i in train_data["residual sugar"]],
     "chlorides": [intervalise(i,0.001,'u',0,None) for i in train_data["chlorides"]],
     "free sulfur dioxide": [intervalise(i,1,'u',0,None) for i in train_data["free sulfur dioxide"]],
-    "total sulfur dioxide": [intervalise(i,5,'u',0,None) for i in train_data["total sulfur dioxide"]],
-    "density": [intervalise(i,0.002,'t',1,[0,1]) for i in train_data["density"]],
-    "pH": [intervalise(i,0.05,'u',0,None) for i in train_data["pH"]],
+    "total sulfur dioxide": [intervalise(i,1,'u',0,None) for i in train_data["total sulfur dioxide"]],
+    "density": [intervalise(i,0.0001,'t',1,[0,1]) for i in train_data["density"]],
+    "pH": [intervalise(i,0.01,'u',0,None) for i in train_data["pH"]],
     "sulphates": [intervalise(i,0.01,'u',0,None) for i in train_data["sulphates"]],
-    "alcohol": [intervalise(i,0.2,"u",0,None) for i in train_data["alcohol"]]
+    "alcohol": [intervalise(i,0.1,"u",0,None) for i in train_data["alcohol"]]
     }, index = train_data.index, dtype = 'O'
 )
 #%%
 ### Fit logistic regression model on full dataset
 base = LogisticRegression(max_iter=10000,solver='sag')
-base.fit(train_data.to_numpy(),train_results.to_numpy())
+base.fit(train_data,train_results)
 
 #%%
 ### Fit models with midpoint data
 mid_data = midpoints(UQdata)
 mid = LogisticRegression(max_iter=10000,solver='sag')
-mid.fit(mid_data.to_numpy(),train_results.to_numpy())
+mid.fit(mid_data,train_results)
 
 #%%
 ### Fit de Souza model
@@ -106,7 +103,7 @@ bd.fit(UQdata,train_results)
 #%%
 ### Fit UQ models
 ilr = ImpLogReg(uncertain_data=True, max_iter = 10000,solver='saga')
-ilr.fit(UQdata,train_results,fast = True)
+ilr.fit(UQdata,train_results,fast = True,n_p_vals = 1)
 
 
 # %% [markdown]
@@ -132,15 +129,13 @@ for i,(p,u,midp,r) in enumerate(zip(probabilities,ilr_probabilities,mid_probabil
         dat2 += [f"{midp} {0.21+yd}"]
         # axdens[0].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
         # axdens[0].scatter(midp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
-        axdens[0].plot([*u],[yd-0.21,yd-0.21],color = 'k', alpha = 0.3)
-        axdens[0].scatter([*u],[yd-0.21,yd-0.21],color = 'k', marker = '|') 
+        axdens[0].plot([*u],[yd-0.21,yd-0.21],color = 'k', marker = '|') 
     else:
         dat3 += [f"{p} {yd}"]
         dat4 += [f"{midp} {0.21+yd}"]
         # axdens[1].scatter(p,yd,color = 'k',marker = 'o',alpha = 0.5)
         # axdens[1].scatter(midp,0.21+yd,color = col_mid,marker = 'o',alpha = 0.5)
-        axdens[1].plot([*u],[yd-0.21,yd-0.21],color = 'k', alpha = 0.3)
-        axdens[1].scatter([*u],[yd-0.21,yd-0.21],color = 'k', marker = '|')
+        axdens[1].plot([*u],[yd-0.21,yd-0.21],color = 'k', marker = '|')
         
         
 axdens[0].set(ylabel = '1',yticks = [])
@@ -195,6 +190,115 @@ print(*dat4,sep='\n',file = open('figs/dat/redwine/redwine_dens-003.dat','w'))
 with open('runinfo/redwine_auc.out','w') as f:
     print('NO UNCERTAINTY: %.4f' %auc(s,fpr), file = f)
     print('MIDPOINTS: %.4F' %auc(mid_s,mid_fpr),file = f)
-    print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
+    print('bd: %.4F' %auc(bd_s,bd_fpr),file = f)
+    print('ds: %.4F' %auc(ds_s,ds_fpr),file = f)
     print('ILR: [%.3f,%.3f]'  %(auc(yl,xu),auc(yu,xl)), file = f)
-#%%
+    print('THROW: %.4f' %auc(s_t,fpr_t), file = f)
+    
+# %%
+### Get confusion matrix
+C = 0.6
+# Classify test data
+base_predict = probabilities>=C
+
+# CLASSIFY NO_UQ MODEL DATA 
+mid_predict = mid_probabilities>=C
+
+# CLASSIFY NO_UQ MODEL DATA 
+bd_predict = bd_probabilities>=C
+
+# CLASSIFY NO_UQ MODEL DATA 
+ds_predict = ds_probabilities>=C
+
+# CLASSIFY UQ MODEL 
+ilr_predict = [i>= C for i in ilr_probabilities]
+
+with open('runinfo/redwine_cm.out','w') as f:
+    print('TRUE MODEL',file = f)
+    a,b,c,d = generate_confusion_matrix(test_results,base_predict)
+    print('TP=%i\tFP=%i\nFN=%i\tTN=%i' %(a,b,c,d),file = f)
+
+    # Calculate sensitivity and specificity
+    print('Sensitivity = %.3f' %(a/(a+c)),file = f)
+    print('Specificity = %.3f' %(d/(b+d)),file = f)
+
+    print('\nmid MODEL',file = f)
+    aa,bb,cc,dd = generate_confusion_matrix(test_results,mid_predict)
+    try:
+        ss = 1/(1+cc/aa)
+    except:
+        ss = None
+    try:    
+        tt = 1/(1+bb/dd)
+    except:
+        tt = None
+    print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aa,bb,cc,dd),file = f)
+
+    print('\nDS MODEL',file = f)
+    aa,bb,cc,dd = generate_confusion_matrix(test_results,ds_predict)
+    try:
+        ss = 1/(1+cc/aa)
+    except:
+        ss = None
+    try:    
+        tt = 1/(1+bb/dd)
+    except:
+        tt = None
+    print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aa,bb,cc,dd),file = f)
+    # Calculate sensitivity and specificity
+    print('Sensitivity = %.3f' %(ss),file = f)
+    print('Specificity = %.3f' %(tt),file = f)
+    
+    print('\nbd MODEL',file = f)
+    aa,bb,cc,dd = generate_confusion_matrix(test_results,bd_predict)
+    try:
+        ss = 1/(1+cc/aa)
+    except:
+        ss = None
+    try:    
+        tt = 1/(1+bb/dd)
+    except:
+        tt = None
+    print('TP=%s\tFP=%s\nFN=%s\tTN=%s' %(aa,bb,cc,dd),file = f)
+
+    # Calculate sensitivity and specificity
+    print('Sensitivity = %.3f' %(ss),file = f)
+    print('Specificity = %.3f' %(tt),file = f)
+    
+    print('\nUQ MODEL',file = f)
+    
+    aaai,bbbi,ccci,dddi = generate_confusion_matrix(test_results,ilr_predict,throw = False)
+    try:
+        sssi = aaai/(a+c)
+    except:
+        sssi = None
+    try:    
+        ttti = dddi/(b+d)
+    except:
+        ttti = None
+
+    print('TP=[%i,%i]\tFP=[%i,%i]\nFN=[%i,%i]\tTN=[%i,%i]' %(*aaai,*bbbi,*ccci,*dddi),file = f)
+
+    # Calculate sensitivity and specificity
+    print('Sensitivity = [%.3f,%.3f]\nSpecificity = [%.3f,%.3f]\n' %(*sssi,*ttti),file = f)
+
+    
+    aaa,bbb,ccc,ddd,eee,fff = generate_confusion_matrix(test_results,ilr_predict,throw = True)
+    try:
+        sss = 1/(1+ccc/aaa)
+    except:
+        sss = None
+    try:    
+        ttt = 1/(1+bbb/ddd)
+    except:
+        ttt = None
+        
+    print('TP=%i\tFP=%i\nFN=%i\tTN=%i\nNP(+)=%i\tNP(-)=%i' %(aaa,bbb,ccc,ddd,eee,fff),file = f)
+
+    # Calculate sensitivity and specificity
+    print('Sensitivity = %.3f' %(sss),file = f)
+    print('Specificity = %.3f' %(ttt),file = f)
+    print('sigma = %.3f' %(eee/(aaa+ccc+eee)),file = f)
+    print('tau = %.3f' %(fff/(bbb+ddd+fff)),file = f)
+   
+# %%

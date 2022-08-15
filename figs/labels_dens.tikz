@@ -170,7 +170,7 @@ x  y
 table{%
 x  y
 0.631759251494239 -0.147336783265839
-0.812984281281784 -0.147336783265839
+0.812984281281783 -0.147336783265839
 };
 \addplot [draw=royalblue, fill=royalblue, mark=|, only marks]
 table{%
@@ -199,7 +199,7 @@ x  y
 \addplot [draw=royalblue, fill=royalblue, mark=|, only marks]
 table{%
 x  y
-0.600203823760782 -0.181134676991717
+0.600203823760783 -0.181134676991717
 0.791378034297894 -0.181134676991717
 };
 \addplot [draw=royalblue, fill=royalblue, mark=|, only marks]
@@ -229,7 +229,7 @@ x  y
 \addplot [draw=royalblue, fill=royalblue, mark=|, only marks]
 table{%
 x  y
-0.757214675795563 -0.255141036196921
+0.757214675795564 -0.255141036196921
 0.888924518480343 -0.255141036196921
 };
 \addplot [draw=royalblue, fill=royalblue, mark=|, only marks]
@@ -408,7 +408,7 @@ table {%
 \addplot [semithick, royalblue, opacity=0.3]
 table {%
 0.631759251494239 -0.147336783265839
-0.812984281281784 -0.147336783265839
+0.812984281281783 -0.147336783265839
 };
 \addplot [semithick, royalblue, opacity=0.3]
 table {%
@@ -432,7 +432,7 @@ table {%
 };
 \addplot [semithick, royalblue, opacity=0.3]
 table {%
-0.600203823760782 -0.181134676991717
+0.600203823760783 -0.181134676991717
 0.791378034297894 -0.181134676991717
 };
 \addplot [semithick, royalblue, opacity=0.3]
@@ -457,7 +457,7 @@ table {%
 };
 \addplot [semithick, royalblue, opacity=0.3]
 table {%
-0.757214675795563 -0.255141036196921
+0.757214675795564 -0.255141036196921
 0.888924518480343 -0.255141036196921
 };
 \addplot [semithick, royalblue, opacity=0.3]
@@ -532,7 +532,7 @@ x  y
 \addplot [draw=royalblue, fill=royalblue, mark=|, only marks]
 table{%
 x  y
-0.232770217603984 -0.291978653055112
+0.232770217603985 -0.291978653055112
 0.425687617888872 -0.291978653055112
 };
 \addplot [draw=royalblue, fill=royalblue, mark=|, only marks]
@@ -610,7 +610,7 @@ x  y
 \addplot [draw=royalblue, fill=royalblue, mark=|, only marks]
 table{%
 x  y
-0.00965633174459341 -0.161465084540113
+0.0096563317445934 -0.161465084540113
 0.0360362344545556 -0.161465084540113
 };
 \addplot [draw=royalblue, fill=royalblue, mark=|, only marks]
@@ -664,7 +664,7 @@ x  y
 \addplot [draw=royalblue, fill=royalblue, mark=|, only marks]
 table{%
 x  y
-0.0148246963999934 -0.231316177512697
+0.0148246963999933 -0.231316177512697
 0.0493108399136911 -0.231316177512697
 };
 \addplot [draw=royalblue, fill=royalblue, mark=|, only marks]
@@ -754,13 +754,13 @@ x  y
 \addplot [draw=royalblue, fill=royalblue, mark=|, only marks]
 table{%
 x  y
-0.672480352458872 -0.229306031903867
+0.672480352458873 -0.229306031903867
 0.839290080335411 -0.229306031903867
 };
 \addplot [draw=royalblue, fill=royalblue, mark=|, only marks]
 table{%
 x  y
-0.0326607927632583 -0.305113471003367
+0.0326607927632582 -0.305113471003367
 0.0871365173752067 -0.305113471003367
 };
 \addplot [draw=royalblue, fill=royalblue, mark=|, only marks]
@@ -772,7 +772,7 @@ x  y
 \addplot [draw=royalblue, fill=royalblue, mark=|, only marks]
 table{%
 x  y
-0.0121959373701666 -0.168178807185602
+0.0121959373701665 -0.168178807185602
 0.042763294340567 -0.168178807185602
 };
 \addplot [draw=royalblue, fill=royalblue, mark=|, only marks]
@@ -808,7 +808,7 @@ x  y
 \addplot [draw=royalblue, fill=royalblue, mark=|, only marks]
 table{%
 x  y
-0.00868402311102942 -0.207758270742907
+0.00868402311102941 -0.207758270742907
 0.0333310189025295 -0.207758270742907
 };
 \addplot [draw=royalblue, fill=royalblue, mark=|, only marks]
@@ -826,7 +826,7 @@ x  y
 \addplot [draw=royalblue, fill=royalblue, mark=|, only marks]
 table{%
 x  y
-0.0329552922355141 -0.196145720059742
+0.032955292235514 -0.196145720059742
 0.0876953037300642 -0.196145720059742
 };
 \addplot [draw=royalblue, fill=royalblue, mark=|, only marks]
@@ -839,7 +839,7 @@ x  y
 table{%
 x  y
 0.827383269552056 -0.11221660516076
-0.926712696441433 -0.11221660516076
+0.926712696441432 -0.11221660516076
 };
 \addplot [draw=royalblue, fill=royalblue, mark=|, only marks]
 table{%
@@ -864,7 +864,7 @@ table {%
 };
 \addplot [semithick, royalblue, opacity=0.3]
 table {%
-0.232770217603984 -0.291978653055112
+0.232770217603985 -0.291978653055112
 0.425687617888872 -0.291978653055112
 };
 \addplot [semithick, royalblue, opacity=0.3]
@@ -929,7 +929,7 @@ table {%
 };
 \addplot [semithick, royalblue, opacity=0.3]
 table {%
-0.00965633174459341 -0.161465084540113
+0.0096563317445934 -0.161465084540113
 0.0360362344545556 -0.161465084540113
 };
 \addplot [semithick, royalblue, opacity=0.3]
@@ -974,7 +974,7 @@ table {%
 };
 \addplot [semithick, royalblue, opacity=0.3]
 table {%
-0.0148246963999934 -0.231316177512697
+0.0148246963999933 -0.231316177512697
 0.0493108399136911 -0.231316177512697
 };
 \addplot [semithick, royalblue, opacity=0.3]
@@ -1049,12 +1049,12 @@ table {%
 };
 \addplot [semithick, royalblue, opacity=0.3]
 table {%
-0.672480352458872 -0.229306031903867
+0.672480352458873 -0.229306031903867
 0.839290080335411 -0.229306031903867
 };
 \addplot [semithick, royalblue, opacity=0.3]
 table {%
-0.0326607927632583 -0.305113471003367
+0.0326607927632582 -0.305113471003367
 0.0871365173752067 -0.305113471003367
 };
 \addplot [semithick, royalblue, opacity=0.3]
@@ -1064,7 +1064,7 @@ table {%
 };
 \addplot [semithick, royalblue, opacity=0.3]
 table {%
-0.0121959373701666 -0.168178807185602
+0.0121959373701665 -0.168178807185602
 0.042763294340567 -0.168178807185602
 };
 \addplot [semithick, royalblue, opacity=0.3]
@@ -1094,7 +1094,7 @@ table {%
 };
 \addplot [semithick, royalblue, opacity=0.3]
 table {%
-0.00868402311102942 -0.207758270742907
+0.00868402311102941 -0.207758270742907
 0.0333310189025295 -0.207758270742907
 };
 \addplot [semithick, royalblue, opacity=0.3]
@@ -1109,7 +1109,7 @@ table {%
 };
 \addplot [semithick, royalblue, opacity=0.3]
 table {%
-0.0329552922355141 -0.196145720059742
+0.032955292235514 -0.196145720059742
 0.0876953037300642 -0.196145720059742
 };
 \addplot [semithick, royalblue, opacity=0.3]
@@ -1120,7 +1120,7 @@ table {%
 \addplot [semithick, royalblue, opacity=0.3]
 table {%
 0.827383269552056 -0.11221660516076
-0.926712696441433 -0.11221660516076
+0.926712696441432 -0.11221660516076
 };
 \addplot [semithick, royalblue, opacity=0.3]
 table {%
