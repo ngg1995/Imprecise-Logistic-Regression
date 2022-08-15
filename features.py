@@ -134,7 +134,7 @@ bd.fit(UQdata,train_results)
 ilr = ImpLogReg(uncertain_data=True, max_iter = 1000)
 ilr.fit(UQdata,train_results,fast=False)
 ilr_fast = ImpLogReg(uncertain_data=True, max_iter = 1000)
-ilr_fast.fit(UQdata,train_results,fast=True)
+ilr_fast.fit(UQdata,train_results,fast=True,n_p_vals=100)
 
 # %% [markdown]
 ### Plot results
@@ -177,48 +177,45 @@ ax1.legend()
 # fig1.savefig('figs/features.png',dpi = 600)
 tikzplotlib.save('figs/features.tikz',figure = fig1,externalize_tables = True, tex_relative_path_to_data = 'dat/features/',override_externals = True)
 
-#%% 
-### PLOT ALL
-fig_a, ax_a = plt.subplots()
-
-steps = 50
-lX = np.linspace(0,10,steps)
-
-many = 20
-for i in range(3*many):
-    if i < many:
-        n_data = get_sample(UQdata,r = i/many)
-    elif i < 2*many:
-        n_data = get_sample(UQdata)
-    else:
-        n_data = get_sample(UQdata, ends = True, seed = i)
-    lr = LogisticRegression()
-    lr.fit(n_data, train_results)
-    
-    lY = lr.predict_proba(lX.reshape(-1, 1))[:,1]
-    
-    ax_a.plot(lX,lY, color='grey', linewidth = 1)
-    
-
-for m,c,l in zip(ilr,[col_ilr,col_ilr2,col_ilr3,col_ilr4,col_mid,col_precise],[r"$\underline{E}$",r"$\underline{E}$",r"$E^\prime_{\underline{\beta_0}}$",r"$E^\prime_{\underline{\beta_1}}$",r"$E^\prime_{\overline{\beta_0}}$",r"$E^\prime_{\overline{\beta_1}}$"]):
-    lY = m.predict_proba(lX.reshape(-1, 1))[:,1]
-    ax_a.plot(lX,lY, color=c, linewidth = 2,label = l)
-ax_a.legend()
+#%%
+### Make `all` plot
+fig_all, ax_all = plt.subplots()
 
 lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
-
-ax_a.plot(lX,[i.left for i in lYu],color='k',lw=2,linestyle='--')
-ax_a.plot(lX,[i.right for i in lYu],color='k',lw=2,label = 'ilr',linestyle='--')
+ax_all.plot(lX,[i.left for i in lYu],'k--',lw=2)
+ax_all.plot(lX,[i.right for i in lYu],'k--',lw=2,label = 'ilr')
+for l,m in ilr.models.items():
+    lY = m.predict_proba(lX.reshape(-1, 1))[:,1]
+    ax_all.plot(lX,lY, linewidth = 2,label = l)
+ax_all.legend()
 
 for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
     yd = np.random.uniform(0,0.1)
     # plt.plot(m,r+yd,color = 'b',marker = 'x')
     if r == 0:
         yd = -yd
-    ax_a.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
+    ax_all.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
 
-#%%
-tikzplotlib.save('figs/features-all.tikz',figure = fig_a,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/features/')
+steps = 300
+nmc = 25
+
+for i in range(2*nmc):
+    if i < nmc:
+        n_data = get_sample(UQdata,r = i/nmc)
+    else:
+        n_data = get_sample(UQdata)
+    
+    lr = LogisticRegression()
+    lr.fit(n_data, train_results)
+    
+    lY = lr.predict_proba(lX.reshape(-1, 1))[:,1]
+    
+    ax_all.plot(lX,lY, color='grey', linewidth = 1)
+    
+
+tikzplotlib.save('figs/features-all.tikz',figure = fig_all,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/features/')
+
+
 
 # %% [markdown]
 ### Get confusion matrix
