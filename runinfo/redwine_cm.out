@@ -1,35 +1,35 @@
 TRUE MODEL
-TP=272	FP=70
-FN=156	TN=302
-Sensitivity = 0.636
-Specificity = 0.812
+TP=312	FP=83
+FN=116	TN=289
+Sensitivity = 0.729
+Specificity = 0.777
 
 mid MODEL
-TP=271	FP=69
-FN=157	TN=303
+TP=312	FP=82
+FN=116	TN=290
 
 DS MODEL
-TP=266	FP=67
-FN=162	TN=305
-Sensitivity = 0.621
-Specificity = 0.820
+TP=311	FP=81
+FN=117	TN=291
+Sensitivity = 0.727
+Specificity = 0.782
 
 bd MODEL
-TP=266	FP=67
-FN=162	TN=305
-Sensitivity = 0.621
-Specificity = 0.820
+TP=309	FP=81
+FN=119	TN=291
+Sensitivity = 0.722
+Specificity = 0.782
 
 UQ MODEL
-TP=[247,300]	FP=[53,76]
-FN=[128,181]	TN=[296,319]
-Sensitivity = [0.577,0.701]
-Specificity = [0.796,0.858]
+TP=[279,329]	FP=[68,109]
+FN=[99,149]	TN=[263,304]
+Sensitivity = [0.652,0.769]
+Specificity = [0.707,0.817]
 
-TP=247	FP=53
-FN=128	TN=296
-NP(+)=53	NP(-)=23
-Sensitivity = 0.659
-Specificity = 0.848
-sigma = 0.124
-tau = 0.062
+TP=279	FP=68
+FN=99	TN=263
+NP(+)=50	NP(-)=41
+Sensitivity = 0.738
+Specificity = 0.795
+sigma = 0.117
+tau = 0.110

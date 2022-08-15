@@ -197,7 +197,7 @@ with open('runinfo/redwine_auc.out','w') as f:
     
 # %%
 ### Get confusion matrix
-C = 0.6
+C = 0.55
 # Classify test data
 base_predict = probabilities>=C
 
