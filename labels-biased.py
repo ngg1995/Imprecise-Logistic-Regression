@@ -36,7 +36,7 @@ base.fit(train_data.to_numpy(),train_results.to_numpy())
 #%%
 def random_5(data,results):
     few = 5
-    random.seed(1)
+    random.seed(11)
     uq_data_index = random.sample([i for i in data.index], k = few)
     return uq_data_index
        
