@@ -71,7 +71,7 @@ ax1.set_ylabel('$\pi(x)$')
 
 jitter = np.random.default_rng(0)
 
-ax1.scatter(nuq_data,[r + jitter.uniform(0,0.1) if r else r - jitter.uniform(-0.1,0.1) for r in nuq_results ],color=col_points,zorder=10)
+ax1.scatter(nuq_data,[r + jitter.uniform(0,0.1) if r else r - jitter.uniform(-0,0.1) for r in nuq_results ],color=col_points,zorder=10)
 
     
 for i in uq_data_index:

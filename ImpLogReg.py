@@ -192,7 +192,7 @@ def _uncertain_class(data: pd.DataFrame, result: pd.Series, uq_data_index: list,
     return models
 
 def _int_data(data,results,sample_weight,catagorical,params, nested = False) -> dict:
-    
+
     uq = [(i,c) for i in data.index for c in data.columns if data.loc[i,c].__class__.__name__ == 'Interval']
     
     assert len(uq) != 0
@@ -211,7 +211,7 @@ def _int_data(data,results,sample_weight,catagorical,params, nested = False) -> 
     
         
     def find_bounds(r, data, results, uq, params,ci, mm, n = 0, cat = []) -> float:
-        lr = LogisticRegression(**params).fit(get_vals_from_intervals(r,data, uq,cat),results)
+        lr = LogisticRegression(**params).fit(get_vals_from_intervals(r,data, uq,cat),results,sample_weight)
         
         if ci == 'intercept':
             if mm == 'min':
@@ -227,7 +227,7 @@ def _int_data(data,results,sample_weight,catagorical,params, nested = False) -> 
     def find_xlr_model(data, results, uq, params,s,b ,ci, mm, n = 0, cat = []):
         method = 'Nelder-Mead'
         bounds = so.minimize(find_bounds, 0.5*np.ones(s), args = (data,results, uq,params, ci, mm),bounds = b, method=method)
-        return LogisticRegression(**params).fit(get_vals_from_intervals(bounds.x,data, uq),results), get_vals_from_intervals(bounds.x,data, uq)
+        return LogisticRegression(**params).fit(get_vals_from_intervals(bounds.x,data, uq),results,sample_weight), get_vals_from_intervals(bounds.x,data, uq)
         
     s = len(uq)
     n = len(data.columns)
@@ -241,7 +241,7 @@ def _int_data(data,results,sample_weight,catagorical,params, nested = False) -> 
     for i in it.product([0,1],repeat=n):
         x = {c:v for c,v in zip(data.columns,i)}
         r = [x[c] for _,c in uq]
-        models[str(i)] = LogisticRegression(**params).fit(get_vals_from_intervals(r,data,uq),results)
+        models[str(i)] = LogisticRegression(**params).fit(get_vals_from_intervals(r,data,uq),results,sample_weight)
         dataset[str(i)] = get_vals_from_intervals(r,data,uq)
         t.update()
                         
