@@ -22,7 +22,9 @@ class ImpLogReg:
         self.n_iter_ = []
         self.classes_ = None
         self.n_features_in_ = None
-    
+
+        self.tqdm_disable = False
+        
     def __iter__(self):
         for _, m in self.models.items():
             yield m
@@ -65,7 +67,7 @@ class ImpLogReg:
             labeled_results = labeled_results.convert_dtypes()
             
 
-            self.models = _uc_int(labeled_data, labeled_results, unlabeled_data, sample_weight, catagorical, self.params)
+            self.models = _uc_int(labeled_data, labeled_results, unlabeled_data, sample_weight, catagorical, self.params,self.tqdm_disable)
 
         elif self.uncertain_class:
             # want to get uq_data_index
@@ -75,15 +77,15 @@ class ImpLogReg:
                 if not (pba.always(results.loc[i]==0) or pba.always(results.loc[i]==1)):
                     uq_data_index.append(i)
                     
-            self.models = _uncertain_class(data, results,uq_data_index, sample_weight, catagorical, self.params)
+            self.models = _uncertain_class(data, results,uq_data_index, sample_weight, catagorical, self.params,self.tqdm_disable)
             
         elif self.uncertain_data:
             
             if fast:
-                self.models = _int_data_fast(data,results,sample_weight,catagorical,self.params,n_p_vals)
+                self.models = _int_data_fast(data,results,sample_weight,catagorical,self.params,n_p_vals,self.tqdm_disable)
                 
             else:
-                self.models = _int_data(data,results,sample_weight,catagorical,self.params)
+                self.models = _int_data(data,results,sample_weight,catagorical,self.params,self.tqdm_disable)
             
         else:
             self.models = {0: LogisticRegression(**self.params).fit(data, results, sample_weight)}
@@ -150,7 +152,7 @@ class ImpLogReg:
         for k,m in self.models.items():
             self.models[k] = m.sparsify()
 
-def _uncertain_class(data: pd.DataFrame, result: pd.Series, uq_data_index: list, sample_weight = None, nested = False, params = {}) -> dict:
+def _uncertain_class(data: pd.DataFrame, result: pd.Series, uq_data_index: list, sample_weight = None, nested = False, params = {},tqdm_disable = False) -> dict:
     
     models = {}
 
@@ -178,7 +180,7 @@ def _uncertain_class(data: pd.DataFrame, result: pd.Series, uq_data_index: list,
         else:
             zones['center'].append(u)
             
-    t = tqdm(total = 2**(len(zones['center'])+1))
+    t = tqdm(total = 2**(len(zones['center'])+1),disable=tqdm_disable)
     for l_bool,r_bool in [(True, False),(False,True)]:
         for c_bool in it.product([False,True],repeat=len(zones['center'])):
             new_results = result.copy().astype(bool)
@@ -191,7 +193,7 @@ def _uncertain_class(data: pd.DataFrame, result: pd.Series, uq_data_index: list,
             
     return models
 
-def _int_data(data,results,sample_weight,catagorical,params, nested = False) -> dict:
+def _int_data(data,results,sample_weight,catagorical,params, tqdm_disable = False) -> dict:
 
     uq = [(i,c) for i in data.index for c in data.columns if data.loc[i,c].__class__.__name__ == 'Interval']
     
@@ -233,7 +235,7 @@ def _int_data(data,results,sample_weight,catagorical,params, nested = False) -> 
     n = len(data.columns)
     m = len({c for _,c in uq})
     b = s*[(0,1)]
-    t = tqdm(total = 2**m+2*n+2)
+    t = tqdm(total = 2**m+2*n+2,disable=tqdm_disable)
     # t.update(2)
         
     models = {}
@@ -255,7 +257,7 @@ def _int_data(data,results,sample_weight,catagorical,params, nested = False) -> 
 
     return models
 
-def _uc_int(data, results, uncertain, sample_weight, catagorical, params) -> dict:
+def _uc_int(data, results, uncertain, sample_weight, catagorical, params,tqdm_disable = False) -> dict:
     
     new_data = pd.concat((data,uncertain), ignore_index = True)
     uq = [(i,c) for i in new_data.index for c in new_data.columns if new_data.loc[i,c].__class__.__name__ == 'Interval']
@@ -301,7 +303,7 @@ def _uc_int(data, results, uncertain, sample_weight, catagorical, params) -> dic
     models = {}
     s = len(uq) + len(uncertain)
     b = s*[(0,1)]
-    t = tqdm(total = 3*2*2*len(data.columns))
+    t = tqdm(total = 3*2*2*len(data.columns),disable = tqdm_disable)
     for j in [0,.5,1]:
         init = j*np.ones(s)
         for mm in ['min','max']:
@@ -314,7 +316,7 @@ def _uc_int(data, results, uncertain, sample_weight, catagorical, params) -> dic
     return models
 
 
-def _int_data_fast(data,results,sample_weight,catagorical,params,n, nested = False) -> dict:
+def _int_data_fast(data,results,sample_weight,catagorical,params,n, nested = False,tqdm_disable = False) -> dict:
     pvals = (np.arange(n)+1)/(n+1)
     def _find(X, p, model, columns):
         X = pd.DataFrame(np.array(x0).reshape(1,len(x0)),columns = columns,index=[0])
@@ -332,7 +334,7 @@ def _int_data_fast(data,results,sample_weight,catagorical,params,n, nested = Fal
 
     models = {}
 
-    for k, func in tqdm(list(zip(it.product('lr',repeat = len(uq_col)),it.product((left,right),repeat = len(uq_col)))),leave = True, colour='red',desc='Uncertain Features',position=0):
+    for k, func in tqdm(list(zip(it.product('lr',repeat = len(uq_col)),it.product((left,right),repeat = len(uq_col)))),leave = True, colour='red',desc='Uncertain Features',position=0,disable=tqdm_disable):
         data_ = pd.DataFrame({
                 **{c:[F(i) if i.__class__.__name__ == 'Interval' else i for i in data[c]] for c,F in zip(uq_col,func)},
                 **{c:data[c] for c in data.columns if c not in uq_col}

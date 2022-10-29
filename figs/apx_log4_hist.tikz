@@ -1,0 +1,37 @@
+% This file was created with tikzplotlib v0.10.1.
+\begin{tikzpicture}
+
+\definecolor{darkgray176}{RGB}{176,176,176}
+\definecolor{steelblue31119180}{RGB}{31,119,180}
+
+\begin{axis}[
+tick align=outside,
+tick pos=left,
+x grid style={darkgray176},
+xmin=-0.05105, xmax=1.05005,
+xtick style={color=black},
+y grid style={darkgray176},
+ymin=0, ymax=3320.1,
+ytick style={color=black}
+]
+\draw[draw=none,fill=steelblue31119180] (axis cs:-0.001,0) rectangle (axis cs:0.001,736);
+\draw[draw=none,fill=steelblue31119180] (axis cs:0.001,0) rectangle (axis cs:0.0125,1978);
+\draw[draw=none,fill=steelblue31119180] (axis cs:0.0125,0) rectangle (axis cs:0.025,3162);
+\draw[draw=none,fill=steelblue31119180] (axis cs:0.025,0) rectangle (axis cs:0.0375,2605);
+\draw[draw=none,fill=steelblue31119180] (axis cs:0.0375,0) rectangle (axis cs:0.05,1056);
+\draw[draw=none,fill=steelblue31119180] (axis cs:0.05,0) rectangle (axis cs:0.0625,264);
+\draw[draw=none,fill=steelblue31119180] (axis cs:0.0625,0) rectangle (axis cs:0.075,66);
+\draw[draw=none,fill=steelblue31119180] (axis cs:0.075,0) rectangle (axis cs:0.0875,39);
+\draw[draw=none,fill=steelblue31119180] (axis cs:0.0875,0) rectangle (axis cs:0.1,19);
+\draw[draw=none,fill=steelblue31119180] (axis cs:0.1,0) rectangle (axis cs:0.1125,16);
+\draw[draw=none,fill=steelblue31119180] (axis cs:0.1125,0) rectangle (axis cs:0.125,10);
+\draw[draw=none,fill=steelblue31119180] (axis cs:0.125,0) rectangle (axis cs:0.1375,9);
+\draw[draw=none,fill=steelblue31119180] (axis cs:0.1375,0) rectangle (axis cs:0.15,7);
+\draw[draw=none,fill=steelblue31119180] (axis cs:0.15,0) rectangle (axis cs:0.1625,7);
+\draw[draw=none,fill=steelblue31119180] (axis cs:0.1625,0) rectangle (axis cs:0.175,4);
+\draw[draw=none,fill=steelblue31119180] (axis cs:0.175,0) rectangle (axis cs:0.1875,3);
+\draw[draw=none,fill=steelblue31119180] (axis cs:0.1875,0) rectangle (axis cs:0.2,2);
+\draw[draw=none,fill=steelblue31119180] (axis cs:0.2,0) rectangle (axis cs:1,17);
+\end{axis}
+
+\end{tikzpicture}
