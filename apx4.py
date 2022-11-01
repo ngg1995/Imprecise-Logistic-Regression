@@ -1,7 +1,6 @@
 #%%
 from multiprocessing import freeze_support
 import multiprocessing
-from turtle import position
 import pba
 import numpy as np
 import tikzplotlib

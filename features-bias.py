@@ -141,13 +141,17 @@ for jj, UQdata,ax in zip([0,1,2,3],UQdatasets,np.ravel(axs)):
     ilr = ImpLogReg(uncertain_data=True, max_iter = 1000)
     ilr.fit(UQdata,train_results)
     
+    ### Fit UQ models
+    ilr_fast = ImpLogReg(uncertain_data=True, max_iter = 1000)
+    ilr_fast.fit(UQdata,train_results,fast=True,n_p_vals = 100)    
+    
     ### Fit de Souza model
     ds = DSLR(max_iter = 1000)
     ds.fit(mid_data,train_results)
     
     ### Fit Billard--Diday model
     bd = BDLR(max_iter = 1000)
-    bd.fit(UQdata,train_results)
+    bd.fit(UQdata,train_results,N = 10000)
     
     ### Plot results
     steps = 300
@@ -155,6 +159,7 @@ for jj, UQdata,ax in zip([0,1,2,3],UQdatasets,np.ravel(axs)):
     lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
     lYn = mid.predict_proba(lX.reshape(-1, 1))[:,1]
     lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
+    lYf = ilr_fast.predict_proba(lX.reshape(-1,1))[:,1]
     lYd = ds.predict_proba(lX.reshape(-1,1))[:,1]
     lYb = bd.predict_proba(lX.reshape(-1,1))[:,1]
     # plt.set_xlabel('$x$')
@@ -173,7 +178,22 @@ for jj, UQdata,ax in zip([0,1,2,3],UQdatasets,np.ravel(axs)):
         ax.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
         
     ax.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
-    ax.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = 'Uncertainty Bounds')
+    ax.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = 'ALG3')
+    
+    ax.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
+    ax.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = 'ALG4')
+    
+    nmin = np.full(len(lX),np.inf)
+    nmax = np.full(len(lX),-np.inf)
+    
+    for lr in bd:
+        lY = lr.predict_proba(lX.reshape(-1, 1))[:,1]
+        
+        nmin = np.minimum(nmin.ravel(),lY.ravel())
+        nmax = np.maximum(nmax.ravel(),lY.ravel())
+        
+    ax.plot(lX,nmin,'r')
+    ax.plot(lX,nmax,'r',label = 'MC')
     # ax.legend()
     # plt.show()
 

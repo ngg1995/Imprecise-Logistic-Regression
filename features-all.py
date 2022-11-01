@@ -107,7 +107,7 @@ ilr.fit(UQdata,train_results)
 #%% 
 ### Fit old models
 ilr_fast = ImpLogReg(uncertain_data=True, max_iter = 1000)
-ilr_fast.fit(UQdata,train_results,fast=True)
+ilr_fast.fit(UQdata,train_results,fast=True,n_p_vals=5)
        
 #%%
 ### Make `all` plot
@@ -116,24 +116,28 @@ many = 10
 steps = 300
 lX = np.linspace(0,10,steps)
 
+nmin = np.full(len(lX),np.inf)
+nmax = np.full(len(lX),-np.inf)
+
 for i in range(many+10):
-    if i < 10:
-        n_data = get_sample(UQdata,r = i/10)
-    else:
-        n_data = get_sample(UQdata)
+
+    n_data = get_sample(UQdata)
     
     lr = LogisticRegression()
     lr.fit(n_data, train_results)
     
     lY = lr.predict_proba(lX.reshape(-1, 1))[:,1]
     
-    ax_all.plot(lX,lY, color='grey', linewidth = 1)
-    
+    nmin = np.minimum(nmin.ravel(),lY.ravel())
+    nmax = np.maximum(nmax.ravel(),lY.ravel())
 
-for l,m in ilr.models.items():
-    lY = m.predict_proba(lX.reshape(-1, 1))[:,1]
-    ax_all.plot(lX,lY, linewidth = 2,label = l)
-ax_all.legend()
+ax_all.plot(lX,nmin,'r')
+ax_all.plot(lX,nmax,'r')
+
+# for l,m in ilr.models.items():
+#     lY = m.predict_proba(lX.reshape(-1, 1))[:,1]
+#     ax_all.plot(lX,lY, linewidth = 2,label = l)
+# ax_all.legend()
 
 for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
     yd = np.random.uniform(0,0.1)
@@ -143,9 +147,13 @@ for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
     ax_all.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
 
 lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
-    
-ax_all.plot(lX,[i.left for i in lYu],'k--',lw=2)
-ax_all.plot(lX,[i.right for i in lYu],'k--',lw=2,label = 'ilr')
+ax_all.plot(lX,[i.left for i in lYu],'k',lw=2)
+ax_all.plot(lX,[i.right for i in lYu],'k',lw=2,label = 'ilr')
+
+lYu = ilr_fast.predict_proba(lX.reshape(-1,1))[:,1]
+ax_all.plot(lX,[i.left for i in lYu],'b',lw=2)
+ax_all.plot(lX,[i.right for i in lYu],'b',lw=2,label = 'fast')
+ax_all.legend()
 fig_all.show()
 tikzplotlib.save('figs/features-all.tikz',figure = fig_all,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/features/')
 

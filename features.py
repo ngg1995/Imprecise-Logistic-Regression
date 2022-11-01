@@ -127,7 +127,7 @@ ds.fit(UQdata,train_results)
 #%%
 ### Fit Billard--Diday model
 bd = BDLR(max_iter = 1000)
-bd.fit(UQdata,train_results)
+bd.fit(UQdata,train_results,N = 10000)
     
 #%%
 ### Fit UQ models
@@ -178,16 +178,34 @@ ax1.legend()
 tikzplotlib.save('figs/features.tikz',figure = fig1,externalize_tables = True, tex_relative_path_to_data = 'dat/features/',override_externals = True)
 
 #%%
+
 ### Make `all` plot
 fig_all, ax_all = plt.subplots()
+many = 10
+steps = 300
+lX = np.linspace(0,10,steps)
 
-lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
-ax_all.plot(lX,[i.left for i in lYu],'k--',lw=2)
-ax_all.plot(lX,[i.right for i in lYu],'k--',lw=2,label = 'ilr')
-for l,m in ilr.models.items():
-    lY = m.predict_proba(lX.reshape(-1, 1))[:,1]
-    ax_all.plot(lX,lY, linewidth = 2,label = l)
-ax_all.legend()
+
+
+nmin = np.full(len(lX),np.inf)
+nmax = np.full(len(lX),-np.inf)
+
+for lr in bd:
+    lY = lr.predict_proba(lX.reshape(-1, 1))[:,1]
+    
+    nmin = np.minimum(nmin.ravel(),lY.ravel())
+    nmax = np.maximum(nmax.ravel(),lY.ravel())
+    
+ax_all.plot(lX,nmin,'r')
+ax_all.plot(lX,nmax,'r',label = 'MC')
+
+ax_all.plot(lX,nmin,'r')
+ax_all.plot(lX,nmax,'r')
+
+# for l,m in ilr.models.items():
+#     lY = m.predict_proba(lX.reshape(-1, 1))[:,1]
+#     ax_all.plot(lX,lY, linewidth = 2,label = l)
+# ax_all.legend()
 
 for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
     yd = np.random.uniform(0,0.1)
@@ -196,26 +214,16 @@ for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
         yd = -yd
     ax_all.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
 
-steps = 300
-nmc = 25
+lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
+ax_all.plot(lX,[i.left for i in lYu],'k',lw=2)
+ax_all.plot(lX,[i.right for i in lYu],'k',lw=2,label = 'ilr')
 
-for i in range(2*nmc):
-    if i < nmc:
-        n_data = get_sample(UQdata,r = i/nmc)
-    else:
-        n_data = get_sample(UQdata)
-    
-    lr = LogisticRegression()
-    lr.fit(n_data, train_results)
-    
-    lY = lr.predict_proba(lX.reshape(-1, 1))[:,1]
-    
-    ax_all.plot(lX,lY, color='grey', linewidth = 1)
-    
-
+lYu = ilr_fast.predict_proba(lX.reshape(-1,1))[:,1]
+ax_all.plot(lX,[i.left for i in lYu],'b',lw=2)
+ax_all.plot(lX,[i.right for i in lYu],'b',lw=2,label = 'fast')
+ax_all.legend()
+fig_all.show()
 tikzplotlib.save('figs/features-all.tikz',figure = fig_all,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/features/')
-
-
 
 # %% [markdown]
 ### Get confusion matrix
