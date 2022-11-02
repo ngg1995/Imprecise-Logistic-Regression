@@ -19,8 +19,8 @@ col_ilr4 = '#008000'
 col_mid = '#DC143C'
 
 from LRF import *
-# from ImpLogReg import *
-from old import ImpLogReg
+from ImpLogReg import *
+# from old import ImpLogReg
 from other_methods import *
 
 
@@ -90,7 +90,7 @@ def ex3(data):
     for i in data.index:
         if data.iloc[i,0] < 2.5:
             n_data.append(
-                data.iloc[i,0]
+                pba.I(data.iloc[i,0])
             )
         elif data.iloc[i,0] < 5:
             n_data.append(
@@ -128,9 +128,8 @@ UQdatasets = [
 
 
 #%%
-fig, axs = plt.subplots(2,2,sharey = True)
-
-for jj, UQdata,ax in zip([0,1,2,3],UQdatasets,np.ravel(axs)):
+# fig, axs = plt.subplots(2,2,sharey = Tr
+for jj, UQdata in zip([0,1,2,3],UQdatasets):
 
     ### Fit models with midpoint data
     mid_data = midpoints(UQdata)
@@ -142,8 +141,8 @@ for jj, UQdata,ax in zip([0,1,2,3],UQdatasets,np.ravel(axs)):
     ilr.fit(UQdata,train_results)
     
     ### Fit UQ models
-    ilr_fast = ImpLogReg(uncertain_data=True, max_iter = 1000)
-    ilr_fast.fit(UQdata,train_results,fast=True,n_p_vals = 100)    
+    fast = ImpLogReg(uncertain_data=True, max_iter = 1000)
+    fast.fit(UQdata,train_results,fast=True,n_p_vals = 100)    
     
     ### Fit de Souza model
     ds = DSLR(max_iter = 1000)
@@ -152,54 +151,51 @@ for jj, UQdata,ax in zip([0,1,2,3],UQdatasets,np.ravel(axs)):
     ### Fit Billard--Diday model
     bd = BDLR(max_iter = 1000)
     bd.fit(UQdata,train_results,N = 10000)
-    
-    ### Plot results
+
+    def make_dat_file(fname,x,y):
+        with open(f'figs/dat/features/{fname}.dat','w') as f:
+            for i,j in zip(x,y):
+                print(f"{i} {j}",file = f)
+
     steps = 300
     lX = np.linspace(0,10,steps)
+
     lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
-    lYn = mid.predict_proba(lX.reshape(-1, 1))[:,1]
-    lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
-    lYf = ilr_fast.predict_proba(lX.reshape(-1,1))[:,1]
+    make_dat_file(f'bias-{jj}-base',lX,lY)
+
+    lYm = mid.predict_proba(lX.reshape(-1, 1))[:,1]
+    make_dat_file(f'bias-{jj}-mid',lX,lYm)
+
     lYd = ds.predict_proba(lX.reshape(-1,1))[:,1]
+    make_dat_file(f'bias-{jj}-deSouza',lX,lYd)
+
     lYb = bd.predict_proba(lX.reshape(-1,1))[:,1]
-    # plt.set_xlabel('$x$')
-    # plt.set_ylabel('$\pi(x)$')
+    make_dat_file(f'bias-{jj}-Billard-Diday',lX,lYb)
 
-    ax.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = 'base')
-    ax.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = 'mid')
-    ax.plot(lX,lYd,color=col_ilr2,zorder=10,lw=3,label = 'ds',linestyle = '--')
-    ax.plot(lX,lYb,color=col_ilr3,zorder=10,lw=4,label = 'bd',linestyle = ':')
+    lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
+    make_dat_file(f'bias-{jj}-minmaxcoef-right',lX,[i.right for i in lYu])
+    make_dat_file(f'bias-{jj}-minmaxcoef-left',lX,[i.left for i in lYu])
 
-    for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
-        yd = np.random.uniform(-0.0,0.1)
-        if r == 0: yd = -yd
-        # plt.plot(m,r+yd,color = 'b',marker = 'x')
-        if not isinstance(u,pba.Interval): u = pba.I(u)
-        ax.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
-        
-    ax.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
-    ax.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = 'ALG3')
-    
-    ax.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
-    ax.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = 'ALG4')
-    
-    nmin = np.full(len(lX),np.inf)
-    nmax = np.full(len(lX),-np.inf)
-    
+    mc_min = np.full(len(lX),np.inf)
+    mc_max = np.full(len(lX),-np.inf)
     for lr in bd:
         lY = lr.predict_proba(lX.reshape(-1, 1))[:,1]
-        
-        nmin = np.minimum(nmin.ravel(),lY.ravel())
-        nmax = np.maximum(nmax.ravel(),lY.ravel())
-        
-    ax.plot(lX,nmin,'r')
-    ax.plot(lX,nmax,'r',label = 'MC')
-    # ax.legend()
-    # plt.show()
+        mc_min = np.minimum(mc_min.ravel(),lY.ravel())
+        mc_max = np.maximum(mc_max.ravel(),lY.ravel())
+    make_dat_file(f'bias-{jj}-MC-right',lX,mc_min)
+    make_dat_file(f'bias-{jj}-MC-left',lX,mc_max)
 
-#%%
-# fig.savefig('../LR-paper/figs/biased_int.png',dpi = 600)
-# fig.savefig('figs/biased_int.png',dpi = 600)
+    lYu = fast.predict_proba(lX.reshape(-1,1))[:,1]
+    make_dat_file(f'bias-{jj}-fast-right',lX,[i.right for i in lYu])
+    make_dat_file(f'bias-{jj}-fast-left',lX,[i.left for i in lYu])
 
-tikzplotlib.save("figs/biased_int.tikz",figure = fig,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/')
-
+    with open(f"figs/dat/features/bias-{jj}-intervals",'w') as f:
+        jit = np.random.default_rng(1)
+        for iii in UQdata.index:
+            if train_results.loc[iii]:
+                jitter = jit.uniform(0,0.1)
+            else:
+                jitter = jit.uniform(-0.1,0)
+                
+            print(f"\\addplot [semithick, points, mark=|, mark size=3, mark options={{solid}}, forget plot]\ntable {{% \n{UQdata.loc[iii,0].left} {train_results.loc[iii] + jitter}\n{UQdata.loc[iii,0].right} {train_results.loc[iii] + jitter}\n}};",file = f)
+            

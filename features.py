@@ -133,97 +133,48 @@ bd.fit(UQdata,train_results,N = 10000)
 ### Fit UQ models
 ilr = ImpLogReg(uncertain_data=True, max_iter = 1000)
 ilr.fit(UQdata,train_results,fast=False)
-ilr_fast = ImpLogReg(uncertain_data=True, max_iter = 1000)
-ilr_fast.fit(UQdata,train_results,fast=True,n_p_vals=100)
+fast = ImpLogReg(uncertain_data=True, max_iter = 1000)
+fast.fit(UQdata,train_results,fast=True,n_p_vals=1000)
 
 # %% [markdown]
-### Plot results
+### Plots
+
+def make_dat_file(fname,x,y):
+    with open(f'figs/dat/features/{fname}.dat','w') as f:
+        for i,j in zip(x,y):
+            print(f"{i} {j}",file = f)
+
 steps = 300
 lX = np.linspace(0,10,steps)
+
 lY = base.predict_proba(lX.reshape(-1, 1))[:,1]
-lYn = mid.predict_proba(lX.reshape(-1, 1))[:,1]
-lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
+make_dat_file('base',lX,lY)
+
+lYm = mid.predict_proba(lX.reshape(-1, 1))[:,1]
+make_dat_file('mid',lX,lYm)
+
 lYd = ds.predict_proba(lX.reshape(-1,1))[:,1]
+make_dat_file('deSouza',lX,lYd)
+
 lYb = bd.predict_proba(lX.reshape(-1,1))[:,1]
-#%%
+make_dat_file('Billard-Diday',lX,lYb)
 
-fig1, ax1 = plt.subplots()
+lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
+make_dat_file('minmaxcoed_right',lX,[i.right for i in lYu])
+make_dat_file('minmaxcoed_left',lX,[i.left for i in lYu])
 
-ax1.set_xlabel('$x$')
-ax1.set_ylabel('$\pi(x)$')
-# plt.scatter(mid_data,train_results,color='grey',zorder=10)
-ax1.plot(lX,lY,color=col_precise,zorder=10,lw=2,label = 'base')
-ax1.plot(lX,lYn,color=col_mid,zorder=10,lw=2,label = 'mid')
-ax1.plot(lX,lYd,color=col_ilr2,zorder=10,lw=3,label = 'ds',linestyle = '--')
-ax1.plot(lX,lYb,color=col_ilr3,zorder=10,lw=4,label = 'bd',linestyle = ':')
-
-
-for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
-    yd = np.random.uniform(0.0,0.1)
-    if r == 0:
-        yd = -yd
-    # plt.plot(m,r+yd,color = 'b',marker = 'x')
-    ax1.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
-    
-# for m in ilr:
-#     lYi = m.predict_proba(lX.reshape(-1, 1))[:,1]
-#     plt.plot(lX, lYi,color='#00F',lw=1,linestyle='dotted')
-    
-ax1.plot(lX,[i.left for i in lYu],color=col_ilr,lw=2)
-ax1.plot(lX,[i.right for i in lYu],color=col_ilr,lw=2,label = 'ilr')
-ax1.legend()
-#%%
-# fig1.savefig('../LR-paper/figs/features.png',dpi = 600)
-# fig1.savefig('figs/features.png',dpi = 600)
-tikzplotlib.save('figs/features.tikz',figure = fig1,externalize_tables = True, tex_relative_path_to_data = 'dat/features/',override_externals = True)
-
-#%%
-
-### Make `all` plot
-fig_all, ax_all = plt.subplots()
-many = 10
-steps = 300
-lX = np.linspace(0,10,steps)
-
-
-
-nmin = np.full(len(lX),np.inf)
-nmax = np.full(len(lX),-np.inf)
-
+mc_min = np.full(len(lX),np.inf)
+mc_max = np.full(len(lX),-np.inf)
 for lr in bd:
     lY = lr.predict_proba(lX.reshape(-1, 1))[:,1]
-    
-    nmin = np.minimum(nmin.ravel(),lY.ravel())
-    nmax = np.maximum(nmax.ravel(),lY.ravel())
-    
-ax_all.plot(lX,nmin,'r')
-ax_all.plot(lX,nmax,'r',label = 'MC')
+    mc_min = np.minimum(mc_min.ravel(),lY.ravel())
+    mc_max = np.maximum(mc_max.ravel(),lY.ravel())
+make_dat_file('MC-right',lX,mc_min)
+make_dat_file('MC-left',lX,mc_max)
 
-ax_all.plot(lX,nmin,'r')
-ax_all.plot(lX,nmax,'r')
-
-# for l,m in ilr.models.items():
-#     lY = m.predict_proba(lX.reshape(-1, 1))[:,1]
-#     ax_all.plot(lX,lY, linewidth = 2,label = l)
-# ax_all.legend()
-
-for u,m,r in zip(UQdata[0],train_data[0],train_results.to_list()):
-    yd = np.random.uniform(0,0.1)
-    # plt.plot(m,r+yd,color = 'b',marker = 'x')
-    if r == 0:
-        yd = -yd
-    ax_all.plot([u.left,u.right],[r+yd,r+yd],color = col_points, marker='|')
-
-lYu = ilr.predict_proba(lX.reshape(-1,1))[:,1]
-ax_all.plot(lX,[i.left for i in lYu],'k',lw=2)
-ax_all.plot(lX,[i.right for i in lYu],'k',lw=2,label = 'ilr')
-
-lYu = ilr_fast.predict_proba(lX.reshape(-1,1))[:,1]
-ax_all.plot(lX,[i.left for i in lYu],'b',lw=2)
-ax_all.plot(lX,[i.right for i in lYu],'b',lw=2,label = 'fast')
-ax_all.legend()
-fig_all.show()
-tikzplotlib.save('figs/features-all.tikz',figure = fig_all,externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/features/')
+lYu = fast.predict_proba(lX.reshape(-1,1))[:,1]
+make_dat_file('fast_right',lX,[i.right for i in lYu])
+make_dat_file('fast_left',lX,[i.left for i in lYu])
 
 # %% [markdown]
 ### Get confusion matrix

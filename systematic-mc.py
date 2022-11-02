@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
     ax.plot(xl,sc_min,'grey')
     ax.plot(xl,sc_max,'grey')
-    tikzplotlib.save('figs/systematic-mc.tikz',figure = fig, externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/apx/')
+    tikzplotlib.save('figs/feature-mc.tikz',figure = fig, externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/features/')
     pool_obj.close()
     print(f"MC - {area(xl,mc_min,mc_max,sc_max,sc_min)}")
     iX = pd.DataFrame({1:int_x},dtype = 'O')
@@ -125,9 +125,9 @@ if __name__ == '__main__':
     ax2.legend()
     
     
-    tikzplotlib.save('figs/feature-minmax.tikz',figure = fig2, externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/apx/')
-    yl = [i.left for i in ilr.predict_proba(xl.reshape(-1, 1))[:,1]]
-    yr = [i.right for i in ilr.predict_proba(xl.reshape(-1, 1))[:,1]]
+    tikzplotlib.save('figs/feature-minmax.tikz',figure = fig2, externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/features/')
+    yl = np.array([i.left for i in ilr.predict_proba(xl.reshape(-1, 1))[:,1]])
+    yr = np.array([i.right for i in ilr.predict_proba(xl.reshape(-1, 1))[:,1]])
     print(f"F3 - {area(xl,yl,yr,sc_max,sc_min)}")
 
     
@@ -143,11 +143,11 @@ if __name__ == '__main__':
             
         ax3.plot([i.left,i.right],[j+jt,j+jt])
 
-    yl = [i.left for i in ilr.predict_proba(xl.reshape(-1, 1))[:,1]]
-    yr = [i.right for i in ilr.predict_proba(xl.reshape(-1, 1))[:,1]]
+    yl = np.array([i.left for i in ilr.predict_proba(xl.reshape(-1, 1))[:,1]])
+    yr = np.array([i.right for i in ilr.predict_proba(xl.reshape(-1, 1))[:,1]])
     ax3.plot(xl,yl)
     ax3.plot(xl,yr)
     print(f"F4 - {area(xl,yl,yr,sc_max,sc_min)}")
     
-    tikzplotlib.save('figs/feature-6line.tikz',figure = fig3, externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/apx/')
+    tikzplotlib.save('figs/feature-6line.tikz',figure = fig3, externalize_tables = True, override_externals = True,tex_relative_path_to_data = 'dat/features/')
 

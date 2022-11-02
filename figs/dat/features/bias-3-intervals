@@ -1,0 +1,250 @@
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+6.71320643266746 1.0511821624700257
+7.71320643266746 1.0511821624700257
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+0.207519493594015 -0.004953630367406467
+1.207519493594015 -0.004953630367406467
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+6.336482349262754 -0.08558403872803663
+7.336482349262754 -0.08558403872803663
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+6.488038825386118 1.0948649447137244
+7.488038825386118 1.0948649447137244
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+4.9850701230259045 -0.06881685479895146
+5.9850701230259045 -0.06881685479895146
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+2.2479664553084766 -0.057667355102742436
+3.2479664553084766 -0.057667355102742436
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+1.98062864759624 -0.01722974061795582
+2.98062864759624 -0.01722974061795582
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+6.605307121989587 1.040919913636916
+7.605307121989587 1.040919913636916
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+1.6911083656253547 -0.045040631232694056
+2.6911083656253547 -0.045040631232694056
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+0.8833981417401027 -0.09724408867569317
+1.8833981417401027 -0.09724408867569317
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+5.853598183677972 1.0753513108674806
+6.853598183677972 1.0753513108674806
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+8.533933461949365 1.053814331321928
+9.533933461949365 1.053814331321928
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+0.039482663279144514 -0.06702682835009079
+1.0394826632791445 -0.06702682835009079
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+5.121922633857766 -0.021157129657159573
+6.121922633857766 -0.021157129657159573
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+7.126209616521136 1.0303194829291644
+8.126209616521136 1.0303194829291644
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+5.1252606682938815 1.0453497889480652
+6.1252606682938815 1.0453497889480652
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+6.217553174317995 1.0134041697247165
+7.217553174317995 1.0134041697247165
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+2.9187606817063316 -0.05968870135528708
+3.9187606817063316 -0.05968870135528708
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+8.177741225129434 1.020345524067615
+9.177741225129434 1.020345524067615
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+6.145757833976906 1.0262313340441849
+7.145757833976906 1.0262313340441849
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+4.425443680112613 1.0750364672630053
+5.425443680112613 1.0750364672630053
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+1.4217004760152696 -0.07195912420139601
+2.4217004760152694 -0.07195912420139601
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+3.733407600514692 -0.051480902556836496
+4.733407600514692 -0.051480902556836496
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+5.741336150663453 1.0980737199801238
+6.741336150663453 1.0980737199801238
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+4.418331744229961 -0.0038342806336213175
+5.418331744229961 -0.0038342806336213175
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+3.340139933332937 1.0724789940773534
+4.340139933332937 1.0724789940773534
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+6.177669784693172 -0.045877314445256584
+7.177669784693172 -0.045877314445256584
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+5.131382425543909 -0.07231087959546292
+6.131382425543909 -0.07231087959546292
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+5.503971819314672 1.0160652008775126
+6.503971819314672 1.0160652008775126
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+6.010389534045444 -0.00300745867838674
+7.010389534045444 -0.00300745867838674
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+7.052231968327465 1.051606858554788
+8.052231968327465 1.051606858554788
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+4.216471523936342 1.0115865612470771
+5.216471523936342 1.0115865612470771
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+8.086488808086683 1.06234897555375
+9.086488808086683 1.06234897555375
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+2.1923608898854527 1.0776683114342298
+3.1923608898854527 1.0776683114342298
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+0.9045934927090737 -0.038699669894695955
+1.9045934927090737 -0.038699669894695955
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+2.0070005663620334 1.0917297704790903
+3.0070005663620334 1.0917297704790903
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+1.1398436186354977 -0.09604071233357972
+2.1398436186354974 -0.09604071233357972
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+7.286813263076766 1.0528589263260022
+8.286813263076766 1.0528589263260022
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+0.46896319389249763 -0.05406641171145963
+1.4689631938924976 -0.05406641171145963
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+5.262871483113925 1.0062349579149876
+6.262871483113925 1.0062349579149876
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+4.475861559192436 1.0641328169139375
+5.475861559192436 1.0641328169139375
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+7.192869956700687 1.0852632838480656
+8.192869956700687 1.0852632838480656
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+1.989475396788123 -0.0407058981895716
+2.989475396788123 -0.0407058981895716
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+7.568503024577332 1.0260097447737224
+8.568503024577332 1.0260097447737224
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+2.516526394320879 1.083988152103141
+3.516526394320879 1.083988152103141
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+6.546476915298572 1.050949588152151
+7.546476915298572 1.050949588152151
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+2.959617068796787 -0.0489111115533467
+3.959617068796787 -0.0489111115533467
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+7.839364795611862 1.0753030207702179
+8.839364795611862 1.0753030207702179
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+3.255116378322488 -0.08520779642150435
+4.255116378322488 -0.08520779642150435
+};
+\addplot [semithick, points, mark=|, mark size=3, mark options={solid}, forget plot]
+table {% 
+1.6501589771914849 -0.018037328088072305
+2.650158977191485 -0.018037328088072305
+};

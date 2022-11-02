@@ -64,22 +64,22 @@ table {%
 4.8 1.060896434136
 };
 \addplot [thick, orchid227119194]
-table {opts_str}{dat/apx/feature-minmax-000.dat};
+table {opts_str}{dat/features/feature-minmax-000.dat};
 \addlegendentry{(0,)}
 \addplot [thick, gray127]
-table {opts_str}{dat/apx/feature-minmax-001.dat};
+table {opts_str}{dat/features/feature-minmax-001.dat};
 \addlegendentry{(1,)}
 \addplot [thick, goldenrod18818934]
-table {opts_str}{dat/apx/feature-minmax-002.dat};
+table {opts_str}{dat/features/feature-minmax-002.dat};
 \addlegendentry{r_min_intercept}
 \addplot [thick, darkturquoise23190207]
-table {opts_str}{dat/apx/feature-minmax-003.dat};
+table {opts_str}{dat/features/feature-minmax-003.dat};
 \addlegendentry{r_min_coef_0}
 \addplot [thick, steelblue31119180]
-table {opts_str}{dat/apx/feature-minmax-004.dat};
+table {opts_str}{dat/features/feature-minmax-004.dat};
 \addlegendentry{r_max_intercept}
 \addplot [thick, darkorange25512714]
-table {opts_str}{dat/apx/feature-minmax-005.dat};
+table {opts_str}{dat/features/feature-minmax-005.dat};
 \addlegendentry{r_max_coef_0}
 \end{axis}
 
