@@ -77,7 +77,7 @@ def systematic(i,int_x=int_x,y=y):
 if __name__ == '__main__':
     xl = np.linspace(0,5,1000)
     freeze_support()
-    pool_obj = multiprocessing.Pool(5)
+    pool_obj = multiprocessing.Pool(4)
 
     sc_min = np.full(len(xl),np.inf)
     sc_max = np.full(len(xl),-np.inf)

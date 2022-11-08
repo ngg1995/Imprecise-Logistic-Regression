@@ -46,7 +46,8 @@ class ImpLogReg:
         for k,m in self.models.items():
             self.models[k] = m.densify()
             
-    def fit(self, data, results ,sample_weight=None, catagorical = [], fast = False,n_p_vals = 1):
+    def fit(self, data, results ,sample_weight=None, catagorical = [], fast = False,n_p_vals = 1,tqdm_disable=False):
+        self.tqdm_disable = tqdm_disable
         
         self.params.update({k:v for k,v in self.__dict__.items() if k in self.params.keys()})
         
@@ -83,7 +84,7 @@ class ImpLogReg:
             
             if fast:
                 self.models = _int_data_fast(data,results,sample_weight,catagorical,self.params,n_p_vals,self.tqdm_disable)
-                
+
             else:
                 self.models = _int_data(data,results,sample_weight,catagorical,self.params,self.tqdm_disable)
             
@@ -316,9 +317,9 @@ def _uc_int(data, results, uncertain, sample_weight, catagorical, params,tqdm_di
     return models
 
 
-def _int_data_fast(data,results,sample_weight,catagorical,params,n, nested = False,tqdm_disable = False) -> dict:
+def _int_data_fast(data,results,sample_weight,catagorical,params,n, tqdm_disable = False) -> dict:
     pvals = (np.arange(n)+1)/(n+1)
-    def _find(X, p, model, columns):
+    def _find(x0, p, model, columns):
         X = pd.DataFrame(np.array(x0).reshape(1,len(x0)),columns = columns,index=[0])
         pr = model.predict_proba(X)[0][1]
         return abs(pr-p)
@@ -335,30 +336,35 @@ def _int_data_fast(data,results,sample_weight,catagorical,params,n, nested = Fal
     models = {}
 
     for k, func in tqdm(list(zip(it.product('lr',repeat = len(uq_col)),it.product((left,right),repeat = len(uq_col)))),leave = True, colour='red',desc='Uncertain Features',position=0,disable=tqdm_disable):
+
         data_ = pd.DataFrame({
                 **{c:[F(i) if i.__class__.__name__ == 'Interval' else i for i in data[c]] for c,F in zip(uq_col,func)},
                 **{c:data[c] for c in data.columns if c not in uq_col}
                 }, index = data.index).reindex(columns = data.columns)
         m = LogisticRegression(**params).fit(data_,results.to_numpy(dtype = bool),sample_weight)
+
         key = "".join(k)
         models[key] = m
     # n_models = models.copy()
     # for k,m in tqdm(models.items()):
+
         for p in pvals:
             min_data = data.copy()
             max_data = data.copy()
             x0 = [pba.I(np.median(data[c])).midpoint() for c in data.columns]
-            xm = so.minimize(_find, x0, args = (p, m, data.columns),method='Nelder-Mead')
+            xm = so.minimize(_find, x0, args = (p, m, data.columns))
+
             x = {cc:xx for xx,cc in zip(xm.x,data.columns)}
+
             for i,c in uq:
                 if data.loc[i,c].straddles(x[c]):
                     min_data.loc[i,c] = x[c]
                     if abs(data.loc[i,c].right - x[c]) > (data.loc[i,c].left - x[c]):
                         max_data.loc[i,c] = data.loc[i,c].right
-                        # min_data.loc[i,c] = data.loc[i,c].left
+                        min_data.loc[i,c] = data.loc[i,c].left
                     else:
                         max_data.loc[i,c] = data.loc[i,c].left
-                        # min_data.loc[i,c] = data.loc[i,c].right
+                        min_data.loc[i,c] = data.loc[i,c].right
                         
                 elif pba.always(data.loc[i,c] < x[c]):
                     max_data.loc[i,c] = data.loc[i,c].left
@@ -366,7 +372,8 @@ def _int_data_fast(data,results,sample_weight,catagorical,params,n, nested = Fal
                 else:
                     max_data.loc[i,c] = data.loc[i,c].right
                     min_data.loc[i,c] = data.loc[i,c].left
-            
+
+
             models[f'{key}-min({p})'] = LogisticRegression(**params).fit(min_data,results.to_numpy(dtype = bool),sample_weight)
 
             models[f'{key}-max({p})'] = LogisticRegression(**params).fit(max_data,results.to_numpy(dtype = bool),sample_weight)

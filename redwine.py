@@ -98,12 +98,12 @@ ds.fit(UQdata,train_results)
 #%%
 ### Fit Billard--Diday model
 bd = BDLR(max_iter = 10000,solver='saga')
-bd.fit(UQdata,train_results)
+bd.fit(UQdata,train_results,N = 10000)
     
 #%%
 ### Fit UQ models
 ilr = ImpLogReg(uncertain_data=True, max_iter = 10000,solver='saga')
-ilr.fit(UQdata,train_results,fast = True,n_p_vals = 1)
+ilr.fit(UQdata,train_results,fast = True,n_p_vals = 10)
 
 
 # %% [markdown]
